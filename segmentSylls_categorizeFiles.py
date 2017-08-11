@@ -5,6 +5,10 @@ import soundfile as sf
 from ifdvsonogramonly import ifdvsonogramonly
 import matplotlib.pyplot as plt
 
+# from screeninfo import get_monitors
+# for m in get_monitors():
+    # print(str(m))
+
 # import a directory of wav files
 directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
 files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
@@ -22,12 +26,12 @@ onset_cells = 1
 offset_cells = 1
 
 wavlist = []
-for i in range(0, F-1):
+for i in range(0, 3):  # F-2):
     i
     # del sonogram* -------how to do this in python?
 
     wavfile = files[i]
-    song1, sample_rate = sf.read(directory+wavfile, always_2d=True) #audio data always returned as 2d array
+    song1, sample_rate = sf.read(directory+wavfile, always_2d=True)  # audio data always returned as 2d array
     song1 = song1[:, 0]  # make files mono
 
     wavfile  # not sure if we want this printed or not
@@ -47,9 +51,10 @@ for i in range(0, F-1):
     sonogram_padded[:, 150:cols+150] = sonogram  # padding for window to start
     sonogram = sonogram_padded
 
-# MAKE THIS A FUNCTION WITH BOUNDARY INPUT
+###### MAKE THIS A FUNCTION WITH BOUNDARY INPUT
     # high pass filter (get rid of low freq noise)
     sonogram[474:513, :] = 0
+######
 
     # sliding window average of amplitude
     amplitude_vector = np.squeeze(np.sum(sonogram, axis=0))
@@ -64,7 +69,6 @@ for i in range(0, F-1):
             vecend = len(amplitude_vector)  # index to end window -> the last one of the array
         else:
             vecend = f+500+1  # have to add one in python since it is not inclusive
-        print(vecstart, vecend)
         amplitude_average_vector[f] = np.mean(amplitude_vector[vecstart:vecend])
 
     # use average amplitude to rescale and increase low amplitude sections
@@ -77,14 +81,15 @@ for i in range(0, F-1):
     # PLOT --> not sure if I will need to position these since it will be in a GUI eventually
     # figure('Position',[1 scrsz(4)/2 scrsz(3) (scrsz(4)/2-60)])
     # %figure('Position',[1 scrsz(4)/2 scrsz(3) (scrsz(4)/2-100)])
+    plt.close('all')
+    fig1 = plt.figure()
     plt.imshow(np.log(sonogram+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
 
-
+###### SET THRESHOLD
     [rows, cols] = np.shape(sonogram)  # update since sonogram has now been padded
     num_elements = rows*cols
     sonogram_binary = sonogram/np.max(sonogram)  # scaling before making binary
 
-    # scale sonogram so that some top % is maximized while the rest is set to 0 (thresholding)
     sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)
     sonogram_vector_sorted = np.sort(sonogram_vector)
 
@@ -93,15 +98,15 @@ for i in range(0, F-1):
     # s40 = ge(sonogrambinary, fortypercent); % ge(A, B) equivalent to A >= B
     # sonogram40 = s40. * sonogrambinary;
 
-    # THRESHOLDING
     # making sonogram_binary actually binary now by keeping some top percentage of the signal
     top_percent = sonogram_vector_sorted[int(num_elements-round(num_elements/57, 0))] # takes top _% off of ranked num_elements
     sonogram_thresh = np.zeros((rows, cols))
     sonogram_thresh[sonogram_binary < top_percent] = 0
     sonogram_thresh[sonogram_binary > top_percent] = 1
+######
 
     # sonogram summed
-    sum_sonogram = sum(sonogram_thresh)
+    sum_sonogram = sum(sonogram_thresh)  # collapse matrix to one row by summing columns (gives total signal over time)
     sum_sonogram_scaled = (sum_sonogram/max(sum_sonogram)*rows)
 
     if not test_if_analyzed:
@@ -128,6 +133,7 @@ for i in range(0, F-1):
             silence_durations[j] = onsets[j]-offsets2[j]
         mean_silence_durations.append(np.mean(silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
 
+######### SET MINIMUM SILENCE
         # define syllable onsets and offsets
         syllable_onsets = np.zeros(len(onsets))
         syllable_offsets = np.zeros(len(onsets))
@@ -137,7 +143,9 @@ for i in range(0, F-1):
                 syllable_offsets[j] = offsets2[j]
         syllable_offsets[0] = 0
         syllable_offsets[len(silence_durations)] = offsets2[len(offsets2)-1]
+#########
 
+######### SET MINIMUM SYLLABLE
         # remove zeros
         syllable_onsets = syllable_onsets[syllable_onsets != 0]
         syllable_offsets = syllable_offsets[syllable_offsets != 0]
@@ -154,6 +162,7 @@ for i in range(0, F-1):
         syllable_marks = np.zeros(len(sum_sonogram_scaled))
         syllable_marks[syllable_onsets.astype(int)] = rows + 30
         syllable_marks[syllable_offsets.astype(int)] = rows + 10
+#########
 
         # PLOT --> need to change to python
         # %draw spectrogram with sumsonogram overlaid
@@ -169,14 +178,17 @@ for i in range(0, F-1):
         # hold off
 
         # plot binary sonogram
+        fig2 = plt.figure()
         plt.imshow(np.log(sonogram_thresh + 3), cmap='hot', extent=[0, cols, 0, rows], aspect='auto')
 
         # plot onsets and offsets
         indexes = np.squeeze(np.nonzero(syllable_marks))
         ymin = np.zeros(len(indexes))
         ymax = syllable_marks[syllable_marks != 0]
-        plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m')
-        plt.show()
+        plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
+        plt.show(block=False)
+
+    input('Press Enter to continue...')
 
 
 
