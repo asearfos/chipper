@@ -1,0 +1,97 @@
+<CustomLabel@Label>
+    color: 1, 1, 1, 1
+
+<ControlPanel>:
+    orientation: "horizontal"
+    padding: 10
+    spacing: 10
+
+    GridLayout:
+        rows: 2
+        cols: 1
+        spacing: 20
+        padding: 20
+
+        Slider:
+            id: slider_high_pass_filter
+            orientation: 'vertical'
+            min: 10
+            max: 30
+            value: 20
+            step: 0.5
+        CustomLabel
+            text:''
+
+    GridLayout:
+        rows: 4
+        cols: 1
+        spacing: 20
+        padding: 20
+
+        GridLayout:
+            rows: 3
+            cols: 1
+            spacing: 5
+            padding: 5
+
+            CustomLabel:
+                text: 'Threshold: Choose Top Percent of Signal'
+            Slider:
+                id: slider_threshold
+                min: 98
+                max: 100
+                value: 99
+                step: 0.1
+            CustomLabel:
+                text: str(slider_threshold.value)
+
+        GridLayout:
+            rows: 3
+            cols: 1
+            spacing: 5
+            padding: 5
+
+            CustomLabel:
+                text: 'Minimum Silence Duration'
+            Slider:
+                id: slider_min_silence
+                min: 1
+                max: 20
+                value: 10
+                step: 0.5
+            CustomLabel:
+                text: str(slider_min_silence.value)
+
+        GridLayout:
+            rows: 3
+            cols: 1
+            spacing: 5
+            padding: 5
+
+            CustomLabel:
+                text: 'Minimum Syllable Duration'
+            Slider:
+                id: slider_min_syllable
+                min: 10
+                max: 30
+                value: 20
+                step: 0.5
+            CustomLabel:
+                text: str(slider_min_syllable.value)
+
+        GridLayout:
+            rows: 2
+            cols: 1
+            spacing: 10
+            padding: 10
+
+            Button:
+                id: button_submit
+                text: 'SUBMIT'
+
+            Button:
+                id: button_toss
+                text: 'TOSS'
+
+
+
