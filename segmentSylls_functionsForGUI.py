@@ -91,38 +91,39 @@ def threshold(percent_keep, scaled_sonogram):
     return sonogram_thresh
 
 
-def initialize_onsets_offsets(sonogram_thresh, test_if_analyzed):
+def initialize_onsets_offsets(sonogram_thresh):
     [rows, cols] = np.shape(sonogram_thresh)
 
     # sonogram summed
     sum_sonogram = sum(sonogram_thresh)  # collapse matrix to one row by summing columns (gives total signal over time)
     sum_sonogram_scaled = (sum_sonogram / max(sum_sonogram) * rows)
 
-    if not test_if_analyzed:
-        # create a vector that equals 1 when amplitude exceeds threshold and 0 when it is below
-        high_amp = sum_sonogram_scaled > 4
-        high_amp = [int(x) for x in high_amp]
-        high_amp[0] = 0
-        high_amp[len(high_amp) - 1] = 0
-        onsets = np.nonzero(np.diff(high_amp) == 1)
-        onsets = np.squeeze(onsets)
-        offsets = np.nonzero(np.diff(high_amp) == -1)
-        offsets = np.squeeze(offsets)
-        offsets2 = np.zeros(len(offsets) + 1)
-        # push offset index by one because when diff is taken it places it in the element before the zeros
-        for j in range(0, len(offsets)):
-            offsets2[j + 1] = offsets[j]
-        offsets2[0] = 1
-        onsets = np.append(onsets, len(sum_sonogram_scaled))
+    #if not test_if_analyzed:
 
-        # define silence durations
-        silence_durations = np.zeros(len(onsets) - 1)
-        mean_silence_durations = []
-        for j in range(0, len(onsets) - 1):
-            silence_durations[j] = onsets[j] - offsets2[j]
-        mean_silence_durations.append(np.mean(
-            silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
+    # create a vector that equals 1 when amplitude exceeds threshold and 0 when it is below
+    high_amp = sum_sonogram_scaled > 4
+    high_amp = [int(x) for x in high_amp]
+    high_amp[0] = 0
+    high_amp[len(high_amp) - 1] = 0
+    onsets = np.nonzero(np.diff(high_amp) == 1)
+    onsets = np.squeeze(onsets)
+    offsets = np.nonzero(np.diff(high_amp) == -1)
+    offsets = np.squeeze(offsets)
+    offsets2 = np.zeros(len(offsets) + 1)
+    # push offset index by one because when diff is taken it places it in the element before the zeros
+    for j in range(0, len(offsets)):
+        offsets2[j + 1] = offsets[j]
+    offsets2[0] = 1
+    onsets = np.append(onsets, len(sum_sonogram_scaled))
 
+    # define silence durations
+    silence_durations = np.zeros(len(onsets) - 1)
+    mean_silence_durations = []
+    for j in range(0, len(onsets) - 1):
+        silence_durations[j] = onsets[j] - offsets2[j]
+    mean_silence_durations.append(np.mean(
+        silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
+    return onsets, offsets2, silence_durations, sum_sonogram_scaled, rows
 
 def set_min_silence(min_silence, onsets, offsets2, silence_durations):
     syllable_onsets = np.zeros(len(onsets))
