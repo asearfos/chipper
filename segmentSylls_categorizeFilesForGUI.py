@@ -56,7 +56,7 @@ for i in range(0, 3): # F-2):
 
     # sliding window average of amplitude
     amplitude_vector = np.squeeze(np.sum(sonogram, axis=0))
-    amplitude_average_vector = np.zeros((len(amplitude_vector),1))
+    amplitude_average_vector = np.zeros((len(amplitude_vector), 1))
 
     for f in range(0, np.size(amplitude_vector)):
         if f-500 <= 0:  # if the index is outside the bounds of the data (negative index)
@@ -71,7 +71,7 @@ for i in range(0, 3): # F-2):
 
     # use average amplitude to rescale and increase low amplitude sections
     amplitude_average_vector_scaled = amplitude_average_vector/max(amplitude_average_vector)
-    divide_matrix = np.tile(np.transpose(amplitude_average_vector_scaled), (513, 1))
+    divide_matrix = np.tile(np.transpose(amplitude_average_vector_scaled), (rows, 1))
 
     scaled_sonogram = sonogram/divide_matrix
     sonogram = scaled_sonogram
