@@ -17,10 +17,28 @@ import segmentSylls_functionsForGUI as seg
 
 class ControlPanel(BoxLayout):
 
+    def __init__(self):
+        super(ControlPanel, self).__init__()
+        self.i = 0
+        self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
+        self.files, self.F = seg.initialize(self.directory)
+        # add save parameters here - dictionary of dictionary
+        self.next()
+
+    def next(self):
+        # set default parameters
+        self.sonogram = seg.initial_sonogram(self.i, self.files, self.directory)
+        self.image_sonogram(self.sonogram)  # only works if moved below def's but then it says it doesn't have enough arguments
+        self.i += 1
+
+    def save(self):
+        # save parameters to dictionary
+        self.next()
+
     def update(self, sonogram, filter_boundary, percent_keep, min_silence, min_syllable):
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
-        ControlPanel.image_sonogram(self, hpf_sonogram)
+        self.image_sonogram(scaled_sonogram)
         #thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
 
     def image_sonogram(self, data):
@@ -41,12 +59,6 @@ class ControlPanel(BoxLayout):
         self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(self.fig))
         return imgplot
 
-    i = 0
-    directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
-
-    [files, F] = seg.initialize(directory)
-    sonogram = seg.initial_sonogram(i, files, directory)
-    #image_sonogram(sonogram) # only works if moved below def's but then it says it doesn't have enough arguments
 
 
 class SegmentSyllablesGUIApp(App):
