@@ -1,0 +1,30 @@
+instead of
+    #from kivy.garden import matplotlib
+use the following code to make the backend for kivy work in matplotlib
+    #import matplotlib
+    #matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
+    #from kivy.garden.matplotlib import FigureCanvasKivyAgg
+useful links:
+https://groups.google.com/forum/embed/#%21topic/kivy-users/7C_MQh_30aA
+https://stackoverflow.com/questions/44905416/how-to-get-started-use-matplotlib-in-kivy
+
+more on matplotlib backend:
+https://andnovar.wordpress.com/
+https://andnovar.wordpress.com/2015/08/06/navigation-toolbar-with-matplotlib-events-connected/
+
+If getting error: kivy.factory.FactoryException: Unknown class <MySubWidget>
+    #from kivy.garden.graph import Graph, MeshLinePlot
+    #kivy.factory.Factory.register('MeshLinePlot', cls=MeshLinePlot)
+useful links:
+https://groups.google.com/forum/#!topic/kivy-users/K9Zk375g1zw
+https://kivy.org/docs/api-kivy.factory.html
+
+Defining a class, I am not sure if I need __int__.
+I think only if I want to add input arguments beyond what the inherited class takes.
+    #class ControlPanel(BoxLayout):
+        #def __init__(self, **kwargs):
+            #super(ControlPanel, self).__init__(**kwargs)
+
+from screeninfo import get_monitors
+    # for m in get_monitors():
+        # print(str(m))
