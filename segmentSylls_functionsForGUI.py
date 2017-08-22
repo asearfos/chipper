@@ -8,14 +8,14 @@ from ifdvsonogramonly import ifdvsonogramonly
 
 def initialize(directory):
     files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
-    F = len(files) + 1  # not sure if i really need the +1 (if not, then change range of for loop)
+    # F = len(files) + 1  # not sure if i really need the +1 (if not, then change range of for loop)
 
     # # define overarching variables here
     # analyzed_wav_files = []
     # analyzed_wav_files.append('test.wav')
     #
     # wavlist = []
-    return files, F
+    return files
 
 
 def initial_sonogram(i, files, directory):
@@ -155,7 +155,7 @@ def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogr
     syllable_marks[syllable_onsets.astype(int)] = rows + 30
     syllable_marks[syllable_offsets.astype(int)] = rows + 10
 
-    return syllable_marks
+    return syllable_onsets, syllable_offsets, syllable_marks
 
 
 def toss_sample(i):
