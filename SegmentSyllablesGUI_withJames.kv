@@ -1,127 +1,184 @@
 #:import MeshLinePlot kivy.garden.graph.MeshLinePlot
 #:import np numpy
 
+<Manager>:
+    ScreenOne:
+    ControlPanel:
+
+#    ScreenOne:
+#        id: screen_one
+#        name: 'choose_file'
+#        manager: screen_manager
+#
+#    ScreenTwo:
+#        id: screen_two
+#        name: 'segment_syllables'
+#        manager: screen_manager
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
 
+<DonePopup>:
+    size_hint: .5, .5
+    auto_dismiss: False
+    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+    Button:
+        text: 'Close'
+        on_release: app.root.quit()
+
+<ScreenOne>:
+    id: browse
+    name: 'choose_file'
+#    FileBrowser:
+#        dirselect: True
+##        on_submit: print('test')
+#        on_success: browse._fbrowser_success()
+
+    Button:
+        text: "go on"
+        on_release: app.root.current = 'control_panel'
+
 <ControlPanel>:
     id: controls
-    orientation: "horizontal"
-    spacing: 10
-    padding: 10
-
-    GridLayout:
-        rows: 2
-        cols: 1
-        spacing: 20
-        padding: 5
-        size_hint_x: .1
-
-        MySlider:
-            id: slider_high_pass_filter
-            orientation: 'vertical'
-            min: 0
-            max: 513
-            value: 0
-            step: 1
-            on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-
-        GridLayout:
-            rows:1
-            cols:1
-
-    GridLayout:
-        id: graphs
-        rows: 2
-        cols: 1
-        spacing: 20
+    name: 'control_panel'
+    on_pre_enter: controls.setup()
+    BoxLayout:
+#        id: controls
+        orientation: "horizontal"
+        spacing: 10
         padding: 10
-
-        GridLayout:
-            id: graph_sonogram
-            rows: 1
-            cols: 1
-        GridLayout:
-            id: graph_binary
-            rows: 1
-            cols: 1
-
-    GridLayout:
-        rows: 4
-        cols: 1
-        spacing: 20
-        padding: 20
-        size_hint_x: .5
-
-        GridLayout:
-            rows: 3
-            cols: 1
-            spacing: 5
-            padding: 5
-
-            CustomLabel:
-                text: 'Threshold: Top Percent of Signal'
-            MySlider:
-                id: slider_threshold
-                min: 0
-                max: 3
-                value: 2
-                step: 0.10
-                on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-            CustomLabel:
-                text: str(round(slider_threshold.value,1))
-
-        GridLayout:
-            rows: 3
-            cols: 1
-            spacing: 5
-            padding: 5
-
-            CustomLabel:
-                text: 'Minimum Silence Duration'
-            MySlider:
-                id: slider_min_silence
-                min: 1
-                max: 50
-                value: 10
-                step: 1
-                on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-            CustomLabel:
-                text: str(slider_min_silence.value)
-
-        GridLayout:
-            rows: 3
-            cols: 1
-            spacing: 5
-            padding: 5
-
-            CustomLabel:
-                text: 'Minimum Syllable Duration'
-            MySlider:
-                id: slider_min_syllable
-                min: 1
-                max: 100
-                value: 20
-                step: 1
-                on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-            CustomLabel:
-                text: str(slider_min_syllable.value)
 
         GridLayout:
             rows: 2
             cols: 1
-            spacing: 10
+            spacing: 20
+            padding: 5
+            size_hint_x: .1
+
+            MySlider:
+                id: slider_high_pass_filter
+                orientation: 'vertical'
+                min: 0
+                max: 513
+                value: 0
+                step: 1
+                on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+
+            GridLayout:
+                rows:1
+                cols:1
+
+        GridLayout:
+            id: graphs
+            rows: 2
+            cols: 1
+            spacing: 20
             padding: 10
 
-            Button:
-                id: button_submit
-                text: 'SUBMIT'
-                on_press: controls.save()
+            GridLayout:
+                id: graph_sonogram
+                rows: 1
+                cols: 1
+            GridLayout:
+                id: graph_binary
+                rows: 1
+                cols: 1
 
-            Button:
-                id: button_toss
-                text: 'TOSS'
-                on_press: controls.toss()
+        GridLayout:
+            rows: 4
+            cols: 1
+            spacing: 20
+            padding: 20
+            size_hint_x: .5
 
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 5
+                padding: 5
+
+                CustomLabel:
+                    text: 'Threshold: Top Percent of Signal'
+                MySlider:
+                    id: slider_threshold
+                    min: 0
+                    max: 3
+                    value: 2
+                    step: 0.10
+                    on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(round(slider_threshold.value,1))
+
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 5
+                padding: 5
+
+                CustomLabel:
+                    text: 'Minimum Silence Duration'
+                MySlider:
+                    id: slider_min_silence
+                    min: 1
+                    max: 50
+                    value: 10
+                    step: 1
+                    on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(slider_min_silence.value)
+
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 5
+                padding: 5
+
+                CustomLabel:
+                    text: 'Minimum Syllable Duration'
+                MySlider:
+                    id: slider_min_syllable
+                    min: 1
+                    max: 100
+                    value: 20
+                    step: 1
+                    on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(slider_min_syllable.value)
+
+            GridLayout:
+                rows: 2
+                cols: 1
+                spacing: 10
+                padding: 10
+
+                Button:
+                    id: button_submit
+                    text: 'SUBMIT'
+                    on_press: controls.save()
+
+                Button:
+                    id: button_toss
+                    text: 'TOSS'
+                    on_press: controls.toss()
+
+#<FileManager>
+#    Button:
+#        text: "go on"
+#        on_release: root.manager.current = 'segment_syllables'
+#
+#<Manager>:
+#    id: screen_manager
+#
+#    screen_one: choose_file_screen
+#    screen_two: segment_syllables_screen
+#
+#    FileManager:
+#        id: choose_file_screen
+#        name: choose_file
+#        manager: screen_manager
+#
+#    ControlPanel:
+#        id: segment_syllables_screen
+#        name: segment_syllables
+#        manager: screen_manager
 
