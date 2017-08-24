@@ -17,6 +17,7 @@ import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
+import re
 
 import numpy as np
 import segmentSylls_functionsForGUI as seg
@@ -29,22 +30,15 @@ class Manager(ScreenManager):
 
 class ScreenOne(Screen):
     def _fbrowser_canceled(self, instance):
-        print ('cancelled, Close self.')
+        print('cancelled, Close SegmentSyllablesGUI.')
+        quit()
 
     def _fbrowser_success(self, instance):
-        print (instance.selection)
-    #
-    # def getBrowser(self):
-    #     if platform == 'win':
-    #         user_path = dirname(expanduser('~')) + sep + 'Documents'
-    #     else:
-    #         user_path = expanduser('~') + sep + 'Documents'
-    #     browser = FileBrowser(select_string='Select',
-    #                           favorites=[(user_path, 'Documents')])
-    #     browser.bind(
-    #                 on_success=self._fbrowser_success,
-    #                 on_canceled=self._fbrowser_canceled)
-    #     return browser
+        [chosen_directory] = instance.selection
+        self.parent.directory = chosen_directory + '\\'
+        # print(test)
+        # self.parent.directory = re.sub(r'([\\])\1+', r'\1', instance.selection)
+        # print(self.parent.directory)
 
 
 class DonePopup(Popup):
@@ -52,15 +46,17 @@ class DonePopup(Popup):
 
 
 class ControlPanel(Screen):
-    def __init__(self, directory, **kwargs):
-        super(ControlPanel, self).__init__(**kwargs)
-        self.directory = directory
+    # def __init__(self, directory, **kwargs):
+    #     super(ControlPanel, self).__init__(**kwargs)
+    #     self.directory = directory
 
     def setup(self):
         self.i = 0
-        self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
+        #self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
         # self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
-        self.files = seg.initialize(self.directory)
+        print(self.parent.directory)
+        self.files = seg.initialize(self.parent.directory)
+        print(self.files)
         self.save_parameters = {}
         self.save_syllables = {}
         self.save_tossed = {}
@@ -90,7 +86,7 @@ class ControlPanel(Screen):
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
 
-        self.sonogram = seg.initial_sonogram(self.i, self.files, self.directory)
+        self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
         # run update to load images for the first time for this file
         self.syllable_onsets, self.syllable_offsets = self.update(self.sonogram, 513-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
         self.i += 1
@@ -116,7 +112,7 @@ class ControlPanel(Screen):
 
     def write(self):
         # write save_parameters to files
-        with open((self.directory + 'segmentedSyllables_parameters'), 'w') as params:
+        with open((self.parent.directory + 'segmentedSyllables_parameters'), 'w') as params:
             params_fields = ['FileName', 'HighPassFilter', 'PercentSignalKept', 'MinSilenceDuration',
                              'MinSyllableDuration']
             params_file = csv.DictWriter(params, params_fields, delimiter='\t')
@@ -126,7 +122,7 @@ class ControlPanel(Screen):
                 row.update(val)
                 params_file.writerow(row)
             params.close()
-        with open((self.directory + 'segmentedSyllables_syllables'), 'w') as sylls:
+        with open((self.parent.directory + 'segmentedSyllables_syllables'), 'w') as sylls:
             sylls_fields = ['FileName', 'Onsets', 'Offsets']
             sylls_file = csv.DictWriter(sylls, sylls_fields, delimiter='\t')
             sylls_file.writeheader()
@@ -136,7 +132,7 @@ class ControlPanel(Screen):
                 sylls_file.writerow(row)
             sylls.close()
         # try using pandas dataframe --> to csv
-        with open((self.directory + 'segmentedSyllables_tossed'), 'w') as tossed:
+        with open((self.parent.directory + 'segmentedSyllables_tossed'), 'w') as tossed:
             tossed_fields = ['FileName']
             tossed_file = csv.DictWriter(tossed, tossed_fields, delimiter='\t')
             tossed_file.writeheader()
@@ -152,7 +148,6 @@ class ControlPanel(Screen):
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
-        #sonogram = seg.initial_sonogram(self.i, self.files, self.directory)
         sonogram = self.sonogram.copy()
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)

@@ -29,21 +29,21 @@
 <ScreenOne>:
     id: browse
     name: 'choose_file'
-#    FileBrowser:
-#        dirselect: True
-##        on_submit: print('test')
-#        on_success: browse._fbrowser_success()
+    FileBrowser:
+        id: file_browser
+        dirselect: True
+        on_success: browse._fbrowser_success(file_browser); app.root.current = 'control_panel'
+        on_canceled: browse._fbrowser_canceled(file_browser)
 
-    Button:
-        text: "go on"
-        on_release: app.root.current = 'control_panel'
+#    Button:
+#        text: "go on"
+#        on_release: app.root.current = 'control_panel'
 
 <ControlPanel>:
     id: controls
     name: 'control_panel'
     on_pre_enter: controls.setup()
     BoxLayout:
-#        id: controls
         orientation: "horizontal"
         spacing: 10
         padding: 10
@@ -161,24 +161,4 @@
                     text: 'TOSS'
                     on_press: controls.toss()
 
-#<FileManager>
-#    Button:
-#        text: "go on"
-#        on_release: root.manager.current = 'segment_syllables'
-#
-#<Manager>:
-#    id: screen_manager
-#
-#    screen_one: choose_file_screen
-#    screen_two: segment_syllables_screen
-#
-#    FileManager:
-#        id: choose_file_screen
-#        name: choose_file
-#        manager: screen_manager
-#
-#    ControlPanel:
-#        id: segment_syllables_screen
-#        name: segment_syllables
-#        manager: screen_manager
 
