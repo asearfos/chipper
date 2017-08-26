@@ -1,19 +1,10 @@
 #:import MeshLinePlot kivy.garden.graph.MeshLinePlot
 #:import np numpy
+#:import FileBrowser kivy.garden.filebrowser
 
 <Manager>:
     ScreenOne:
     ControlPanel:
-
-#    ScreenOne:
-#        id: screen_one
-#        name: 'choose_file'
-#        manager: screen_manager
-#
-#    ScreenTwo:
-#        id: screen_two
-#        name: 'segment_syllables'
-#        manager: screen_manager
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
@@ -34,10 +25,6 @@
         dirselect: True
         on_success: browse._fbrowser_success(file_browser); app.root.current = 'control_panel'
         on_canceled: browse._fbrowser_canceled(file_browser)
-
-#    Button:
-#        text: "go on"
-#        on_release: app.root.current = 'control_panel'
 
 <ControlPanel>:
     id: controls
@@ -65,8 +52,8 @@
                 on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
             GridLayout:
-                rows:1
-                cols:1
+                rows: 2
+                cols: 1
 
         GridLayout:
             id: graphs
@@ -85,7 +72,7 @@
                 cols: 1
 
         GridLayout:
-            rows: 4
+            rows: 6
             cols: 1
             spacing: 20
             padding: 20
@@ -94,8 +81,8 @@
             GridLayout:
                 rows: 3
                 cols: 1
-                spacing: 5
-                padding: 5
+                spacing: 10
+                padding: 10
 
                 CustomLabel:
                     text: 'Threshold: Top Percent of Signal'
@@ -112,8 +99,8 @@
             GridLayout:
                 rows: 3
                 cols: 1
-                spacing: 5
-                padding: 5
+                spacing: 10
+                padding: 10
 
                 CustomLabel:
                     text: 'Minimum Silence Duration'
@@ -130,8 +117,8 @@
             GridLayout:
                 rows: 3
                 cols: 1
-                spacing: 5
-                padding: 5
+                spacing: 10
+                padding: 10
 
                 CustomLabel:
                     text: 'Minimum Syllable Duration'
@@ -144,6 +131,50 @@
                     on_release: controls.update(controls.sonogram, 513-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(slider_min_syllable.value)
+
+            GridLayout:
+                rows:1
+                cols:2
+                spacing: 10
+                padding: 10
+
+                ToggleButton:
+                    id: set_beginning
+                    text: 'Set Bout Beginning:\nSelect Now' if set_beginning.state == 'down' else 'Set Bout Beginning'
+                    group: 'Crop'
+
+                ToggleButton:
+                    id: set_ending
+                    text: 'Set Bout Ending:\nSelect Now' if set_ending.state == 'down' else 'Set Bout Ending'
+                    group: 'Crop'
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                spacing: 10
+                padding: 10
+
+                GridLayout:
+                    rows: 1
+                    cols: 1
+
+                    ToggleButton:
+                        id: syllable_toggle
+                        text: 'Syllable Beginning'
+                        on_press: syllable_toggle.text = 'Syllable Ending'
+
+
+                GridLayout:
+                    rows: 2
+                    cols: 1
+
+                    Button:
+                        id: add
+                        text: 'Add'
+
+                    Button:
+                        id: del
+                        text: 'Delete'
 
             GridLayout:
                 rows: 2

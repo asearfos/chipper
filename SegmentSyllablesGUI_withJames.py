@@ -6,22 +6,20 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
-
-#from kivy.uix.filechooser import FileChooser
-
-from os.path import sep, expanduser, isdir, dirname
-from kivy.garden.filebrowser import FileBrowser
-from kivy.utils import platform
+from kivy.core.window import Window
+from kivy.config import Config
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import re
-
 import numpy as np
-import segmentSylls_functionsForGUI as seg
 import csv
+
+# import my own functions for data analysis
+import segmentSylls_functionsForGUI as seg
+
 
 
 class Manager(ScreenManager):
@@ -35,10 +33,8 @@ class ScreenOne(Screen):
 
     def _fbrowser_success(self, instance):
         [chosen_directory] = instance.selection
-        self.parent.directory = chosen_directory + '\\'
-        # print(test)
-        # self.parent.directory = re.sub(r'([\\])\1+', r'\1', instance.selection)
-        # print(self.parent.directory)
+        # self.parent.directory = chosen_directory + '\\'
+        self.parent.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
 
 
 class DonePopup(Popup):
@@ -46,35 +42,17 @@ class DonePopup(Popup):
 
 
 class ControlPanel(Screen):
-    # def __init__(self, directory, **kwargs):
-    #     super(ControlPanel, self).__init__(**kwargs)
-    #     self.directory = directory
 
     def setup(self):
         self.i = 0
-        #self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
-        # self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
-        print(self.parent.directory)
         self.files = seg.initialize(self.parent.directory)
-        print(self.files)
         self.save_parameters = {}
         self.save_syllables = {}
         self.save_tossed = {}
         self.next()
 
-    # def __init__(self,**kwargs):
-    #     super(ControlPanel, self).__init__(**kwargs)
-    #     self.i = 0
-    #     self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
-    #     # self.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/chipping sparrow new recording/fromEBird/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung/eBird_MLCatNum_ChippingSparrows_asOf07142017_fromMatthewYoung_bouts/"
-    #     self.files = seg.initialize(self.directory)
-    #     self.save_parameters = {}
-    #     self.save_syllables = {}
-    #     self.save_tossed = {}
-    #     #self.next()
-
     def next(self):
-        # set default parameters
+        # reset default parameters for new song
         self.filter_boundary = 0
         self.percent_keep = 2
         self.min_silence = 10
@@ -90,6 +68,60 @@ class ControlPanel(Screen):
         # run update to load images for the first time for this file
         self.syllable_onsets, self.syllable_offsets = self.update(self.sonogram, 513-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
         self.i += 1
+
+    def update(self, sonogram, filter_boundary, percent_keep, min_silence, min_syllable):
+        self.filter_boundary = filter_boundary
+        self.percent_keep = percent_keep
+        self.min_silence = min_silence
+        self.min_syllable = min_syllable
+        sonogram = self.sonogram.copy()
+        hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
+        scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
+        self.image_sonogram(hpf_sonogram)
+
+        thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
+        onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
+        syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
+        syllable_onsets, syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
+        self.image_binary(thresh_sonogram, syllable_marks)
+        return syllable_onsets, syllable_offsets
+
+    def image_sonogram(self, data):
+        plt.close('all')
+        self.ids.graph_sonogram.clear_widgets()
+
+        [rows, cols] = np.shape(data)
+        plt.style.use('dark_background')
+        fig1 = plt.figure()
+        plot_sonogram = plt.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+        #plot_sonogram.axes.axis('off')
+        fig1.tight_layout()
+
+        fig1 = plt.gcf()
+        self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(fig1))
+        # look up how to speed up matplotlip --> make one canvas
+        return plot_sonogram
+
+    def image_binary(self, data, syllable_marks):
+        self.ids.graph_binary.clear_widgets()
+
+        [rows, cols] = np.shape(data)
+        plt.style.use('dark_background')
+        fig2 = plt.figure()
+        plot_sonogram = plt.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+        #plot_sonogram.axes.axis('off')
+        fig2.tight_layout()
+
+        # plot onsets and offsets
+        indexes = np.squeeze(np.nonzero(syllable_marks))
+        ymin = np.zeros(len(indexes))
+        ymax = syllable_marks[syllable_marks != 0]
+        plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
+        plt.show(block=False)
+
+        fig2 = plt.gcf()
+        self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(fig2))
+        return plot_sonogram
 
     def save(self):
         # save parameters to dictionary
@@ -143,59 +175,6 @@ class ControlPanel(Screen):
             tossed.close()
         self.done_window()
 
-    def update(self, sonogram, filter_boundary, percent_keep, min_silence, min_syllable):
-        self.filter_boundary = filter_boundary
-        self.percent_keep = percent_keep
-        self.min_silence = min_silence
-        self.min_syllable = min_syllable
-        sonogram = self.sonogram.copy()
-        hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
-        scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
-        self.image_sonogram(hpf_sonogram)
-
-        thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
-        onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
-        syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
-        syllable_onsets, syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
-        self.image_binary(thresh_sonogram, syllable_marks)
-        return syllable_onsets, syllable_offsets
-
-    def image_sonogram(self, data):
-        self.ids.graph_sonogram.clear_widgets()
-
-        [rows, cols] = np.shape(data)
-        plt.style.use('dark_background')
-        fig1 = plt.figure()
-        plot_sonogram = plt.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-        #plot_sonogram.axes.axis('off')
-        fig1.tight_layout()
-
-        fig1 = plt.gcf()
-        self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(fig1))
-        # look up how to speed up matplotlip --> make one canvas
-        return plot_sonogram
-
-    def image_binary(self, data, syllable_marks):
-        self.ids.graph_binary.clear_widgets()
-
-        [rows, cols] = np.shape(data)
-        plt.style.use('dark_background')
-        fig2 = plt.figure()
-        plot_sonogram = plt.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-        #plot_sonogram.axes.axis('off')
-        fig2.tight_layout()
-
-        # plot onsets and offsets
-        indexes = np.squeeze(np.nonzero(syllable_marks))
-        ymin = np.zeros(len(indexes))
-        ymax = syllable_marks[syllable_marks != 0]
-        plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
-        plt.show(block=False)
-
-        fig2 = plt.gcf()
-        self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(fig2))
-        return plot_sonogram
-
     def done_window(self):
         done_popup = DonePopup()
         done_popup.open()
@@ -220,4 +199,7 @@ class SegmentSyllablesGUI_withJamesApp(App):
         return Manager()
 
 if __name__ == "__main__":
+    Config.set('input', 'mouse', 'mouse,disable_multitouch')
+    # mouse = Mouse, disable_multitouch
+    Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()
