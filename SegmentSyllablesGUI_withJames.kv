@@ -36,21 +36,6 @@
         padding: 20
         spacing: 10
 
-#        BoxLayout:
-#            orientation: 'vertical'
-#            size_hint_x: 0.1
-#
-#            MySlider:
-#                id: slider_high_pass_filter
-#                orientation: 'vertical'
-##                size_hint: 0.1, 0.5
-#                min: 0
-#                max: 513
-#                value: 0
-#                step: 1
-#                on_release: controls.update(controls.sonogram, slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-#            GridLayout:
-
         GridLayout:
             rows: 3
             cols: 1
@@ -67,7 +52,7 @@
 #                max: 513
 #                value: 0
                 step: 1
-                on_release: controls.update(controls.sonogram, slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
             GridLayout:
 
@@ -126,7 +111,7 @@
                     max: 3
                     value: 2
                     step: 0.10
-                    on_release: controls.update(controls.sonogram, slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(round(slider_threshold.value,1))
 
@@ -144,7 +129,7 @@
                     max: 50
                     value: 10
                     step: 1
-                    on_release: controls.update(controls.sonogram, slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(slider_min_silence.value)
 
@@ -162,7 +147,7 @@
                     max: 100
                     value: 20
                     step: 1
-                    on_release: controls.update(controls.sonogram, slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(slider_min_syllable.value)
 

@@ -63,55 +63,68 @@ class ControlPanel(Screen):
 
 
     def next(self):
-        # reset default parameters for new song
-        # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
+        # reset default parameters for new song (will be used by update to graph the first attempt)
         self.filter_boundary = 0
         self.percent_keep = 2
         self.min_silence = 10
         self.min_syllable = 20
 
+        # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
         # connect defaults to .kv (would like to do this the other way around)
         self.ids.slider_high_pass_filter.value = self.filter_boundary
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
 
+        # get initial data
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
-        # run update to load images for the first time for this file
+
+        # connect size of sonogram to maximum of sliders for HPF and crop
         [rows, cols] = np.shape(self.sonogram)
         self.ids.slider_high_pass_filter.max = rows
         self.ids.range_slider_crop.max = cols
 
+        # initialize the matplotlib figures/axes (no data yet)
         self.image_sonogram_initial(rows, cols)
         self.image_binary_initial(rows, cols)
-        self.syllable_onsets, self.syllable_offsets = self.update(self.sonogram, 513-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
+
+        # run update to load images for the first time for this file
+        self.update(rows-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
+
+        # increment i so next file will be opened on submit/toss
         self.i += 1
 
-    def update(self, sonogram, filter_boundary, percent_keep, min_silence, min_syllable):
+    def update(self, filter_boundary, percent_keep, min_silence, min_syllable):
+        #update variables based on input to function
         self.filter_boundary = filter_boundary
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
-        sonogram = self.sonogram.copy()
+        sonogram = self.sonogram.copy()  # must do this for image to update for some reason
+
+        # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
         self.image_sonogram(hpf_sonogram)
 
+        # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
         thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
         onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
-        syllable_onsets, syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
+        self.syllable_onsets, self.syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
         self.image_binary(thresh_sonogram, syllable_marks)
-        return syllable_onsets, syllable_offsets
+        # return syllable_onsets, syllable_offsets
 
     def image_sonogram_initial(self, rows, cols):
         data = np.zeros((rows, cols))
         self.fig1, self.ax1 = plt.subplots()
-        # self.fig1.tight_layout()
+
         # make plot take up the entire space
         self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
         self.ax1.set_axis_off()
         self.fig1.add_axes(self.ax1)
+
+        # plot data
         self.plot_sonogram = self.ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
 
     def image_sonogram(self, data):
@@ -119,6 +132,8 @@ class ControlPanel(Screen):
         self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
         self.plot_sonogram.set_data(np.log(data+3))
         self.plot_sonogram.autoscale()
+
+        # !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
         # self.ids.graph_sonogram.clear_widgets()
         # self.ids.graph_sonogram.add_widget(FigureCanvas(self.fig1)) # doesn't work without draw
         # self.plot_sonogram.set_data(np.log(data+3))
@@ -142,11 +157,13 @@ class ControlPanel(Screen):
         data = np.zeros((rows, cols))
         self.lines = {}
         self.fig2, self.ax2 = plt.subplots()
-        # self.fig2.tight_layout()
+
         # make plot take up the entire space
         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
         self.fig2.add_axes(self.ax2)
+
+        # plot data
         self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
         self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
 
@@ -156,9 +173,8 @@ class ControlPanel(Screen):
         self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(self.fig2))
         self.plot_binary.set_data(np.log(data+3))
         self.plot_binary.autoscale()
-        # self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig2))
 
-        # plot onsets and offsets
+        # remove old lines and replot onsets and offsets
         self.lines.pop(0).remove()
         indexes = np.squeeze(np.nonzero(syllable_marks))
         ymin = np.zeros(len(indexes))
@@ -191,16 +207,18 @@ class ControlPanel(Screen):
         # save parameters to dictionary
         self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
         self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
-        # go to next file
+
+        # write if last file otherwise go to next file
         if self.i == len(self.files):
             self.write()
         else:
             self.next()
 
     def toss(self):
-        # send file name to .txt or send file to folder
+        # save file name to dictionary
         self.save_tossed[self.i-1] = {'FileName': self.files[self.i-1]}
-        # print(self.save_tossed)
+
+        # write if last file otherwise go to next file
         if self.i == len(self.files):
             self.write()
         else:
@@ -280,6 +298,5 @@ class SegmentSyllablesGUI_withJamesApp(App):
 
 if __name__ == "__main__":
     Config.set('input', 'mouse', 'mouse,disable_multitouch')
-    # mouse = Mouse, disable_multitouch
     Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()
