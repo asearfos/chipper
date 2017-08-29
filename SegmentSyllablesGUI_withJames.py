@@ -79,10 +79,11 @@ class ControlPanel(Screen):
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
         # run update to load images for the first time for this file
         [rows, cols] = np.shape(self.sonogram)
-        print(rows, cols)
-        if self.i == 0:
-            self.image_sonogram_initial(rows, cols)
-            self.image_binary_initial(rows, cols)
+        self.ids.slider_high_pass_filter.max = rows
+        self.ids.range_slider_crop.max = cols
+
+        self.image_sonogram_initial(rows, cols)
+        self.image_binary_initial(rows, cols)
         self.syllable_onsets, self.syllable_offsets = self.update(self.sonogram, 513-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
         self.i += 1
 
