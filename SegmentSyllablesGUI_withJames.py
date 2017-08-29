@@ -3,7 +3,9 @@ kivy.require('1.10.0')
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.slider import Slider
+from RangeSlider_FromGoogle import RangeSlider
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
@@ -11,15 +13,17 @@ from kivy.config import Config
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
+from kivy.garden.matplotlib.backend_kivy import FigureCanvas
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
+plt.style.use('dark_background')
+
 import re
 import numpy as np
 import csv
 
 # import my own functions for data analysis
 import segmentSylls_functionsForGUI as seg
-
 
 
 class Manager(ScreenManager):
@@ -43,6 +47,12 @@ class DonePopup(Popup):
 
 class ControlPanel(Screen):
 
+    def test(self, touchx, touchy):
+        print(touchx, touchy)
+        # new = touch.apply_transform_2d(self.to_window)
+        # print(new)
+
+
     def setup(self):
         self.i = 0
         self.files = seg.initialize(self.parent.directory)
@@ -51,8 +61,10 @@ class ControlPanel(Screen):
         self.save_tossed = {}
         self.next()
 
+
     def next(self):
         # reset default parameters for new song
+        # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
         self.filter_boundary = 0
         self.percent_keep = 2
         self.min_silence = 10
@@ -66,6 +78,11 @@ class ControlPanel(Screen):
 
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
         # run update to load images for the first time for this file
+        [rows, cols] = np.shape(self.sonogram)
+        print(rows, cols)
+        if self.i == 0:
+            self.image_sonogram_initial(rows, cols)
+            self.image_binary_initial(rows, cols)
         self.syllable_onsets, self.syllable_offsets = self.update(self.sonogram, 513-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
         self.i += 1
 
@@ -86,42 +103,88 @@ class ControlPanel(Screen):
         self.image_binary(thresh_sonogram, syllable_marks)
         return syllable_onsets, syllable_offsets
 
+    def image_sonogram_initial(self, rows, cols):
+        data = np.zeros((rows, cols))
+        self.fig1, self.ax1 = plt.subplots()
+        # self.fig1.tight_layout()
+        # make plot take up the entire space
+        self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
+        self.ax1.set_axis_off()
+        self.fig1.add_axes(self.ax1)
+        self.plot_sonogram = self.ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+
     def image_sonogram(self, data):
-        plt.close('all')
         self.ids.graph_sonogram.clear_widgets()
+        self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
+        self.plot_sonogram.set_data(np.log(data+3))
+        self.plot_sonogram.autoscale()
+        # self.ids.graph_sonogram.clear_widgets()
+        # self.ids.graph_sonogram.add_widget(FigureCanvas(self.fig1)) # doesn't work without draw
+        # self.plot_sonogram.set_data(np.log(data+3))
+        # self.plot_sonogram.autoscale()
+        # self.fig1.canvas.draw() # this doesn't work:  AttributeError: 'numpy.ndarray' object has no attribute 'get_size_out'
+        # self.fig1.canvas.flush_events() # supposed to get rid of the lag due to sleep
 
-        [rows, cols] = np.shape(data)
-        plt.style.use('dark_background')
-        fig1 = plt.figure()
-        plot_sonogram = plt.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-        #plot_sonogram.axes.axis('off')
-        fig1.tight_layout()
+    # def image_sonogram(self, data):
+    #     # plt.close('all')
+    #     self.ids.graph_sonogram.clear_widgets()
+    #
+    #     [rows, cols] = np.shape(data)
+    #     fig1, ax1 = plt.subplots()
+    #     fig1.tight_layout()
+    #     plot_sonogram = ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+    #     # plot_sonogram.set_data(np.log(data+3))
+    #     self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(fig1))
+    #     # look up how to speed up matplotlip --> make one canvas
 
-        fig1 = plt.gcf()
-        self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(fig1))
-        # look up how to speed up matplotlip --> make one canvas
-        return plot_sonogram
+    def image_binary_initial(self, rows, cols):
+        data = np.zeros((rows, cols))
+        self.lines = {}
+        self.fig2, self.ax2 = plt.subplots()
+        # self.fig2.tight_layout()
+        # make plot take up the entire space
+        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+        self.ax2.set_axis_off()
+        self.fig2.add_axes(self.ax2)
+        self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+        self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
+
 
     def image_binary(self, data, syllable_marks):
         self.ids.graph_binary.clear_widgets()
-
-        [rows, cols] = np.shape(data)
-        plt.style.use('dark_background')
-        fig2 = plt.figure()
-        plot_sonogram = plt.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-        #plot_sonogram.axes.axis('off')
-        fig2.tight_layout()
+        self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(self.fig2))
+        self.plot_binary.set_data(np.log(data+3))
+        self.plot_binary.autoscale()
+        # self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig2))
 
         # plot onsets and offsets
+        self.lines.pop(0).remove()
         indexes = np.squeeze(np.nonzero(syllable_marks))
         ymin = np.zeros(len(indexes))
         ymax = syllable_marks[syllable_marks != 0]
-        plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
-        plt.show(block=False)
+        self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
 
-        fig2 = plt.gcf()
-        self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(fig2))
-        return plot_sonogram
+
+    # def image_binary(self, data, syllable_marks):
+    #     self.ids.graph_binary.clear_widgets()
+    #
+    #     [rows, cols] = np.shape(data)
+    #     plt.style.use('dark_background')
+    #     fig2 = plt.figure()
+    #     plot_sonogram = plt.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+    #     #plot_sonogram.axes.axis('off')
+    #     fig2.tight_layout()
+    #
+    #     # plot onsets and offsets
+    #     indexes = np.squeeze(np.nonzero(syllable_marks))
+    #     ymin = np.zeros(len(indexes))
+    #     ymax = syllable_marks[syllable_marks != 0]
+    #     plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
+    #     plt.show(block=False)
+    #
+    #     fig2 = plt.gcf()
+    #     self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(fig2))
+    #     return plot_sonogram
 
     def save(self):
         # save parameters to dictionary
@@ -163,7 +226,7 @@ class ControlPanel(Screen):
                 row.update(val)
                 sylls_file.writerow(row)
             sylls.close()
-        # try using pandas dataframe --> to csv
+        # !!!!try using pandas dataframe --> to csv!!!
         with open((self.parent.directory + 'segmentedSyllables_tossed'), 'w') as tossed:
             tossed_fields = ['FileName']
             tossed_file = csv.DictWriter(tossed, tossed_fields, delimiter='\t')
@@ -179,6 +242,7 @@ class ControlPanel(Screen):
         done_popup = DonePopup()
         done_popup.open()
 
+
 class MySlider(Slider):
     def __init__(self, **kwargs):
         self.register_event_type('on_release')
@@ -189,6 +253,21 @@ class MySlider(Slider):
 
     def on_touch_up(self, touch):
         super(MySlider, self).on_touch_up(touch)
+        if touch.grab_current == self:
+            self.dispatch('on_release')
+            return True
+
+
+class MyRangeSlider(RangeSlider):
+    def __init__(self, **kwargs):
+        self.register_event_type('on_release')
+        super(MyRangeSlider, self).__init__(**kwargs)
+
+    def on_release(self):
+        pass
+
+    def on_touch_up(self, touch):
+        super(MyRangeSlider, self).on_touch_up(touch)
         if touch.grab_current == self:
             self.dispatch('on_release')
             return True

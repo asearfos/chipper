@@ -47,6 +47,12 @@ def high_pass_filter(filter_boundary, sonogram):
     return sonogram
 
 
+# def crop_sonogram(range, sonogram):
+#     [beginning, ending] = range
+#     sonogram[beginning:ending, :] = 0
+#     return sonogram
+
+
 def normalize_amplitude(sonogram):
     [rows, cols] = np.shape(sonogram)
 
@@ -125,6 +131,7 @@ def initialize_onsets_offsets(sonogram_thresh):
         silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
     return onsets, offsets2, silence_durations, sum_sonogram_scaled, rows
 
+
 def set_min_silence(min_silence, onsets, offsets2, silence_durations):
     syllable_onsets = np.zeros(len(onsets))
     syllable_offsets = np.zeros(len(onsets))
@@ -158,7 +165,11 @@ def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogr
     return syllable_onsets, syllable_offsets, syllable_marks
 
 
-def toss_sample(i):
-    i = i+1
-    return i
+def crop(bout_range, syllable_onsets, syllable_offsets, syllable_marks):
+    [beginning, ending] = bout_range
+    remove_onsets = syllable_onsets[np.logical_or(syllable_onsets <= beginning, syllable_onsets >= ending)]
+    remove_offsets = syllable_offsets[np.logical_or(syllable_offsets <= beginning, syllable_offsets >= ending)]
+    syllable_marks[remove_onsets.astype(int)] = 0
+    syllable_marks[remove_offsets.astype(int)] = 0
 
+    return syllable_onsets, syllable_offsets, syllable_marks
