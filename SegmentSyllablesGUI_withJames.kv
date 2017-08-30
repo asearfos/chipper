@@ -46,13 +46,14 @@
             MySlider:
                 id: slider_high_pass_filter
                 orientation: 'vertical'
-#                value_track: True
+                value_track: True
+                value_track_color: [.2, .7, 0.9, 1]
                 padding: 0
                 min: 0
 #                max: 513
 #                value: 0
                 step: 1
-                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
             GridLayout:
 
@@ -83,15 +84,15 @@
                 id: range_slider_crop
                 size_hint: 1, 0.1
                 padding: 0
-                value1: range_slider_crop.min
-                value2: range_slider_crop.max
-                min: 0.
-                max: 10213.
+#                value1: range_slider_crop.min
+#                value2: range_slider_crop.max
+#                min: 0.
+#                max: 10213.
                 step: 1
-#                on_release: controls.crop(range.value)
+                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
         GridLayout:
-            rows: 6
+            rows: 5
             cols: 1
             spacing: 20
             padding: 20
@@ -111,7 +112,7 @@
                     max: 3
                     value: 2
                     step: 0.10
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(round(slider_threshold.value,1))
 
@@ -129,7 +130,7 @@
                     max: 50
                     value: 10
                     step: 1
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(slider_min_silence.value)
 
@@ -147,27 +148,27 @@
                     max: 100
                     value: 20
                     step: 1
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     text: str(slider_min_syllable.value)
 
-            GridLayout:
-                rows:1
-                cols:2
-                spacing: 10
-                padding: 10
-
-                ToggleButton:
-                    id: set_beginning
-                    text: 'Set Bout Beginning:\nSelect Now' if self.state == 'down' else 'Set Bout Beginning'
-                    group: 'Crop'
-                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(args[1].apply_transform_2d(self.to_widget))
-
-                ToggleButton:
-                    id: set_ending
-                    text: 'Set Bout Ending:\nSelect Now' if self.state == 'down' else 'Set Bout Ending'
-                    group: 'Crop'
-                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(*args[1].spos)
+#            GridLayout:
+#                rows:1
+#                cols:2
+#                spacing: 10
+#                padding: 10
+#
+#                ToggleButton:
+#                    id: set_beginning
+#                    text: 'Set Bout Beginning:\nSelect Now' if self.state == 'down' else 'Set Bout Beginning'
+#                    group: 'Crop'
+#                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(args[1].apply_transform_2d(self.to_widget))
+#
+#                ToggleButton:
+#                    id: set_ending
+#                    text: 'Set Bout Ending:\nSelect Now' if self.state == 'down' else 'Set Bout Ending'
+#                    group: 'Crop'
+#                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(*args[1].spos)
 
             GridLayout:
                 rows: 1
@@ -181,21 +182,26 @@
 
                     ToggleButton:
                         id: syllable_toggle
-                        text: 'Syllable Beginning'
-                        on_press: syllable_toggle.text = 'Syllable Ending'
+                        text: 'Syllable Ending' if self.state == 'down' else 'Syllable Beginning'
+                        on_press:
 
 
                 GridLayout:
                     rows: 2
                     cols: 1
 
-                    Button:
+                    ToggleButton:
                         id: add
+                        group: 'user_defined_syllables'
                         text: 'Add'
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(*args[1].pos)
+#                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and print(graph_binary.pos, graph_binary.size)
 
-                    Button:
-                        id: del
+                    ToggleButton:
+                        id: delete
+                        group: 'user_defined_syllables'
                         text: 'Delete'
+
 
             GridLayout:
                 rows: 2

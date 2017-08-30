@@ -145,7 +145,36 @@ def set_min_silence(min_silence, onsets, offsets2, silence_durations):
     return syllable_onsets, syllable_offsets
 
 
-def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
+# def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
+#     syllable_onsets = syllable_onsets[syllable_onsets != 0]
+#     syllable_offsets = syllable_offsets[syllable_offsets != 0]
+#     if syllable_offsets[0] < syllable_onsets[0]:  # make sure there is always first an onset
+#         np.delete(syllable_offsets, 0)
+#     for j in range(0, len(syllable_offsets) - 1):
+#         if syllable_offsets[j] - syllable_onsets[j] < min_syllable:  # sets minimum syllable size
+#             syllable_offsets[j] = 0
+#             syllable_onsets[j] = 0
+#     # remove zeros again after correcting for syllable size
+#     syllable_onsets = syllable_onsets[syllable_onsets != 0]
+#     syllable_offsets = syllable_offsets[syllable_offsets != 0]
+#
+#     syllable_marks = np.zeros(len(sum_sonogram_scaled))
+#     syllable_marks[syllable_onsets.astype(int)] = rows + 30
+#     syllable_marks[syllable_offsets.astype(int)] = rows + 10
+#
+#     return syllable_onsets, syllable_offsets, syllable_marks
+#
+#
+# def crop(bout_range, syllable_onsets, syllable_offsets, syllable_marks):
+#     [beginning, ending] = bout_range
+#     remove_onsets = syllable_onsets[np.logical_or(syllable_onsets <= beginning, syllable_onsets >= ending)]
+#     remove_offsets = syllable_offsets[np.logical_or(syllable_offsets <= beginning, syllable_offsets >= ending)]
+#     syllable_marks[remove_onsets.astype(int)] = 0
+#     syllable_marks[remove_offsets.astype(int)] = 0
+#
+#     return syllable_onsets, syllable_offsets, syllable_marks
+
+def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets):
     syllable_onsets = syllable_onsets[syllable_onsets != 0]
     syllable_offsets = syllable_offsets[syllable_offsets != 0]
     if syllable_offsets[0] < syllable_onsets[0]:  # make sure there is always first an onset
@@ -158,18 +187,20 @@ def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogr
     syllable_onsets = syllable_onsets[syllable_onsets != 0]
     syllable_offsets = syllable_offsets[syllable_offsets != 0]
 
+    return syllable_onsets, syllable_offsets
+
+
+def crop(bout_range, syllable_onsets, syllable_offsets):
+    [beginning, ending] = bout_range
+    syllable_onsets = syllable_onsets[np.logical_and(syllable_onsets >= beginning, syllable_onsets <= ending)]
+    syllable_offsets = syllable_offsets[np.logical_and(syllable_offsets >= beginning, syllable_offsets <= ending)]
+
+    return syllable_onsets, syllable_offsets
+
+
+def create_syllable_marks(syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
     syllable_marks = np.zeros(len(sum_sonogram_scaled))
     syllable_marks[syllable_onsets.astype(int)] = rows + 30
     syllable_marks[syllable_offsets.astype(int)] = rows + 10
 
-    return syllable_onsets, syllable_offsets, syllable_marks
-
-
-def crop(bout_range, syllable_onsets, syllable_offsets, syllable_marks):
-    [beginning, ending] = bout_range
-    remove_onsets = syllable_onsets[np.logical_or(syllable_onsets <= beginning, syllable_onsets >= ending)]
-    remove_offsets = syllable_offsets[np.logical_or(syllable_offsets <= beginning, syllable_offsets >= ending)]
-    syllable_marks[remove_onsets.astype(int)] = 0
-    syllable_marks[remove_offsets.astype(int)] = 0
-
-    return syllable_onsets, syllable_offsets, syllable_marks
+    return syllable_marks

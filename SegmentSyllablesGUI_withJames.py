@@ -49,6 +49,7 @@ class ControlPanel(Screen):
 
     def test(self, touchx, touchy):
         print(touchx, touchy)
+        print(self.ids.graph_binary.pos, self.ids.graph_binary.size)
         # new = touch.apply_transform_2d(self.to_window)
         # print(new)
 
@@ -75,6 +76,9 @@ class ControlPanel(Screen):
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
+        # self.ids.syllable_toggle.state = 'normal'
+        self.ids.add.state = 'normal'
+        self.ids.delete.state = 'normal'
 
         # get initial data
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
@@ -82,21 +86,26 @@ class ControlPanel(Screen):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [rows, cols] = np.shape(self.sonogram)
         self.ids.slider_high_pass_filter.max = rows
-        self.ids.range_slider_crop.max = cols
+        self.bout_range = [0, cols]
+        self.ids.range_slider_crop.value1 = self.bout_range[0]
+        self.ids.range_slider_crop.value2 = self.bout_range[1]
+        self.ids.range_slider_crop.min = self.bout_range[0]
+        self.ids.range_slider_crop.max = self.bout_range[1]
 
         # initialize the matplotlib figures/axes (no data yet)
         self.image_sonogram_initial(rows, cols)
         self.image_binary_initial(rows, cols)
 
         # run update to load images for the first time for this file
-        self.update(rows-self.filter_boundary, self.percent_keep, self.min_silence, self.min_syllable)
+        self.update(rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
         # increment i so next file will be opened on submit/toss
         self.i += 1
 
-    def update(self, filter_boundary, percent_keep, min_silence, min_syllable):
+    def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable):
         #update variables based on input to function
         self.filter_boundary = filter_boundary
+        self.bout_range = bout_range
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
@@ -111,7 +120,12 @@ class ControlPanel(Screen):
         thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
         onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
-        self.syllable_onsets, self.syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
+        # self.syllable_onsets, self.syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
+
+        syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
+        self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
+        syllable_marks = seg.create_syllable_marks(self.syllable_onsets, self.syllable_offsets, sum_sonogram_scaled, rows)
+
         self.image_binary(thresh_sonogram, syllable_marks)
         # return syllable_onsets, syllable_offsets
 
@@ -298,5 +312,5 @@ class SegmentSyllablesGUI_withJamesApp(App):
 
 if __name__ == "__main__":
     Config.set('input', 'mouse', 'mouse,disable_multitouch')
-    Window.fullscreen = 'auto'
+    # Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()
