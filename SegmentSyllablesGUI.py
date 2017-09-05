@@ -20,7 +20,7 @@ class ControlPanel(BoxLayout):
     def update(self, sonogram, filter_boundary, percent_keep, min_silence, min_syllable):
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
-        ControlPanel.image_sonogram(self, hpf_sonogram)
+        ControlPanel.image_sonogram(self, scaled_sonogram)
         #thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
 
     def image_sonogram(self, data):

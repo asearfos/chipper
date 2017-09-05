@@ -15,7 +15,7 @@ from kivy.uix.behaviors.focus import FocusBehavior
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
-from kivy.garden.matplotlib.backend_kivy import FigureCanvas
+from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -53,8 +53,14 @@ class DonePopup(Popup):
 class ControlPanel(Screen):
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
-        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self, 'text')
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    def test(self, event):
+        if event.key == 'left' and self.ids.add.state == 'down':
+            print('left')
+        if event.key == 'right' and self.ids.add.state == 'down':
+            print('right')
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -239,6 +245,7 @@ class ControlPanel(Screen):
 
         self.ids.graph_binary.clear_widgets()
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+        self.fig2.canvas.mpl_connect('key_press_event', self.test)
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
 
         # self.plot_binary_canvas.draw()
@@ -257,10 +264,12 @@ class ControlPanel(Screen):
     def image_syllable_marks(self):
         self.lines_on.set_xdata(np.repeat(self.syllable_onsets, 3))
         self.lines_on.set_ydata(np.tile([0, .75, np.nan], len(self.syllable_onsets)))
+        # self.fig2.canvas.show()
         self.plot_binary_canvas.draw()
 
         self.lines_off.set_xdata(np.repeat(self.syllable_offsets, 3))
         self.lines_off.set_ydata(np.tile([0, .90, np.nan], len(self.syllable_offsets)))
+        # self.fig2.canvas.show()
         self.plot_binary_canvas.draw()
 
         # self.ax2.draw_artist(self.ax2.patch)
