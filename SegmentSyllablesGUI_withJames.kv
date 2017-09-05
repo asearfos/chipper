@@ -152,24 +152,6 @@
                 CustomLabel:
                     text: str(slider_min_syllable.value)
 
-#            GridLayout:
-#                rows:1
-#                cols:2
-#                spacing: 10
-#                padding: 10
-#
-#                ToggleButton:
-#                    id: set_beginning
-#                    text: 'Set Bout Beginning:\nSelect Now' if self.state == 'down' else 'Set Bout Beginning'
-#                    group: 'Crop'
-#                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(args[1].apply_transform_2d(self.to_widget))
-#
-#                ToggleButton:
-#                    id: set_ending
-#                    text: 'Set Bout Ending:\nSelect Now' if self.state == 'down' else 'Set Bout Ending'
-#                    group: 'Crop'
-#                    on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(*args[1].spos)
-
             GridLayout:
                 rows: 1
                 cols: 2
@@ -194,13 +176,14 @@
                         id: add
                         group: 'user_defined_syllables'
                         text: 'Add'
-                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.test(*args[1].pos)
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add(*args[1].pos)
 #                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and print(graph_binary.pos, graph_binary.size)
 
                     ToggleButton:
                         id: delete
                         group: 'user_defined_syllables'
                         text: 'Delete'
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.delete(*args[1].pos)
 
 
             GridLayout:

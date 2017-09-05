@@ -4,12 +4,14 @@ kivy.require('1.10.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.widget import Widget
 from kivy.uix.slider import Slider
 from RangeSlider_FromGoogle import RangeSlider
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
+from kivy.uix.behaviors.focus import FocusBehavior
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
@@ -21,6 +23,9 @@ plt.style.use('dark_background')
 import re
 import numpy as np
 import csv
+import math
+import matplotlib.transforms as tx
+
 
 # import my own functions for data analysis
 import segmentSylls_functionsForGUI as seg
@@ -46,13 +51,65 @@ class DonePopup(Popup):
 
 
 class ControlPanel(Screen):
+    def __init__(self, **kwargs):
+        super(ControlPanel, self).__init__(**kwargs)
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
-    def test(self, touchx, touchy):
-        print(touchx, touchy)
-        print(self.ids.graph_binary.pos, self.ids.graph_binary.size)
-        # new = touch.apply_transform_2d(self.to_window)
-        # print(new)
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
 
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        self.key = keycode[1]
+        if keycode[1] == 'left' and self.ids.add.state == 'down':
+            print('left')
+        if keycode[1] == 'right' and self.ids.add.state == 'down':
+            print('right')
+        return True
+
+    def add(self, touchx, touchy):
+        conversion = np.shape(self.sonogram)[1]/self.ids.graph_binary.size[0]
+        graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
+
+        print(graph_location)
+        if self.ids.syllable_toggle.state == 'normal':
+            self.syllable_onsets = np.append(self.syllable_onsets, graph_location)
+            # ymax = 0.75
+        else:
+            self.syllable_offsets = np.append(self.syllable_offsets, graph_location)
+            # ymax = 0.90
+
+        self.image_syllable_marks()
+        # use one of the below options to graph as another color/group of lines
+        # add_on = self.ax2.axvline(graph_location, ymax=ymax, color='m', linewidth=1)
+        # self.plot_binary_canvas.draw()
+        # or can plot like this... not sure which is best
+        # self.ax2.plot(np.repeat(graph_location, 3), np.tile([0, .75, np.nan], 1), linewidth=2, color='m', transform=self.trans)
+        # self.plot_binary_canvas.draw()
+
+    def delete(self, touchx, touchy):
+        conversion = np.shape(self.sonogram)[1] / self.ids.graph_binary.size[0]
+        graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
+
+        if self.ids.syllable_toggle.state == 'normal':
+            try:
+                onsets_list = list(self.syllable_onsets)
+                onsets_list.remove(graph_location)
+                self.syllable_onsets = np.array(onsets_list)
+                print('removed', graph_location)
+            except ValueError:
+                print('try again', graph_location, self.syllable_onsets)
+        else:
+            try:
+                onsets_list = list(self.syllable_offsets)
+                onsets_list.remove(graph_location)
+                self.syllable_offsets = np.array(onsets_list)
+                print('removed', graph_location)
+            except ValueError:
+                print('try again', graph_location, self.syllable_offsets)
+
+        self.image_syllable_marks()
 
     def setup(self):
         self.i = 0
@@ -62,7 +119,6 @@ class ControlPanel(Screen):
         self.save_tossed = {}
         self.next()
 
-
     def next(self):
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.filter_boundary = 0
@@ -71,12 +127,12 @@ class ControlPanel(Screen):
         self.min_syllable = 20
 
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
-        # connect defaults to .kv (would like to do this the other way around)
+        # TODO: connect defaults to .kv (would like to do this the other way around) or remove values from .kv
         self.ids.slider_high_pass_filter.value = self.filter_boundary
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
-        # self.ids.syllable_toggle.state = 'normal'
+        self.ids.syllable_toggle.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
 
@@ -86,14 +142,14 @@ class ControlPanel(Screen):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [rows, cols] = np.shape(self.sonogram)
         self.ids.slider_high_pass_filter.max = rows
-        self.bout_range = [0, cols]
+        self.bout_range = [0, cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
         self.ids.range_slider_crop.value1 = self.bout_range[0]
         self.ids.range_slider_crop.value2 = self.bout_range[1]
         self.ids.range_slider_crop.min = self.bout_range[0]
         self.ids.range_slider_crop.max = self.bout_range[1]
 
         # initialize the matplotlib figures/axes (no data yet)
-        self.image_sonogram_initial(rows, cols)
+        self.image_sonogram_initial(rows, cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
         self.image_binary_initial(rows, cols)
 
         # run update to load images for the first time for this file
@@ -103,7 +159,7 @@ class ControlPanel(Screen):
         self.i += 1
 
     def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable):
-        #update variables based on input to function
+        # update variables based on input to function
         self.filter_boundary = filter_boundary
         self.bout_range = bout_range
         self.percent_keep = percent_keep
@@ -124,14 +180,16 @@ class ControlPanel(Screen):
 
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
-        syllable_marks = seg.create_syllable_marks(self.syllable_onsets, self.syllable_offsets, sum_sonogram_scaled, rows)
+        # syllable_marks = seg.create_syllable_marks(self.syllable_onsets, self.syllable_offsets, sum_sonogram_scaled, rows)
 
-        self.image_binary(thresh_sonogram, syllable_marks)
+        self.image_binary(thresh_sonogram)
+        self.image_syllable_marks()
         # return syllable_onsets, syllable_offsets
 
     def image_sonogram_initial(self, rows, cols):
         data = np.zeros((rows, cols))
         self.fig1, self.ax1 = plt.subplots()
+        self.plot_sonogram_canvas = FigureCanvasKivyAgg(self.fig1)
 
         # make plot take up the entire space
         self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
@@ -141,36 +199,30 @@ class ControlPanel(Screen):
         # plot data
         self.plot_sonogram = self.ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
 
-    def image_sonogram(self, data):
+        # create widget
         self.ids.graph_sonogram.clear_widgets()
-        self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
-        self.plot_sonogram.set_data(np.log(data+3))
-        self.plot_sonogram.autoscale()
+        self.ids.graph_sonogram.add_widget(self.plot_sonogram_canvas)  # doesn't work without draw
 
-        # !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
+    def image_sonogram(self, data):
         # self.ids.graph_sonogram.clear_widgets()
-        # self.ids.graph_sonogram.add_widget(FigureCanvas(self.fig1)) # doesn't work without draw
+        # self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
         # self.plot_sonogram.set_data(np.log(data+3))
         # self.plot_sonogram.autoscale()
-        # self.fig1.canvas.draw() # this doesn't work:  AttributeError: 'numpy.ndarray' object has no attribute 'get_size_out'
-        # self.fig1.canvas.flush_events() # supposed to get rid of the lag due to sleep
 
-    # def image_sonogram(self, data):
-    #     # plt.close('all')
-    #     self.ids.graph_sonogram.clear_widgets()
-    #
-    #     [rows, cols] = np.shape(data)
-    #     fig1, ax1 = plt.subplots()
-    #     fig1.tight_layout()
-    #     plot_sonogram = ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-    #     # plot_sonogram.set_data(np.log(data+3))
-    #     self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(fig1))
-    #     # look up how to speed up matplotlip --> make one canvas
+        # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
+        self.plot_sonogram.set_data(np.log(data+3))
+        self.plot_sonogram.autoscale()
+        self.plot_sonogram_canvas.draw()
+        # self.ax1.draw_artist(self.ax1.patch)
+        # self.ax1.draw_artist(self.plot_sonogram)
+        # self.plot_sonogram_canvas.update()
+        # self.plot_sonogram_canvas.flush_events()  # supposed to get rid of the lag due to sleep
 
     def image_binary_initial(self, rows, cols):
         data = np.zeros((rows, cols))
-        self.lines = {}
+        # self.lines = {}
         self.fig2, self.ax2 = plt.subplots()
+        # x = [0]
 
         # make plot take up the entire space
         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
@@ -179,43 +231,57 @@ class ControlPanel(Screen):
 
         # plot data
         self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-        self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
 
+        self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
+        self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=1, color='g', transform=self.trans)
+        self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=1, color='g', transform=self.trans)
+        # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
 
-    def image_binary(self, data, syllable_marks):
         self.ids.graph_binary.clear_widgets()
-        self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(self.fig2))
+        self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+        self.ids.graph_binary.add_widget(self.plot_binary_canvas)
+
+        # self.plot_binary_canvas.draw()
+
+        # self.vert_on = self.ax2.axvline(ymax=0.90, color='m', linewidth=1)
+
+        # self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
+
+    def image_binary(self, data):
+        # self.ids.graph_binary.clear_widgets()
+        # self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+        # self.ids.graph_binary.add_widget(self.plot_binary_canvas)
         self.plot_binary.set_data(np.log(data+3))
         self.plot_binary.autoscale()
 
+    def image_syllable_marks(self):
+        self.lines_on.set_xdata(np.repeat(self.syllable_onsets, 3))
+        self.lines_on.set_ydata(np.tile([0, .75, np.nan], len(self.syllable_onsets)))
+        self.plot_binary_canvas.draw()
+
+        self.lines_off.set_xdata(np.repeat(self.syllable_offsets, 3))
+        self.lines_off.set_ydata(np.tile([0, .90, np.nan], len(self.syllable_offsets)))
+        self.plot_binary_canvas.draw()
+
+        # self.ax2.draw_artist(self.ax2.patch)
+        # self.ax2.draw_artist(self.lines)
+        # self.plot_binary_canvas.update()
+        # self.plot_binary_canvas.flush_events()
+
+        # for x in self.syllable_onsets.astype(np.int64):
+        #     self.vert_on.set_xdata(x)
+        #     self.plot_binary_canvas.draw()
+            # self.vert_on = self.ax2.axvline(x, ymax=0.90, color='m', linewidth=1)
+        # for x in self.syllable_offsets.astype(np.int64):
+        #     self.vert_off = self.ax2.axvline(x, color='m', linewidth=1)
+        # self.vert.set_xdata(xdata=indexes)
+
         # remove old lines and replot onsets and offsets
-        self.lines.pop(0).remove()
-        indexes = np.squeeze(np.nonzero(syllable_marks))
-        ymin = np.zeros(len(indexes))
-        ymax = syllable_marks[syllable_marks != 0]
-        self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
-
-
-    # def image_binary(self, data, syllable_marks):
-    #     self.ids.graph_binary.clear_widgets()
-    #
-    #     [rows, cols] = np.shape(data)
-    #     plt.style.use('dark_background')
-    #     fig2 = plt.figure()
-    #     plot_sonogram = plt.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-    #     #plot_sonogram.axes.axis('off')
-    #     fig2.tight_layout()
-    #
-    #     # plot onsets and offsets
-    #     indexes = np.squeeze(np.nonzero(syllable_marks))
-    #     ymin = np.zeros(len(indexes))
-    #     ymax = syllable_marks[syllable_marks != 0]
-    #     plt.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
-    #     plt.show(block=False)
-    #
-    #     fig2 = plt.gcf()
-    #     self.ids.graph_binary.add_widget(FigureCanvasKivyAgg(fig2))
-    #     return plot_sonogram
+        # self.lines.pop(0).remove()
+        # indexes = np.squeeze(np.nonzero(syllable_marks))
+        # ymin = np.zeros(len(indexes))
+        # ymax = syllable_marks[syllable_marks != 0]
+        # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
 
     def save(self):
         # save parameters to dictionary
@@ -259,7 +325,7 @@ class ControlPanel(Screen):
                 row.update(val)
                 sylls_file.writerow(row)
             sylls.close()
-        # !!!!try using pandas dataframe --> to csv!!!
+        # TODO: !!!!try using pandas dataframe --> to csv!!!
         with open((self.parent.directory + 'segmentedSyllables_tossed'), 'w') as tossed:
             tossed_fields = ['FileName']
             tossed_file = csv.DictWriter(tossed, tossed_fields, delimiter='\t')
@@ -312,5 +378,5 @@ class SegmentSyllablesGUI_withJamesApp(App):
 
 if __name__ == "__main__":
     Config.set('input', 'mouse', 'mouse,disable_multitouch')
-    # Window.fullscreen = 'auto'
+    Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()

@@ -5,6 +5,7 @@ import soundfile as sf
 from ifdvsonogramonly import ifdvsonogramonly
 #import matplotlib.pyplot as plt
 
+# TODO: clean up extra lines from MATLAB workflow
 
 def initialize(directory):
     files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
@@ -84,8 +85,8 @@ def threshold(percent_keep, scaled_sonogram):
     [rows, cols] = np.shape(scaled_sonogram)
     num_elements = rows*cols
     sonogram_binary = scaled_sonogram/np.max(scaled_sonogram)  # scaling before making binary
-    sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)
-    sonogram_vector_sorted = np.sort(sonogram_vector)
+    sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)  # TODO: use flatten
+    sonogram_vector_sorted = np.sort(sonogram_vector)  # TODO: try bottleneck
 
     # making sonogram_binary actually binary now by keeping some top percentage of the signal
     decimal_keep = percent_keep/100
@@ -198,9 +199,9 @@ def crop(bout_range, syllable_onsets, syllable_offsets):
     return syllable_onsets, syllable_offsets
 
 
-def create_syllable_marks(syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
-    syllable_marks = np.zeros(len(sum_sonogram_scaled))
-    syllable_marks[syllable_onsets.astype(int)] = rows + 30
-    syllable_marks[syllable_offsets.astype(int)] = rows + 10
-
-    return syllable_marks
+# def create_syllable_marks(syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
+#     syllable_marks = np.zeros(len(sum_sonogram_scaled))
+#     syllable_marks[syllable_onsets.astype(int)] = rows + 30
+#     syllable_marks[syllable_offsets.astype(int)] = rows + 10
+#
+#     return syllable_marks

@@ -28,3 +28,44 @@ I think only if I want to add input arguments beyond what the inherited class ta
 from screeninfo import get_monitors
     # for m in get_monitors():
         # print(str(m))
+
+matplotlib formatting
+    #plot_sonogram.axes.get_xaxis().set_visible(False)
+    #plot_sonogram.axes.get_yaxis().set_visible(False)
+    #fig1.patch.set_visible(False)
+
+    Imshow
+    Must have self.plot_sonogram.autoscale() after .set_data() because imshow just autoscales to the initial graph and doesnt update with .set_data
+    https://stackoverflow.com/questions/10970492/matplotlib-no-effect-of-set-data-in-imshow-for-the-plot
+
+regex in python examples
+    https://stackoverflow.com/questions/4574509/remove-duplicate-chars-using-regex
+    https://docs.python.org/3/library/re.html
+    https://stackoverflow.com/questions/33582162/backslashes-in-python-regular-expressions
+
+Object Oriented Programming - Python to Java comparison
+    http://home.wlu.edu/~lambertk/pythontojava/InstanceVariables.htm
+
+'__no_builder'
+    https://www.cocept.io/blog/development/kivy-unexpected-keyboard-no-builder/
+
+Keyboard stops after a click event
+    - looks like solution might be hidden in focus behavior
+    - Tried the following:
+        class ControlPanel(FocusBehavior, Screen):
+            def on_touch_down(self, touch):
+            super(ControlPanel, self).on_touch_down(touch)
+            self.focus = True
+    - get error:
+         old_focus = keyboards[keyboard]  # keyboard should be in dict
+         KeyError: <kivy.core.window.Keyboard object at 0x000002226CEE4320>
+
+Removing lines from matplotlib plots:
+    https://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
+    https://stackoverflow.com/questions/4981815/how-to-remove-lines-in-a-matplotlib-plot
+
+Plotting multiple lines using matplotlib
+    - can use transforms instead of enumerating through axvlines or axhlines --> says it is faster to do it this way if many lines
+    https://stackoverflow.com/questions/21300953/matplotlib-axvline-truth-ambiguous-or-list-issue
+    - looks like you can do something similar with line collections
+    http://matplotlib.1069221.n5.nabble.com/Multiple-lines-with-axhline-td15717.html
