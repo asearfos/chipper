@@ -17,6 +17,34 @@
         text: 'Close'
         on_release: app.root.quit()
 
+<FinishMarksPopup>
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'Before moving to a new task you must do one of the following:'
+    title_size: 16
+#    on_dismiss: root.controls.connect()
+    BoxLayout:
+        orientation: 'vertical'
+        Button:
+            text: 'Accept'
+            on_press: root.controls.enter_mark()
+            on_release: root.dismiss()
+        Button:
+            text: 'Cancel'
+            on_press: root.controls.cancel_mark()
+            on_release: root.dismiss()
+        Label:
+            text: 'Pro Tip: You can press ENTER to accept or X to cancel to avoid this popup.'
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+#        Label:
+#            text: '1. Press ENTER to set mark\n2. Press X to cancel mark'
+#        Button:
+#            text: 'Okay'
+#            on_press: root.dismiss()
+##            on_release:
+
 <ScreenOne>:
     id: browse
     name: 'choose_file'
@@ -26,10 +54,16 @@
         on_success: browse._fbrowser_success(file_browser); app.root.current = 'control_panel'
         on_canceled: browse._fbrowser_canceled(file_browser)
 
+<ImageSonogram>:
+
+#<ImageBinary>:
+
 <ControlPanel>:
     id: controls
     name: 'control_panel'
     on_pre_enter: controls.setup()
+    top_image: graph_sonogram
+#    bottom_image: graph_binary
 
     BoxLayout:
         orientation: 'horizontal'
@@ -66,7 +100,15 @@
 #            spacing: 20
 #            padding: 5
 
-            GridLayout:
+#            GridLayout:
+#                id: graph_sonogram
+#                rows: 1
+#                cols: 1
+#                size_hint_x: 1
+##                spacing: 20
+##                padding: 5
+
+            ImageSonogram:
                 id: graph_sonogram
                 rows: 1
                 cols: 1
@@ -74,11 +116,20 @@
 #                spacing: 20
 #                padding: 5
 
+#                ImageSonogram:
+#                    id: image_sonogram
+
             GridLayout:
                 id: graph_binary
                 rows: 1
                 cols: 1
                 size_hint_x: 1
+
+#            ImageBinary:
+#                id: graph_binary
+#                rows: 1
+#                cols: 1
+#                size_hint_x: 1
 
             MyRangeSlider:
                 id: range_slider_crop
@@ -176,14 +227,14 @@
                         id: add
                         group: 'user_defined_syllables'
                         text: 'Add'
-                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add(*args[1].pos)
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add_mark(*args[1].pos)
 #                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and print(graph_binary.pos, graph_binary.size)
 
                     ToggleButton:
                         id: delete
                         group: 'user_defined_syllables'
                         text: 'Delete'
-                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.delete(*args[1].pos)
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.delete_mark(*args[1].pos)
 
 
             GridLayout:
@@ -201,5 +252,4 @@
                     id: button_toss
                     text: 'TOSS'
                     on_press: controls.toss()
-
 

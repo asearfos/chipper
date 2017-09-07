@@ -4,6 +4,7 @@ kivy.require('1.10.0')
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.slider import Slider
 from RangeSlider_FromGoogle import RangeSlider
@@ -12,6 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.uix.behaviors.focus import FocusBehavior
+from kivy.properties import ObjectProperty
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
@@ -19,6 +21,8 @@ from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
+
+from bisect import bisect_left
 
 import re
 import numpy as np
@@ -50,71 +54,375 @@ class DonePopup(Popup):
     pass
 
 
+class FinishMarksPopup(Popup):
+    def __init__(self, controls, **kwargs):  # my_widget is now the object where popup was called from.
+        # self.register_event_type('on_connect')
+        super(FinishMarksPopup, self).__init__(**kwargs)
+        self.controls = controls
+
+# def on_connect(self):
+    #     self.controls.connect()
+    #
+
+    # def on_dismiss(self):
+    #     super(FinishMarksPopup, self).on_dismiss()
+    #     self.dispatch('on_connect')
+
+
+
+class ImageSonogram(GridLayout):
+
+    def image_sonogram_initial(self, rows, cols):
+        data = np.zeros((rows, cols))
+        self.fig1, self.ax1 = plt.subplots()
+        self.plot_sonogram_canvas = FigureCanvasKivyAgg(self.fig1)
+
+        # make plot take up the entire space
+        self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
+        self.ax1.set_axis_off()
+        self.fig1.add_axes(self.ax1)
+
+        # plot data
+        self.plot_sonogram = self.ax1.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+
+        # create widget
+        self.clear_widgets()
+        self.add_widget(self.plot_sonogram_canvas)
+
+
+    def image_sonogram(self, data):
+        self.plot_sonogram.set_data(np.log(data + 3))
+        self.plot_sonogram.autoscale()
+        self.plot_sonogram_canvas.draw()
+
+        # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
+        # self.ax1.draw_artist(self.ax1.patch)
+        # self.ax1.draw_artist(self.plot_sonogram)
+        # self.canvas.update()
+        # self.canvas.flush_events
+
+
+# class ImageBinary(GridLayout):
+#     def test(self, event):
+#         if event.key == 'left':
+#             if self.ids.add.state == 'down':
+#                 print('left', 'add')
+#             elif self.ids.delete.state == 'down':
+#                 print('left', 'delete')
+#         elif event.key == 'right':
+#             if self.ids.add.state == 'down':
+#                 print('right', 'add')
+#             elif self.ids.delete.state == 'down':
+#                 print('right', 'delete')
+#
+#
+#     def image_binary_initial(self, rows, cols):
+#         data = np.zeros((rows, cols))
+#         # self.lines = {}
+#         self.fig2, self.ax2 = plt.subplots()
+#         # x = [0]
+#
+#         # make plot take up the entire space
+#         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+#         self.ax2.set_axis_off()
+#         self.fig2.add_axes(self.ax2)
+#
+#         # plot data
+#         self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+#
+#         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
+#         self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=1, color='g', transform=self.trans)
+#         self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=1, color='g', transform=self.trans)
+#         # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
+#
+#         # self.ids.graph_binary.clear_widgets()
+#         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+#         self.fig2.canvas.mpl_connect('key_press_event', self.test)
+#         self.add_widget(self.plot_binary_canvas)
+#
+#         # self.plot_binary_canvas.draw()
+#
+#         # self.vert_on = self.ax2.axvline(ymax=0.90, color='m', linewidth=1)
+#
+#         # self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
+#
+#     def image_binary(self, data):
+#         # self.ids.graph_binary.clear_widgets()
+#         # self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+#         # self.ids.graph_binary.add_widget(self.plot_binary_canvas)
+#         self.plot_binary.set_data(np.log(data+3))
+#         self.plot_binary.autoscale()
+#
+#     def image_syllable_marks(self, syllable_onsets, syllable_offsets):
+#         self.lines_on.set_xdata(np.repeat(syllable_onsets, 3))
+#         self.lines_on.set_ydata(np.tile([0, .75, np.nan], len(syllable_onsets)))
+#         # self.fig2.canvas.show()
+#         self.plot_binary_canvas.draw()
+#
+#         self.lines_off.set_xdata(np.repeat(syllable_offsets, 3))
+#         self.lines_off.set_ydata(np.tile([0, .90, np.nan], len(syllable_offsets)))
+#         # self.fig2.canvas.show()
+#         self.plot_binary_canvas.draw()
+#
+#         # self.ax2.draw_artist(self.ax2.patch)
+#         # self.ax2.draw_artist(self.lines)
+#         # self.plot_binary_canvas.update()
+#         # self.plot_binary_canvas.flush_events()
+#
+#         # for x in self.syllable_onsets.astype(np.int64):
+#         #     self.vert_on.set_xdata(x)
+#         #     self.plot_binary_canvas.draw()
+#             # self.vert_on = self.ax2.axvline(x, ymax=0.90, color='m', linewidth=1)
+#         # for x in self.syllable_offsets.astype(np.int64):
+#         #     self.vert_off = self.ax2.axvline(x, color='m', linewidth=1)
+#         # self.vert.set_xdata(xdata=indexes)
+#
+#         # remove old lines and replot onsets and offsets
+#         # self.lines.pop(0).remove()
+#         # indexes = np.squeeze(np.nonzero(syllable_marks))
+#         # ymin = np.zeros(len(indexes))
+#         # ymax = syllable_marks[syllable_marks != 0]
+#         # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
+#
+
 class ControlPanel(Screen):
+    top_image = ObjectProperty(None)
+    mark_boolean = False
+    click = 0
+    # bottom_image = ObjectProperty(None)
+
     def __init__(self, **kwargs):
+        self.register_event_type('on_check_boolean')
         super(ControlPanel, self).__init__(**kwargs)
-        self._keyboard = Window.request_keyboard(self._keyboard_closed, self, 'text')
-        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    def on_check_boolean(self):
+        if self.click >= 2:
+            marks_popup = FinishMarksPopup(self)
+            marks_popup.open()
+
+    def on_touch_down(self, touch):
+        super(ControlPanel, self).on_touch_down(touch)
+        print('touched', self.click)
+        if self.mark_boolean is True:
+            self.click += 1
+            self.dispatch('on_check_boolean')
+            ControlPanel.disabled = True  # TODO: re-enable after enter and see if that works.
+            return True
+
+    # def __init__(self, **kwargs):
+    #     super(ControlPanel, self).__init__(**kwargs)
+    #     self._keyboard = Window.request_keyboard(self._keyboard_closed, self, 'text')
+    #     self._keyboard.bind(on_key_down=self._on_keyboard_down)
+    #
+    # def _keyboard_closed(self):
+    #     # print('keyboard closed')
+    #     self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+    #     self._keyboard = None
+    #
+    # def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+    #     self.key = keycode[1]
+    #     if keycode[1] == 'left' and self.ids.add.state == 'down':
+    #         print('left')
+    #     if keycode[1] == 'right' and self.ids.add.state == 'down':
+    #         print('right')
+    #     return True
+
+    def connect(self):  # this doens't seem to do anything
+        # self.fig1.canvas.mpl_connect('key_press_event', self.test)
+        self.fig2.canvas.mpl_connect('key_press_event', self.test)
+        self.fig2.canvas.focus = True
+        print('connected')
 
     def test(self, event):
-        if event.key == 'left' and self.ids.add.state == 'down':
-            print('left')
-        if event.key == 'right' and self.ids.add.state == 'down':
-            print('right')
+        print(self.fig2.canvas.focus)
+        if self.ids.add.state == 'down':  # adding
+            if event.key == 'left':
+                self.graph_location -= 10
+                self.update_mark(self.graph_location)
+            elif event.key == 'right':
+                self.graph_location += 10
+                self.update_mark(self.graph_location)
+            elif event.key == 'enter':
+                if self.ids.syllable_toggle.state == 'normal':
+                    self.add_onsets()
+                else:
+                    self.add_offsets()
+                self.mark_boolean = False
+                self.click = 0
+                ControlPanel.disabled = False
+            elif event.key == 'x':
+                self.cancel_mark()
+        elif self.ids.delete.state == 'down':  # deleting
+            if event.key == 'left':
+                self.index -= 1
+                if self.ids.syllable_toggle.state == 'normal':
+                    self.update_mark(self.syllable_onsets[self.index])
+                else:
+                    self.update_mark(self.syllable_offsets[self.index])
+            elif event.key == 'right':
+                self.index += 1
+                if self.ids.syllable_toggle.state == 'normal':
+                    self.update_mark(self.syllable_onsets[self.index])
+                else:
+                    self.update_mark(self.syllable_offsets[self.index])
+            elif event.key == 'enter':
+                if self.ids.syllable_toggle.state == 'normal':
+                    self.delete_onsets()
+                else:
+                    self.delete_offsets()
+                self.mark_boolean = False
+                self.click = 0
+                ControlPanel.disabled = False
+            elif event.key == 'x':
+                self.cancel_mark()
 
-    def _keyboard_closed(self):
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
+    def enter_mark(self):
+        if self.ids.add.state == 'down':  # adding
+            if self.ids.syllable_toggle.state == 'normal':
+                self.add_onsets()
+            else:
+                self.add_offsets()
+        elif self.ids.delete.state == 'down':  # deleting
+            if self.ids.syllable_toggle.state == 'normal':
+                self.delete_onsets()
+            else:
+                self.delete_offsets()
+        self.mark_boolean = False
+        self.click = 0
+        ControlPanel.disabled = False
 
-    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-        self.key = keycode[1]
-        if keycode[1] == 'left' and self.ids.add.state == 'down':
-            print('left')
-        if keycode[1] == 'right' and self.ids.add.state == 'down':
-            print('right')
-        return True
-
-    def add(self, touchx, touchy):
-        conversion = np.shape(self.sonogram)[1]/self.ids.graph_binary.size[0]
-        graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
-
-        print(graph_location)
-        if self.ids.syllable_toggle.state == 'normal':
-            self.syllable_onsets = np.append(self.syllable_onsets, graph_location)
-            # ymax = 0.75
-        else:
-            self.syllable_offsets = np.append(self.syllable_offsets, graph_location)
-            # ymax = 0.90
-
+    def cancel_mark(self):
+        self.mark.remove()
         self.image_syllable_marks()
+        self.mark_boolean = False
+        self.click = 0
+        ControlPanel.disabled = False
+
+    def add_mark(self, touchx, touchy):
+        self.mark_boolean = True
+        conversion = np.shape(self.sonogram)[1]/self.ids.graph_binary.size[0]
+        self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
+
+        if self.ids.syllable_toggle.state == 'normal':
+            # self.syllable_onsets = np.append(self.syllable_onsets, graph_location)
+            ymax = 0.75
+        else:
+            # self.syllable_offsets = np.append(self.syllable_offsets, graph_location)
+            ymax = 0.90
+
+        # self.image_syllable_marks()
+        # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
         # use one of the below options to graph as another color/group of lines
-        # add_on = self.ax2.axvline(graph_location, ymax=ymax, color='m', linewidth=1)
-        # self.plot_binary_canvas.draw()
+        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=1)
+        self.plot_binary_canvas.draw()
+
         # or can plot like this... not sure which is best
         # self.ax2.plot(np.repeat(graph_location, 3), np.tile([0, .75, np.nan], 1), linewidth=2, color='m', transform=self.trans)
         # self.plot_binary_canvas.draw()
 
-    def delete(self, touchx, touchy):
+    def update_mark(self, new_mark):
+        self.mark.set_xdata(new_mark)
+        self.plot_binary_canvas.draw()
+
+    def add_onsets(self):
+        self.syllable_onsets = np.append(self.syllable_onsets, self.graph_location)
+        self.mark.remove()
+        self.image_syllable_marks()
+
+    def add_offsets(self):
+        self.syllable_offsets = np.append(self.syllable_offsets, self.graph_location)
+        self.mark.remove()
+        self.image_syllable_marks()
+
+    # def takeClosest(myList, myNumber):
+    #     """
+    #     Assumes myList is sorted. Returns closest value to myNumber.
+    #
+    #     If two numbers are equally close, return the smallest number.
+    #     """
+    #     pos = bisect_left(myList, myNumber)
+    #     if pos == 0:
+    #         return myList[0]
+    #     if pos == len(myList):
+    #         return myList[-1]
+    #     before = myList[pos - 1]
+    #     after = myList[pos]
+    #     if after - myNumber < myNumber - before:
+    #         return after
+    #     else:
+    #         return before
+
+    def takeClosest(self, myList, myNumber):
+        """
+        Assumes myList is sorted. Returns index of closest value to myNumber.
+
+        If two numbers are equally close, return the index of the smallest number.
+        """
+        pos = bisect_left(myList, myNumber)
+        if pos == 0:
+            return pos
+        if pos == len(myList):
+            return -1
+        before = myList[pos - 1]
+        after = myList[pos]
+        if after - myNumber < myNumber - before:
+            return pos
+        else:
+            return pos-1
+
+    def delete_mark(self, touchx, touchy):
+        self.mark_boolean = True
         conversion = np.shape(self.sonogram)[1] / self.ids.graph_binary.size[0]
-        graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
+        self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
+
+        # TODO: do not increase index if it is the last one
 
         if self.ids.syllable_toggle.state == 'normal':
-            try:
-                onsets_list = list(self.syllable_onsets)
-                onsets_list.remove(graph_location)
-                self.syllable_onsets = np.array(onsets_list)
-                print('removed', graph_location)
-            except ValueError:
-                print('try again', graph_location, self.syllable_onsets)
+            ymax = 0.75
+            # find nearest onset
+            self.index = self.takeClosest(self.syllable_onsets, self.graph_location)
+            location = self.syllable_onsets[self.index]
         else:
-            try:
-                onsets_list = list(self.syllable_offsets)
-                onsets_list.remove(graph_location)
-                self.syllable_offsets = np.array(onsets_list)
-                print('removed', graph_location)
-            except ValueError:
-                print('try again', graph_location, self.syllable_offsets)
+            ymax = 0.90
+            # find nearest offset
+            self.index = self.takeClosest(self.syllable_offsets, self.graph_location)
+            location = self.syllable_offsets[self.index]
 
+        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=1)
+        self.plot_binary_canvas.draw()
+
+    # def delete_onsets(self):
+    #     if self.ids.syllable_toggle.state == 'normal':
+    #         try:
+    #             onsets_list = list(self.syllable_onsets)
+    #             onsets_list.remove(self.graph_location)
+    #             self.syllable_onsets = np.array(onsets_list)
+    #             print('removed', self.graph_location)
+    #         except ValueError:
+    #             print('try again', self.graph_location, self.syllable_onsets)
+    #     else:
+    #         try:
+    #             onsets_list = list(self.syllable_offsets)
+    #             onsets_list.remove(self.graph_location)
+    #             self.syllable_offsets = np.array(onsets_list)
+    #             print('removed', self.graph_location)
+    #         except ValueError:
+    #             print('try again', self.graph_location, self.syllable_offsets)
+    #
+    #     self.image_syllable_marks()
+
+    def delete_onsets(self):
+        onsets_list = list(self.syllable_onsets)
+        onsets_list.remove(self.syllable_onsets[self.index])  # TODO: throwing error
+        self.syllable_onsets = np.array(onsets_list)
+        self.mark.remove()  #  TODO: make sure this works
+        self.image_syllable_marks()
+
+    def delete_offsets(self):
+        onsets_list = list(self.syllable_offsets)
+        onsets_list.remove(self.syllable_offsets[self.index])
+        self.syllable_offsets = np.array(onsets_list)
+        self.mark.remove()
         self.image_syllable_marks()
 
     def setup(self):
@@ -155,7 +463,7 @@ class ControlPanel(Screen):
         self.ids.range_slider_crop.max = self.bout_range[1]
 
         # initialize the matplotlib figures/axes (no data yet)
-        self.image_sonogram_initial(rows, cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
+        self.top_image.image_sonogram_initial(rows, cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
         self.image_binary_initial(rows, cols)
 
         # run update to load images for the first time for this file
@@ -176,7 +484,7 @@ class ControlPanel(Screen):
         # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
-        self.image_sonogram(hpf_sonogram)
+        self.top_image.image_sonogram(hpf_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
         thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
@@ -190,39 +498,40 @@ class ControlPanel(Screen):
 
         self.image_binary(thresh_sonogram)
         self.image_syllable_marks()
+        # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
         # return syllable_onsets, syllable_offsets
 
-    def image_sonogram_initial(self, rows, cols):
-        data = np.zeros((rows, cols))
-        self.fig1, self.ax1 = plt.subplots()
-        self.plot_sonogram_canvas = FigureCanvasKivyAgg(self.fig1)
-
-        # make plot take up the entire space
-        self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
-        self.ax1.set_axis_off()
-        self.fig1.add_axes(self.ax1)
-
-        # plot data
-        self.plot_sonogram = self.ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-
-        # create widget
-        self.ids.graph_sonogram.clear_widgets()
-        self.ids.graph_sonogram.add_widget(self.plot_sonogram_canvas)  # doesn't work without draw
-
-    def image_sonogram(self, data):
-        # self.ids.graph_sonogram.clear_widgets()
-        # self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
-        # self.plot_sonogram.set_data(np.log(data+3))
-        # self.plot_sonogram.autoscale()
-
-        # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
-        self.plot_sonogram.set_data(np.log(data+3))
-        self.plot_sonogram.autoscale()
-        self.plot_sonogram_canvas.draw()
-        # self.ax1.draw_artist(self.ax1.patch)
-        # self.ax1.draw_artist(self.plot_sonogram)
-        # self.plot_sonogram_canvas.update()
-        # self.plot_sonogram_canvas.flush_events()  # supposed to get rid of the lag due to sleep
+    # def image_sonogram_initial(self, rows, cols):
+    #     data = np.zeros((rows, cols))
+    #     self.fig1, self.ax1 = plt.subplots()
+    #     self.plot_sonogram_canvas = FigureCanvasKivyAgg(self.fig1)
+    #
+    #     # make plot take up the entire space
+    #     self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
+    #     self.ax1.set_axis_off()
+    #     self.fig1.add_axes(self.ax1)
+    #
+    #     # plot data
+    #     self.plot_sonogram = self.ax1.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+    #
+    #     # create widget
+    #     self.ids.graph_sonogram.clear_widgets()
+    #     self.ids.graph_sonogram.add_widget(self.plot_sonogram_canvas)  # doesn't work without draw
+    #
+    # def image_sonogram(self, data):
+    #     # self.ids.graph_sonogram.clear_widgets()
+    #     # self.ids.graph_sonogram.add_widget(FigureCanvasKivyAgg(self.fig1))
+    #     # self.plot_sonogram.set_data(np.log(data+3))
+    #     # self.plot_sonogram.autoscale()
+    #
+    #     # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
+    #     self.plot_sonogram.set_data(np.log(data+3))
+    #     self.plot_sonogram.autoscale()
+    #     self.plot_sonogram_canvas.draw()
+    #     # self.ax1.draw_artist(self.ax1.patch)
+    #     # self.ax1.draw_artist(self.plot_sonogram)
+    #     # self.plot_sonogram_canvas.update()
+    #     # self.plot_sonogram_canvas.flush_events()  # supposed to get rid of the lag due to sleep
 
     def image_binary_initial(self, rows, cols):
         data = np.zeros((rows, cols))
@@ -247,7 +556,7 @@ class ControlPanel(Screen):
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         self.fig2.canvas.mpl_connect('key_press_event', self.test)
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
-
+        print(self.fig2.canvas.focus)
         # self.plot_binary_canvas.draw()
 
         # self.vert_on = self.ax2.axvline(ymax=0.90, color='m', linewidth=1)
