@@ -1,4 +1,5 @@
 import numpy as np
+import bottleneck as bn
 import glob
 import os
 import soundfile as sf
@@ -81,19 +82,29 @@ def normalize_amplitude(sonogram):
     return scaled_sonogram
 
 
-def threshold(percent_keep, scaled_sonogram):
-    [rows, cols] = np.shape(scaled_sonogram)
-    num_elements = rows*cols
-    sonogram_binary = scaled_sonogram/np.max(scaled_sonogram)  # scaling before making binary
-    sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)  # TODO: use flatten
-    sonogram_vector_sorted = np.sort(sonogram_vector)  # TODO: try bottleneck
+# def threshold_image(percent_keep, scaled_sonogram):
+#     [rows, cols] = np.shape(scaled_sonogram)
+#     num_elements = rows*cols
+#     sonogram_binary = scaled_sonogram/np.max(scaled_sonogram)  # scaling before making binary
+#     # sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)  # TODO: use flatten
+#     sonogram_vector = sonogram_binary.flatten(order='F')
+#     sonogram_vector_sorted = np.sort(sonogram_vector)  # TODO: try bottleneck
+#     # sonogram_vector_sorted = bn.partition(sonogram_vector)
+#
+#     # making sonogram_binary actually binary now by keeping some top percentage of the signal
+#     decimal_keep = percent_keep/100
+#     top_percent = sonogram_vector_sorted[int(num_elements-round(num_elements*decimal_keep, 0))]  # find value at keep boundary
+#     sonogram_thresh = np.zeros((rows, cols))
+#     sonogram_thresh[sonogram_binary < top_percent] = 0
+#     sonogram_thresh[sonogram_binary > top_percent] = 1
+#     print(sonogram_thresh.shape)
+#
+#     return sonogram_thresh
 
-    # making sonogram_binary actually binary now by keeping some top percentage of the signal
-    decimal_keep = percent_keep/100
-    top_percent = sonogram_vector_sorted[int(num_elements-round(num_elements*decimal_keep, 0))]  # find value at keep boundary
-    sonogram_thresh = np.zeros((rows, cols))
-    sonogram_thresh[sonogram_binary < top_percent] = 0
-    sonogram_thresh[sonogram_binary > top_percent] = 1
+def threshold_image(top_threshold, scaled_sonogram):
+    percentile = np.percentile(scaled_sonogram, 100-top_threshold)
+    sonogram_thresh = np.zeros(scaled_sonogram.shape)
+    sonogram_thresh[scaled_sonogram > percentile] = 1
 
     return sonogram_thresh
 
@@ -105,13 +116,11 @@ def initialize_onsets_offsets(sonogram_thresh):
     sum_sonogram = sum(sonogram_thresh)  # collapse matrix to one row by summing columns (gives total signal over time)
     sum_sonogram_scaled = (sum_sonogram / max(sum_sonogram) * rows)
 
-    #if not test_if_analyzed:
-
     # create a vector that equals 1 when amplitude exceeds threshold and 0 when it is below
     high_amp = sum_sonogram_scaled > 4
     high_amp = [int(x) for x in high_amp]
     high_amp[0] = 0
-    high_amp[len(high_amp) - 1] = 0
+    high_amp[-1] = 0
     onsets = np.nonzero(np.diff(high_amp) == 1)
     onsets = np.squeeze(onsets)
     offsets = np.nonzero(np.diff(high_amp) == -1)

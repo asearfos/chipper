@@ -9,20 +9,11 @@
 <CustomLabel@Label>
     color: 1, 1, 1, 1
 
-<DonePopup>:
-    size_hint: .5, .5
-    auto_dismiss: False
-    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
-    Button:
-        text: 'Close'
-        on_release: app.root.quit()
-
 <FinishMarksPopup>
     size_hint: .25, .25
     auto_dismiss: False
     title: 'Before moving to a new task you must do one of the following:'
     title_size: 16
-#    on_dismiss: root.controls.connect()
     BoxLayout:
         orientation: 'vertical'
         Button:
@@ -34,7 +25,7 @@
             on_press: root.controls.cancel_mark()
             on_release: root.dismiss()
         Label:
-            text: 'Pro Tip: You can press ENTER to accept or X to cancel to avoid this popup.'
+            text: 'ProTip: You can press ENTER to accept or X to cancel to avoid this popup.'
             text_size: self.size
             halign: 'left'
             valign: 'middle'
@@ -44,6 +35,32 @@
 #            text: 'Okay'
 #            on_press: root.dismiss()
 ##            on_release:
+
+<CheckLengthPopup>
+#    id: lengths
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'WARNING: There is an unequal number of onsets and offsets. You must have an equal number to proceed to the next sample.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+#            id: 'lengths'
+            text: 'Number of onsets: ' + root.len_onsets + "\nNumber of offsets: " + root.len_offsets
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
+<DonePopup>:
+    size_hint: .5, .5
+    auto_dismiss: False
+    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+    Button:
+        text: 'Close'
+        on_release: app.root.quit()
 
 <ScreenOne>:
     id: browse

@@ -69,3 +69,24 @@ Plotting multiple lines using matplotlib
     https://stackoverflow.com/questions/21300953/matplotlib-axvline-truth-ambiguous-or-list-issue
     - looks like you can do something similar with line collections
     http://matplotlib.1069221.n5.nabble.com/Multiple-lines-with-axhline-td15717.html
+
+Find the element with the closest value to given number:
+    - Found good function written for this here: https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value
+        # def takeClosest(myList, myNumber):
+        #     """
+        #     Assumes myList is sorted. Returns closest value to myNumber.
+        #
+        #     If two numbers are equally close, return the smallest number.
+        #     """
+        #     pos = bisect_left(myList, myNumber)
+        #     if pos == 0:
+        #         return myList[0]
+        #     if pos == len(myList):
+        #         return myList[-1]
+        #     before = myList[pos - 1]
+        #     after = myList[pos]
+        #     if after - myNumber < myNumber - before:
+        #         return after
+        #     else:
+        #         return before
+    - this link might have other good solutions: https://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array

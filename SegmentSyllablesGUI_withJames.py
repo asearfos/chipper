@@ -13,7 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.uix.behaviors.focus import FocusBehavior
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
@@ -50,24 +50,25 @@ class ScreenOne(Screen):
         self.parent.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
 
 
-class DonePopup(Popup):
-    pass
-
-
 class FinishMarksPopup(Popup):
-    def __init__(self, controls, **kwargs):  # my_widget is now the object where popup was called from.
+    def __init__(self, controls, **kwargs):  # controls is now the object where popup was called from.
         # self.register_event_type('on_connect')
         super(FinishMarksPopup, self).__init__(**kwargs)
         self.controls = controls
 
-# def on_connect(self):
-    #     self.controls.connect()
-    #
 
-    # def on_dismiss(self):
-    #     super(FinishMarksPopup, self).on_dismiss()
-    #     self.dispatch('on_connect')
+class CheckLengthPopup(Popup):
+    # def __init__(self, len_onsets, len_offsets, **kwargs):  # controls is now the object where popup was called from.
+    #     # self.register_event_type('on_connect')
+    #     super(CheckLengthPopup, self).__init__(**kwargs)
+    #     # self.ids.lengths.text = len_onsets
+    #     self.len_onsets = len_onsets
+    len_onsets = StringProperty()
+    len_offsets = StringProperty()
 
+
+class DonePopup(Popup):
+    pass
 
 
 class ImageSonogram(GridLayout):
@@ -101,89 +102,6 @@ class ImageSonogram(GridLayout):
         # self.canvas.update()
         # self.canvas.flush_events
 
-
-# class ImageBinary(GridLayout):
-#     def test(self, event):
-#         if event.key == 'left':
-#             if self.ids.add.state == 'down':
-#                 print('left', 'add')
-#             elif self.ids.delete.state == 'down':
-#                 print('left', 'delete')
-#         elif event.key == 'right':
-#             if self.ids.add.state == 'down':
-#                 print('right', 'add')
-#             elif self.ids.delete.state == 'down':
-#                 print('right', 'delete')
-#
-#
-#     def image_binary_initial(self, rows, cols):
-#         data = np.zeros((rows, cols))
-#         # self.lines = {}
-#         self.fig2, self.ax2 = plt.subplots()
-#         # x = [0]
-#
-#         # make plot take up the entire space
-#         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
-#         self.ax2.set_axis_off()
-#         self.fig2.add_axes(self.ax2)
-#
-#         # plot data
-#         self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
-#
-#         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
-#         self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=1, color='g', transform=self.trans)
-#         self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=1, color='g', transform=self.trans)
-#         # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
-#
-#         # self.ids.graph_binary.clear_widgets()
-#         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
-#         self.fig2.canvas.mpl_connect('key_press_event', self.test)
-#         self.add_widget(self.plot_binary_canvas)
-#
-#         # self.plot_binary_canvas.draw()
-#
-#         # self.vert_on = self.ax2.axvline(ymax=0.90, color='m', linewidth=1)
-#
-#         # self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
-#
-#     def image_binary(self, data):
-#         # self.ids.graph_binary.clear_widgets()
-#         # self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
-#         # self.ids.graph_binary.add_widget(self.plot_binary_canvas)
-#         self.plot_binary.set_data(np.log(data+3))
-#         self.plot_binary.autoscale()
-#
-#     def image_syllable_marks(self, syllable_onsets, syllable_offsets):
-#         self.lines_on.set_xdata(np.repeat(syllable_onsets, 3))
-#         self.lines_on.set_ydata(np.tile([0, .75, np.nan], len(syllable_onsets)))
-#         # self.fig2.canvas.show()
-#         self.plot_binary_canvas.draw()
-#
-#         self.lines_off.set_xdata(np.repeat(syllable_offsets, 3))
-#         self.lines_off.set_ydata(np.tile([0, .90, np.nan], len(syllable_offsets)))
-#         # self.fig2.canvas.show()
-#         self.plot_binary_canvas.draw()
-#
-#         # self.ax2.draw_artist(self.ax2.patch)
-#         # self.ax2.draw_artist(self.lines)
-#         # self.plot_binary_canvas.update()
-#         # self.plot_binary_canvas.flush_events()
-#
-#         # for x in self.syllable_onsets.astype(np.int64):
-#         #     self.vert_on.set_xdata(x)
-#         #     self.plot_binary_canvas.draw()
-#             # self.vert_on = self.ax2.axvline(x, ymax=0.90, color='m', linewidth=1)
-#         # for x in self.syllable_offsets.astype(np.int64):
-#         #     self.vert_off = self.ax2.axvline(x, color='m', linewidth=1)
-#         # self.vert.set_xdata(xdata=indexes)
-#
-#         # remove old lines and replot onsets and offsets
-#         # self.lines.pop(0).remove()
-#         # indexes = np.squeeze(np.nonzero(syllable_marks))
-#         # ymin = np.zeros(len(indexes))
-#         # ymax = syllable_marks[syllable_marks != 0]
-#         # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
-#
 
 class ControlPanel(Screen):
     top_image = ObjectProperty(None)
@@ -226,12 +144,6 @@ class ControlPanel(Screen):
     #     if keycode[1] == 'right' and self.ids.add.state == 'down':
     #         print('right')
     #     return True
-
-    def connect(self):  # this doens't seem to do anything
-        # self.fig1.canvas.mpl_connect('key_press_event', self.test)
-        self.fig2.canvas.mpl_connect('key_press_event', self.test)
-        self.fig2.canvas.focus = True
-        print('connected')
 
     def test(self, event):
         print(self.fig2.canvas.focus)
@@ -325,32 +237,14 @@ class ControlPanel(Screen):
         self.plot_binary_canvas.draw()
 
     def add_onsets(self):
-        self.syllable_onsets = np.append(self.syllable_onsets, self.graph_location)
+        self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
         self.mark.remove()
         self.image_syllable_marks()
 
     def add_offsets(self):
-        self.syllable_offsets = np.append(self.syllable_offsets, self.graph_location)
+        self.syllable_offsets = np.insert(self.syllable_offsets, np.searchsorted(self.syllable_offsets, self.graph_location), self.graph_location)
         self.mark.remove()
         self.image_syllable_marks()
-
-    # def takeClosest(myList, myNumber):
-    #     """
-    #     Assumes myList is sorted. Returns closest value to myNumber.
-    #
-    #     If two numbers are equally close, return the smallest number.
-    #     """
-    #     pos = bisect_left(myList, myNumber)
-    #     if pos == 0:
-    #         return myList[0]
-    #     if pos == len(myList):
-    #         return myList[-1]
-    #     before = myList[pos - 1]
-    #     after = myList[pos]
-    #     if after - myNumber < myNumber - before:
-    #         return after
-    #     else:
-    #         return before
 
     def takeClosest(self, myList, myNumber):
         """
@@ -413,9 +307,9 @@ class ControlPanel(Screen):
 
     def delete_onsets(self):
         onsets_list = list(self.syllable_onsets)
-        onsets_list.remove(self.syllable_onsets[self.index])  # TODO: throwing error
+        onsets_list.remove(self.syllable_onsets[self.index])
         self.syllable_onsets = np.array(onsets_list)
-        self.mark.remove()  #  TODO: make sure this works
+        self.mark.remove()
         self.image_syllable_marks()
 
     def delete_offsets(self):
@@ -487,7 +381,7 @@ class ControlPanel(Screen):
         self.top_image.image_sonogram(hpf_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
-        thresh_sonogram = seg.threshold(percent_keep, scaled_sonogram)
+        thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
         onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
         # self.syllable_onsets, self.syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
@@ -556,7 +450,6 @@ class ControlPanel(Screen):
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         self.fig2.canvas.mpl_connect('key_press_event', self.test)
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
-        print(self.fig2.canvas.focus)
         # self.plot_binary_canvas.draw()
 
         # self.vert_on = self.ax2.axvline(ymax=0.90, color='m', linewidth=1)
@@ -601,16 +494,24 @@ class ControlPanel(Screen):
         # ymax = syllable_marks[syllable_marks != 0]
         # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
 
-    def save(self):
-        # save parameters to dictionary
-        self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-        self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
 
-        # write if last file otherwise go to next file
-        if self.i == len(self.files):
-            self.write()
+    def save(self):
+        if len(self.syllable_onsets) != len(self.syllable_offsets):
+            # check_length = CheckLengthPopup(len(self.syllable_onsets), len(self.syllable_offsets))
+            check_length = CheckLengthPopup()
+            check_length.len_onsets = str(len(self.syllable_onsets))
+            check_length.len_offsets = str(len(self.syllable_offsets))
+            check_length.open()
         else:
-            self.next()
+            # save parameters to dictionary
+            self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
+            self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
+
+            # write if last file otherwise go to next file
+            if self.i == len(self.files):
+                self.write()
+            else:
+                self.next()
 
     def toss(self):
         # save file name to dictionary
