@@ -29,15 +29,8 @@
             text_size: self.size
             halign: 'left'
             valign: 'middle'
-#        Label:
-#            text: '1. Press ENTER to set mark\n2. Press X to cancel mark'
-#        Button:
-#            text: 'Okay'
-#            on_press: root.dismiss()
-##            on_release:
 
 <CheckLengthPopup>
-#    id: lengths
     size_hint: .25, .25
     auto_dismiss: False
     title: 'WARNING: There is an unequal number of onsets and offsets. You must have an equal number to proceed to the next sample.'
@@ -45,7 +38,6 @@
     BoxLayout:
         orientation: 'vertical'
         Label:
-#            id: 'lengths'
             text: 'Number of onsets: ' + root.len_onsets + "\nNumber of offsets: " + root.len_offsets
             text_size: self.size
             halign: 'center'
@@ -84,22 +76,21 @@
 
     BoxLayout:
         orientation: 'horizontal'
-        padding: 20
+        padding: 10
         spacing: 10
 
         GridLayout:
             rows: 3
             cols: 1
-#            spacing: 20
-#            padding: 5
-            size_hint_x: .1
+            size_hint_x: .05
 
             MySlider:
                 id: slider_high_pass_filter
                 orientation: 'vertical'
+                padding: 0
+                size_hint_x: 0.1
                 value_track: True
                 value_track_color: [.2, .7, 0.9, 1]
-                padding: 0
                 min: 0
 #                max: 513
 #                value: 0
@@ -114,27 +105,12 @@
         BoxLayout:
             id: graphs
             orientation: 'vertical'
-#            spacing: 20
-#            padding: 5
-
-#            GridLayout:
-#                id: graph_sonogram
-#                rows: 1
-#                cols: 1
-#                size_hint_x: 1
-##                spacing: 20
-##                padding: 5
 
             ImageSonogram:
                 id: graph_sonogram
                 rows: 1
                 cols: 1
                 size_hint_x: 1
-#                spacing: 20
-#                padding: 5
-
-#                ImageSonogram:
-#                    id: image_sonogram
 
             GridLayout:
                 id: graph_binary
@@ -152,10 +128,6 @@
                 id: range_slider_crop
                 size_hint: 1, 0.1
                 padding: 0
-#                value1: range_slider_crop.min
-#                value2: range_slider_crop.max
-#                min: 0.
-#                max: 10213.
                 step: 1
                 on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
@@ -163,8 +135,8 @@
             rows: 5
             cols: 1
             spacing: 20
-            padding: 20
-            size_hint_x: .5
+            padding: 10
+            size_hint_x: .375
 
             GridLayout:
                 rows: 3
@@ -176,7 +148,7 @@
                     text: 'Threshold: Top Percent of Signal'
                 MySlider:
                     id: slider_threshold
-                    min: 0
+                    min: 0.10
                     max: 3
                     value: 2
                     step: 0.10
@@ -195,7 +167,7 @@
                 MySlider:
                     id: slider_min_silence
                     min: 1
-                    max: 50
+                    max: 100
                     value: 10
                     step: 1
                     on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
@@ -213,7 +185,7 @@
                 MySlider:
                     id: slider_min_syllable
                     min: 1
-                    max: 100
+                    max: 1000
                     value: 20
                     step: 1
                     on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
@@ -227,14 +199,26 @@
                 padding: 10
 
                 GridLayout:
-                    rows: 1
+                    rows: 2
                     cols: 1
 
                     ToggleButton:
-                        id: syllable_toggle
-                        text: 'Syllable Ending' if self.state == 'down' else 'Syllable Beginning'
-                        on_press:
+                        id: syllable_beginning
+                        group: 'syllable_marks'
+                        text: 'Syllable\nBeginning'
+                        halign: 'center'
+                        on_press: syllable_beginning.state = 'down'
 
+                    ToggleButton:
+                        id: syllable_ending
+                        group: 'syllable_marks'
+                        text: 'Syllable\nEnding'
+                        halign: 'center'
+                        on_press: syllable_ending.state = 'down'
+
+#                    ToggleButton:
+#                        id: syllable_toggle
+#                        text: 'Syllable Ending' if self.state == 'down' else 'Syllable Beginning'
 
                 GridLayout:
                     rows: 2
@@ -252,7 +236,6 @@
                         group: 'user_defined_syllables'
                         text: 'Delete'
                         on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.delete_mark(*args[1].pos)
-
 
             GridLayout:
                 rows: 2

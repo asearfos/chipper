@@ -139,7 +139,7 @@ def initialize_onsets_offsets(sonogram_thresh):
         silence_durations[j] = onsets[j] - offsets2[j]
     mean_silence_durations.append(np.mean(
         silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
-    return onsets, offsets2, silence_durations, sum_sonogram_scaled, rows
+    return onsets, offsets2, silence_durations, sum_sonogram_scaled
 
 
 def set_min_silence(min_silence, onsets, offsets2, silence_durations):
@@ -207,7 +207,7 @@ def crop(bout_range, syllable_onsets, syllable_offsets):
 
     return syllable_onsets, syllable_offsets
 
-
+# this was only to make the onsets and offsets different heigths in matlab plotting - got around this in python
 # def create_syllable_marks(syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
 #     syllable_marks = np.zeros(len(sum_sonogram_scaled))
 #     syllable_marks[syllable_onsets.astype(int)] = rows + 30

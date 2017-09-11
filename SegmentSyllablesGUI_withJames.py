@@ -14,6 +14,8 @@ from kivy.core.window import Window
 from kivy.config import Config
 from kivy.uix.behaviors.focus import FocusBehavior
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.logger import Logger
+# Logger.disabled = True
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
@@ -21,6 +23,7 @@ from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
+from matplotlib.lines import Line2D
 
 from bisect import bisect_left
 
@@ -29,7 +32,6 @@ import numpy as np
 import csv
 import math
 import matplotlib.transforms as tx
-
 
 # import my own functions for data analysis
 import segmentSylls_functionsForGUI as seg
@@ -120,42 +122,28 @@ class ControlPanel(Screen):
 
     def on_touch_down(self, touch):
         super(ControlPanel, self).on_touch_down(touch)
-        print('touched', self.click)
         if self.mark_boolean is True:
             self.click += 1
             self.dispatch('on_check_boolean')
-            ControlPanel.disabled = True  # TODO: re-enable after enter and see if that works.
+            ControlPanel.disabled = True
             return True
 
-    # def __init__(self, **kwargs):
-    #     super(ControlPanel, self).__init__(**kwargs)
-    #     self._keyboard = Window.request_keyboard(self._keyboard_closed, self, 'text')
-    #     self._keyboard.bind(on_key_down=self._on_keyboard_down)
-    #
-    # def _keyboard_closed(self):
-    #     # print('keyboard closed')
-    #     self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-    #     self._keyboard = None
-    #
-    # def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
-    #     self.key = keycode[1]
-    #     if keycode[1] == 'left' and self.ids.add.state == 'down':
-    #         print('left')
-    #     if keycode[1] == 'right' and self.ids.add.state == 'down':
-    #         print('right')
-    #     return True
-
-    def test(self, event):
-        print(self.fig2.canvas.focus)
+    def move_mark(self, event):
         if self.ids.add.state == 'down':  # adding
             if event.key == 'left':
-                self.graph_location -= 10
+                if self.graph_location >= 25:
+                    self.graph_location -= 5
                 self.update_mark(self.graph_location)
             elif event.key == 'right':
-                self.graph_location += 10
+                # print('length', self.cols)
+                # print('location', self.graph_location)
+                if self.graph_location < self.cols-25: #the mark is not resolved on the screen past this even though it is still within the size of the image
+                    self.graph_location += 5
+                # print('updated location', self.graph_location)
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
-                if self.ids.syllable_toggle.state == 'normal':
+                # if self.ids.syllable_toggle.state == 'normal':
+                if self.ids.syllable_beginning.state == 'down':
                     self.add_onsets()
                 else:
                     self.add_offsets()
@@ -167,18 +155,25 @@ class ControlPanel(Screen):
         elif self.ids.delete.state == 'down':  # deleting
             if event.key == 'left':
                 self.index -= 1
-                if self.ids.syllable_toggle.state == 'normal':
+                # if self.ids.syllable_toggle.state == 'normal':
+                if self.ids.syllable_beginning.state == 'down':
+                    if self.index < 0:
+                        self.index = len(self.syllable_onsets) - 1
                     self.update_mark(self.syllable_onsets[self.index])
                 else:
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'right':
                 self.index += 1
-                if self.ids.syllable_toggle.state == 'normal':
+                # if self.ids.syllable_toggle.state == 'normal':
+                if self.ids.syllable_beginning.state == 'down':
+                    if self.index >= len(self.syllable_onsets):
+                        self.index = 0
                     self.update_mark(self.syllable_onsets[self.index])
                 else:
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'enter':
-                if self.ids.syllable_toggle.state == 'normal':
+                # if self.ids.syllable_toggle.state == 'normal':
+                if self.ids.syllable_beginning.state == 'down':
                     self.delete_onsets()
                 else:
                     self.delete_offsets()
@@ -190,12 +185,14 @@ class ControlPanel(Screen):
 
     def enter_mark(self):
         if self.ids.add.state == 'down':  # adding
-            if self.ids.syllable_toggle.state == 'normal':
+            # if self.ids.syllable_toggle.state == 'normal':
+            if self.ids.syllable_beginning.state == 'down':
                 self.add_onsets()
             else:
                 self.add_offsets()
         elif self.ids.delete.state == 'down':  # deleting
-            if self.ids.syllable_toggle.state == 'normal':
+            # if self.ids.syllable_toggle.state == 'normal':
+            if self.ids.syllable_beginning.state == 'down':
                 self.delete_onsets()
             else:
                 self.delete_offsets()
@@ -210,31 +207,30 @@ class ControlPanel(Screen):
         self.click = 0
         ControlPanel.disabled = False
 
+    def update_mark(self, new_mark):
+        self.mark.set_xdata(new_mark)
+        self.plot_binary_canvas.draw()
+
     def add_mark(self, touchx, touchy):
         self.mark_boolean = True
         conversion = np.shape(self.sonogram)[1]/self.ids.graph_binary.size[0]
         self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
 
-        if self.ids.syllable_toggle.state == 'normal':
-            # self.syllable_onsets = np.append(self.syllable_onsets, graph_location)
+        # if self.ids.syllable_toggle.state == 'normal':
+        if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
         else:
-            # self.syllable_offsets = np.append(self.syllable_offsets, graph_location)
             ymax = 0.90
 
         # self.image_syllable_marks()
         # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
-        # use one of the below options to graph as another color/group of lines
-        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=1)
-        self.plot_binary_canvas.draw()
 
+        # use one of the below options to graph as another color/group of lines
+        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=.5)
+        self.plot_binary_canvas.draw()
         # or can plot like this... not sure which is best
         # self.ax2.plot(np.repeat(graph_location, 3), np.tile([0, .75, np.nan], 1), linewidth=2, color='m', transform=self.trans)
         # self.plot_binary_canvas.draw()
-
-    def update_mark(self, new_mark):
-        self.mark.set_xdata(new_mark)
-        self.plot_binary_canvas.draw()
 
     def add_onsets(self):
         self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
@@ -269,9 +265,8 @@ class ControlPanel(Screen):
         conversion = np.shape(self.sonogram)[1] / self.ids.graph_binary.size[0]
         self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
 
-        # TODO: do not increase index if it is the last one
-
-        if self.ids.syllable_toggle.state == 'normal':
+        # if self.ids.syllable_toggle.state == 'normal':
+        if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
             # find nearest onset
             self.index = self.takeClosest(self.syllable_onsets, self.graph_location)
@@ -282,28 +277,8 @@ class ControlPanel(Screen):
             self.index = self.takeClosest(self.syllable_offsets, self.graph_location)
             location = self.syllable_offsets[self.index]
 
-        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=1)
+        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=0.5)
         self.plot_binary_canvas.draw()
-
-    # def delete_onsets(self):
-    #     if self.ids.syllable_toggle.state == 'normal':
-    #         try:
-    #             onsets_list = list(self.syllable_onsets)
-    #             onsets_list.remove(self.graph_location)
-    #             self.syllable_onsets = np.array(onsets_list)
-    #             print('removed', self.graph_location)
-    #         except ValueError:
-    #             print('try again', self.graph_location, self.syllable_onsets)
-    #     else:
-    #         try:
-    #             onsets_list = list(self.syllable_offsets)
-    #             onsets_list.remove(self.graph_location)
-    #             self.syllable_offsets = np.array(onsets_list)
-    #             print('removed', self.graph_location)
-    #         except ValueError:
-    #             print('try again', self.graph_location, self.syllable_offsets)
-    #
-    #     self.image_syllable_marks()
 
     def delete_onsets(self):
         onsets_list = list(self.syllable_onsets)
@@ -313,9 +288,9 @@ class ControlPanel(Screen):
         self.image_syllable_marks()
 
     def delete_offsets(self):
-        onsets_list = list(self.syllable_offsets)
-        onsets_list.remove(self.syllable_offsets[self.index])
-        self.syllable_offsets = np.array(onsets_list)
+        offsets_list = list(self.syllable_offsets)
+        offsets_list.remove(self.syllable_offsets[self.index])
+        self.syllable_offsets = np.array(offsets_list)
         self.mark.remove()
         self.image_syllable_marks()
 
@@ -340,7 +315,8 @@ class ControlPanel(Screen):
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
-        self.ids.syllable_toggle.state = 'normal'
+        # self.ids.syllable_toggle.state = 'normal'
+        self.ids.syllable_beginning.state = 'down'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
 
@@ -348,20 +324,20 @@ class ControlPanel(Screen):
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
 
         # connect size of sonogram to maximum of sliders for HPF and crop
-        [rows, cols] = np.shape(self.sonogram)
-        self.ids.slider_high_pass_filter.max = rows
-        self.bout_range = [0, cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
+        [self.rows, self.cols] = np.shape(self.sonogram)
+        self.ids.slider_high_pass_filter.max = self.rows
+        self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
         self.ids.range_slider_crop.value1 = self.bout_range[0]
         self.ids.range_slider_crop.value2 = self.bout_range[1]
         self.ids.range_slider_crop.min = self.bout_range[0]
         self.ids.range_slider_crop.max = self.bout_range[1]
 
         # initialize the matplotlib figures/axes (no data yet)
-        self.top_image.image_sonogram_initial(rows, cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
-        self.image_binary_initial(rows, cols)
+        self.top_image.image_sonogram_initial(self.rows, self.cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
+        self.image_binary_initial()
 
         # run update to load images for the first time for this file
-        self.update(rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+        self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
         # increment i so next file will be opened on submit/toss
         self.i += 1
@@ -382,18 +358,14 @@ class ControlPanel(Screen):
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
         thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
-        onsets, offsets2, silence_durations, sum_sonogram_scaled, rows = seg.initialize_onsets_offsets(thresh_sonogram)
+        onsets, offsets2, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
-        # self.syllable_onsets, self.syllable_offsets, syllable_marks = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows)
-
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
-        # syllable_marks = seg.create_syllable_marks(self.syllable_onsets, self.syllable_offsets, sum_sonogram_scaled, rows)
 
         self.image_binary(thresh_sonogram)
         self.image_syllable_marks()
         # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
-        # return syllable_onsets, syllable_offsets
 
     # def image_sonogram_initial(self, rows, cols):
     #     data = np.zeros((rows, cols))
@@ -427,8 +399,8 @@ class ControlPanel(Screen):
     #     # self.plot_sonogram_canvas.update()
     #     # self.plot_sonogram_canvas.flush_events()  # supposed to get rid of the lag due to sleep
 
-    def image_binary_initial(self, rows, cols):
-        data = np.zeros((rows, cols))
+    def image_binary_initial(self):
+        data = np.zeros((self.rows, self.cols))
         # self.lines = {}
         self.fig2, self.ax2 = plt.subplots()
         # x = [0]
@@ -439,16 +411,16 @@ class ControlPanel(Screen):
         self.fig2.add_axes(self.ax2)
 
         # plot data
-        self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+        self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, self.cols, 0, self.rows], aspect='auto')
 
         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
-        self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=1, color='g', transform=self.trans)
-        self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=1, color='g', transform=self.trans)
+        self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
+        self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
         # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
 
         self.ids.graph_binary.clear_widgets()
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
-        self.fig2.canvas.mpl_connect('key_press_event', self.test)
+        self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
         # self.plot_binary_canvas.draw()
 
@@ -466,12 +438,8 @@ class ControlPanel(Screen):
     def image_syllable_marks(self):
         self.lines_on.set_xdata(np.repeat(self.syllable_onsets, 3))
         self.lines_on.set_ydata(np.tile([0, .75, np.nan], len(self.syllable_onsets)))
-        # self.fig2.canvas.show()
-        self.plot_binary_canvas.draw()
-
         self.lines_off.set_xdata(np.repeat(self.syllable_offsets, 3))
         self.lines_off.set_ydata(np.tile([0, .90, np.nan], len(self.syllable_offsets)))
-        # self.fig2.canvas.show()
         self.plot_binary_canvas.draw()
 
         # self.ax2.draw_artist(self.ax2.patch)
@@ -597,5 +565,5 @@ class SegmentSyllablesGUI_withJamesApp(App):
 
 if __name__ == "__main__":
     Config.set('input', 'mouse', 'mouse,disable_multitouch')
-    Window.fullscreen = 'auto'
+    # Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()
