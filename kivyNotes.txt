@@ -90,3 +90,12 @@ Find the element with the closest value to given number:
         #     else:
         #         return before
     - this link might have other good solutions: https://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array
+
+Connecting PopUps to other classes
+    - https://stackoverflow.com/questions/38548075/kivy-get-textinput-from-popup/38552214
+    - https://stackoverflow.com/questions/40074004/access-kivy-popup-parent
+    - https://www.reddit.com/r/kivy/comments/3pqem2/how_do_i_pass_data_to_a_screen/
+
+Python Slices - good explanation
+    - https://stackoverflow.com/questions/509211/explain-slice-notation
+

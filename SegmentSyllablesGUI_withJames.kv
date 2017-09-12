@@ -46,6 +46,39 @@
             text: 'Okay'
             on_release: root.dismiss()
 
+<CheckBeginningEndPopup>
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'WARNING: You must start with an onset and end with an offset.'
+#    title: 'WARNING: The order of syllable onsets and offsets is nonsensical.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Starts with onset: ' + str(root.start_onset) + "\nEnds with offset: " + str(root.end_offset)
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
+<CheckOrderPopup>
+    size_hint: .5, .25
+    auto_dismiss: False
+    title: 'WARNING: The order of syllable onsets and offsets is nonsensical. You must alternate between onsets and offsets.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Your current order is as follows with 0 as onsets and 1 as offsets:\n' + str(root.order)
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
 <DonePopup>:
     size_hint: .5, .5
     auto_dismiss: False

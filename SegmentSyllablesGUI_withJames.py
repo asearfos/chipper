@@ -13,7 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.uix.behaviors.focus import FocusBehavior
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty, BooleanProperty, ListProperty
 from kivy.logger import Logger
 # Logger.disabled = True
 
@@ -22,10 +22,11 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 plt.style.use('dark_background')
 from matplotlib.lines import Line2D
 
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right, insort
 
 import re
 import numpy as np
@@ -60,13 +61,19 @@ class FinishMarksPopup(Popup):
 
 
 class CheckLengthPopup(Popup):
-    # def __init__(self, len_onsets, len_offsets, **kwargs):  # controls is now the object where popup was called from.
-    #     # self.register_event_type('on_connect')
-    #     super(CheckLengthPopup, self).__init__(**kwargs)
-    #     # self.ids.lengths.text = len_onsets
-    #     self.len_onsets = len_onsets
     len_onsets = StringProperty()
     len_offsets = StringProperty()
+
+
+class CheckBeginningEndPopup(Popup):
+    start_onset = BooleanProperty()
+    end_offset = BooleanProperty()
+    two_onsets = BooleanProperty()
+    two_offsets = BooleanProperty()
+
+
+class CheckOrderPopup(Popup):
+    order = ListProperty()
 
 
 class DonePopup(Popup):
@@ -96,7 +103,7 @@ class ImageSonogram(GridLayout):
     def image_sonogram(self, data):
         self.plot_sonogram.set_data(np.log(data + 3))
         self.plot_sonogram.autoscale()
-        self.plot_sonogram_canvas.draw()
+        # self.plot_sonogram_canvas.draw()
 
         # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
         # self.ax1.draw_artist(self.ax1.patch)
@@ -139,7 +146,6 @@ class ControlPanel(Screen):
                 # print('location', self.graph_location)
                 if self.graph_location < self.cols-25: #the mark is not resolved on the screen past this even though it is still within the size of the image
                     self.graph_location += 5
-                # print('updated location', self.graph_location)
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
                 # if self.ids.syllable_toggle.state == 'normal':
@@ -161,6 +167,8 @@ class ControlPanel(Screen):
                         self.index = len(self.syllable_onsets) - 1
                     self.update_mark(self.syllable_onsets[self.index])
                 else:
+                    if self.index < 0:
+                        self.index = len(self.syllable_offsets) - 1
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'right':
                 self.index += 1
@@ -170,6 +178,8 @@ class ControlPanel(Screen):
                         self.index = 0
                     self.update_mark(self.syllable_onsets[self.index])
                 else:
+                    if self.index >= len(self.syllable_offsets):
+                        self.index = 0
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'enter':
                 # if self.ids.syllable_toggle.state == 'normal':
@@ -233,6 +243,7 @@ class ControlPanel(Screen):
         # self.plot_binary_canvas.draw()
 
     def add_onsets(self):
+        # TODO: might be able to just use bisect.insort(list, new number) https://stackoverflow.com/questions/29408661/add-elements-into-a-sorted-array-in-ascending-order
         self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
         self.mark.remove()
         self.image_syllable_marks()
@@ -245,8 +256,8 @@ class ControlPanel(Screen):
     def takeClosest(self, myList, myNumber):
         """
         Assumes myList is sorted. Returns index of closest value to myNumber.
-
         If two numbers are equally close, return the index of the smallest number.
+        From: https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value
         """
         pos = bisect_left(myList, myNumber)
         if pos == 0:
@@ -465,21 +476,36 @@ class ControlPanel(Screen):
 
     def save(self):
         if len(self.syllable_onsets) != len(self.syllable_offsets):
-            # check_length = CheckLengthPopup(len(self.syllable_onsets), len(self.syllable_offsets))
             check_length = CheckLengthPopup()
             check_length.len_onsets = str(len(self.syllable_onsets))
             check_length.len_offsets = str(len(self.syllable_offsets))
             check_length.open()
+        elif self.syllable_onsets[0] > self.syllable_offsets[0] or self.syllable_onsets[-1] > self.syllable_offsets[-1]:
+            check_beginning_end = CheckBeginningEndPopup()
+            check_beginning_end.start_onset = not self.syllable_onsets[0] > self.syllable_offsets[0]
+            check_beginning_end.end_offset = not self.syllable_onsets[-1] > self.syllable_offsets[-1]
+            check_beginning_end.open()
         else:
-            # save parameters to dictionary
-            self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-            self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
-
-            # write if last file otherwise go to next file
-            if self.i == len(self.files):
-                self.write()
+            combined_onsets_offsets = list(self.syllable_onsets)
+            binary_list = [0] * len(self.syllable_onsets)
+            for i in range(len(self.syllable_offsets)):
+                insertion_pt = bisect_right(combined_onsets_offsets, self.syllable_offsets[i])
+                binary_list.insert(insertion_pt, 1)
+                insort(combined_onsets_offsets, self.syllable_offsets[i])
+            if sum(binary_list[::2]) != 0 or sum(binary_list[1::2]) != len(binary_list)/2:  # using python slices
+                check_order = CheckOrderPopup()
+                check_order.order = binary_list
+                check_order.open()
             else:
-                self.next()
+                # save parameters to dictionary
+                self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
+                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
+
+                # write if last file otherwise go to next file
+                if self.i == len(self.files):
+                    self.write()
+                else:
+                    self.next()
 
     def toss(self):
         # save file name to dictionary
