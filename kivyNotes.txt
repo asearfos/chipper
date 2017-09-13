@@ -99,3 +99,17 @@ Connecting PopUps to other classes
 Python Slices - good explanation
     - https://stackoverflow.com/questions/509211/explain-slice-notation
 
+Kivy Spacing vs Padding:
+    - from https://pythontips.com/2013/12/02/kivy-101-how-to-use-boxlayouts/
+    padding --> how much space there should be between the Layout and its children
+    spacing --> how much spacing there should be between the children
+
+Plotting without Axes or Only One:
+    - http://www.shocksolution.com/2011/08/removing-an-axis-or-both-axes-from-a-matplotlib-plot/
+    - https://github.com/cfinch/Shocksolution_Examples/blob/master/Plotting/matplotlib/plot_without_axes.py
+
+Matplotlib Scalebar:
+    - https://stackoverflow.com/questions/39786714/how-to-insert-scale-bar-in-a-map-in-matplotlib
+    - https://matplotlib.org/mpl_toolkits/axes_grid/api/anchored_artists_api.html#mpl_toolkits.axes_grid1.anchored_artists.AnchoredSizeBar
+
+

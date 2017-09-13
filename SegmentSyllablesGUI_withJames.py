@@ -13,7 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.uix.behaviors.focus import FocusBehavior
-from kivy.properties import ObjectProperty, StringProperty, BooleanProperty, ListProperty
+from kivy.properties import ObjectProperty, StringProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.logger import Logger
 # Logger.disabled = True
 
@@ -22,9 +22,10 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 plt.style.use('dark_background')
-from matplotlib.lines import Line2D
+import pandas as pd
 
 from bisect import bisect_left, bisect_right, insort
 
@@ -77,7 +78,42 @@ class CheckOrderPopup(Popup):
 
 
 class DonePopup(Popup):
-    pass
+    def quit_app(self):
+        print('song segmentation complete, Close SegmentSyllablesGUI.')
+        quit()
+
+class ZoomPopup(Popup):
+    def __init__(self, zoom_x, zoom_y, zoom_data, rows, cols, **kwargs):
+        super(ZoomPopup, self).__init__(**kwargs)
+        self.zoom_x = zoom_x
+        self.zoom_y = zoom_y
+        self.zoom_data = zoom_data
+        self.rows = rows
+        self.cols = cols
+
+        # top_image = ObjectProperty(None)
+
+        # axzoom = figzoom.add_subplot(111, xlim=(0.45, 0.55), ylim=(0.4, .6),
+        #                              autoscale_on=False)
+
+        self.figzoom, self.axzoom = plt.subplots()
+        # self.zoom_canvas = FigureCanvasKivyAgg(self.figzoom)
+
+        self.axzoom = plt.Axes(self.figzoom, [0., 0., 1., 1.])
+        self.axzoom.set_axis_off()
+        self.figzoom.add_axes(self.axzoom)
+
+        self.zoom_plot = self.axzoom.imshow(self.zoom_data, cmap='jet', extent=[0, self.cols, 0, self.rows], aspect='auto')
+
+        self.axzoom.set_xlim(self.zoom_x - 1000, self.zoom_x + 1000)
+        self.axzoom.set_ylim(0, self.rows)
+
+        # self.zoom_canvas.draw()
+
+        # create widget
+        # self.clear_widgets()
+        self.zoom_canvas = FigureCanvasKivyAgg(self.figzoom)
+        self.add_widget(self.zoom_canvas)
 
 
 class ImageSonogram(GridLayout):
@@ -103,7 +139,7 @@ class ImageSonogram(GridLayout):
     def image_sonogram(self, data):
         self.plot_sonogram.set_data(np.log(data + 3))
         self.plot_sonogram.autoscale()
-        # self.plot_sonogram_canvas.draw()
+        self.plot_sonogram_canvas.draw()
 
         # TODO: !!!SHOULD BE ABLE TO SPEED UP FASTER LIKE THIS BUT CAN'T GET TO WORK!!!
         # self.ax1.draw_artist(self.ax1.patch)
@@ -139,13 +175,13 @@ class ControlPanel(Screen):
         if self.ids.add.state == 'down':  # adding
             if event.key == 'left':
                 if self.graph_location >= 25:
-                    self.graph_location -= 5
+                    self.graph_location -= 7
                 self.update_mark(self.graph_location)
             elif event.key == 'right':
                 # print('length', self.cols)
                 # print('location', self.graph_location)
                 if self.graph_location < self.cols-25: #the mark is not resolved on the screen past this even though it is still within the size of the image
-                    self.graph_location += 5
+                    self.graph_location += 7
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
                 # if self.ids.syllable_toggle.state == 'normal':
@@ -220,6 +256,11 @@ class ControlPanel(Screen):
     def update_mark(self, new_mark):
         self.mark.set_xdata(new_mark)
         self.plot_binary_canvas.draw()
+
+    def zoom(self, touchx, touchy):
+        zoom_popup = ZoomPopup(touchx, touchy, self.zoom_data, self.rows, self.cols)
+        # zoom_popup.zoom_x, zoom_popup.zoom_y = touchx, touchy
+        zoom_popup.open()
 
     def add_mark(self, touchx, touchy):
         self.mark_boolean = True
@@ -368,13 +409,13 @@ class ControlPanel(Screen):
         self.top_image.image_sonogram(hpf_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
-        thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
-        onsets, offsets2, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(thresh_sonogram)
+        self.thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
+        onsets, offsets2, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(self.thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
 
-        self.image_binary(thresh_sonogram)
+        self.image_binary()
         self.image_syllable_marks()
         # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
 
@@ -423,11 +464,20 @@ class ControlPanel(Screen):
 
         # plot data
         self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, self.cols, 0, self.rows], aspect='auto')
+        # self.zoom_data = np.log(data+3)
 
         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
         self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
         self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
         # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
+
+        scalebar = AnchoredSizeBar(self.ax2.transData,
+                                   100, '100', 1,
+                                   pad=0.1,
+                                   color='white',
+                                   frameon=False,
+                                   size_vertical=2)
+        self.ax2.add_artist(scalebar)
 
         self.ids.graph_binary.clear_widgets()
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
@@ -439,12 +489,15 @@ class ControlPanel(Screen):
 
         # self.lines[0] = self.ax2.vlines(0, ymin=0, ymax=0, colors='m', linewidth=0.5)
 
-    def image_binary(self, data):
+    def image_binary(self):
         # self.ids.graph_binary.clear_widgets()
         # self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         # self.ids.graph_binary.add_widget(self.plot_binary_canvas)
-        self.plot_binary.set_data(np.log(data+3))
+        self.plot_binary.set_data(np.log(self.thresh_sonogram+3))
         self.plot_binary.autoscale()
+
+        self.zoom_data = np.log(self.thresh_sonogram+3)
+
 
     def image_syllable_marks(self):
         self.lines_on.set_xdata(np.repeat(self.syllable_onsets, 3))
@@ -499,7 +552,7 @@ class ControlPanel(Screen):
             else:
                 # save parameters to dictionary
                 self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets}
+                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets, 'ThresholdSonogram': self.thresh_sonogram}
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
@@ -518,36 +571,22 @@ class ControlPanel(Screen):
             self.next()
 
     def write(self):
-        # write save_parameters to files
-        with open((self.parent.directory + 'segmentedSyllables_parameters'), 'w') as params:
-            params_fields = ['FileName', 'HighPassFilter', 'PercentSignalKept', 'MinSilenceDuration',
-                             'MinSyllableDuration']
-            params_file = csv.DictWriter(params, params_fields, delimiter='\t')
-            params_file.writeheader()
-            for key, val in self.save_parameters.items():
-                row = {'FileName': key}
-                row.update(val)
-                params_file.writerow(row)
-            params.close()
-        with open((self.parent.directory + 'segmentedSyllables_syllables'), 'w') as sylls:
-            sylls_fields = ['FileName', 'Onsets', 'Offsets']
-            sylls_file = csv.DictWriter(sylls, sylls_fields, delimiter='\t')
-            sylls_file.writeheader()
-            for key, val in self.save_syllables.items():
-                row = {'FileName': key}
-                row.update(val)
-                sylls_file.writerow(row)
-            sylls.close()
-        # TODO: !!!!try using pandas dataframe --> to csv!!!
-        with open((self.parent.directory + 'segmentedSyllables_tossed'), 'w') as tossed:
-            tossed_fields = ['FileName']
-            tossed_file = csv.DictWriter(tossed, tossed_fields, delimiter='\t')
-            tossed_file.writeheader()
-            for key, val in self.save_tossed.items():
-                row = {'FileName': key}
-                row.update(val)
-                tossed_file.writerow(row)
-            tossed.close()
+
+        pd.DataFrame(self.thresh_sonogram).to_csv((self.parent.directory + 'testing.txt'), sep="\t")
+
+
+        df_parameters = pd.DataFrame.from_dict(self.save_parameters, orient='index')
+        df_parameters.index.name = 'FileName'
+        df_parameters.to_csv((self.parent.directory + 'segmentedSyllables_parameters.txt'), sep="\t")
+
+        df_syllables = pd.DataFrame.from_dict(self.save_syllables, orient='index')
+        df_syllables.index.name = 'FileName'
+        df_syllables.to_csv((self.parent.directory + 'segmentedSyllables_syllables.txt'), sep="\t")
+
+        df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
+        # df_tossed.index.name = 'FileName'
+        df_tossed.to_csv((self.parent.directory + 'segmentedSyllables_tossed.txt'), sep="\t", index=False)
+
         self.done_window()
 
     def done_window(self):

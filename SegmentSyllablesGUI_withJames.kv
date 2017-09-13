@@ -50,7 +50,6 @@
     size_hint: .25, .25
     auto_dismiss: False
     title: 'WARNING: You must start with an onset and end with an offset.'
-#    title: 'WARNING: The order of syllable onsets and offsets is nonsensical.'
     title_size: 16
     BoxLayout:
         orientation: 'vertical'
@@ -62,6 +61,17 @@
         Button:
             text: 'Okay'
             on_release: root.dismiss()
+
+#<ZoomPopup>
+##    top_image: test
+#    size_hint: .5, .5
+#    auto_dismiss: True
+#
+##    ImageSonogram
+##        id: test
+##        rows:1
+##        cols:1
+##        size_hint_x: 1
 
 <CheckOrderPopup>
     size_hint: .5, .25
@@ -85,7 +95,7 @@
     title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
     Button:
         text: 'Close'
-        on_release: app.root.quit()
+        on_release: root.quit_app()
 
 <ScreenOne>:
     id: browse
@@ -110,34 +120,32 @@
     BoxLayout:
         orientation: 'horizontal'
         padding: 10
-        spacing: 10
+        spacing: 0
 
-        GridLayout:
-            rows: 3
-            cols: 1
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 10
             size_hint_x: .05
 
             MySlider:
                 id: slider_high_pass_filter
                 orientation: 'vertical'
                 padding: 0
-                size_hint_x: 0.1
                 value_track: True
                 value_track_color: [.2, .7, 0.9, 1]
                 min: 0
-#                max: 513
-#                value: 0
                 step: 1
                 on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
             GridLayout:
 
             GridLayout:
-                size_hint: 1, 0.1
+                size_hint: 1, 0.05
 
         BoxLayout:
             id: graphs
             orientation: 'vertical'
+            spacing: 10
 
             ImageSonogram:
                 id: graph_sonogram
@@ -159,7 +167,7 @@
 
             MyRangeSlider:
                 id: range_slider_crop
-                size_hint: 1, 0.1
+                size_hint: 1, 0.05
                 padding: 0
                 step: 1
                 on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
@@ -261,8 +269,8 @@
                         id: add
                         group: 'user_defined_syllables'
                         text: 'Add'
+#                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.zoom(*args[1].pos)
                         on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add_mark(*args[1].pos)
-#                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and print(graph_binary.pos, graph_binary.size)
 
                     ToggleButton:
                         id: delete
