@@ -2,8 +2,6 @@ import kivy
 kivy.require('1.10.0')
 
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.slider import Slider
@@ -13,7 +11,6 @@ from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.config import Config
-from kivy.uix.behaviors.focus import FocusBehavior
 from kivy.properties import ObjectProperty, StringProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.logger import Logger
 # Logger.disabled = True
@@ -23,23 +20,20 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib.backend_kivy import FigureCanvasKivy
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
+import matplotlib.transforms as tx
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 plt.style.use('dark_background')
 
 
 from bisect import bisect_left, bisect_right, insort
-
-import re
 import numpy as np
 import pandas as pd
 import os
-import time
-import csv
 import math
-import matplotlib.transforms as tx
+import time
 from kivy.clock import Clock
 from time import sleep
+
 
 # import my own functions for data analysis
 import segmentSylls_functionsForGUI as seg
@@ -49,7 +43,7 @@ class Manager(ScreenManager):
     pass
 
 
-class ScreenOne(Screen):
+class FileExplorer(Screen):
     def _fbrowser_canceled(self, instance):
         print('cancelled, Close SegmentSyllablesGUI.')
         quit()
@@ -58,6 +52,7 @@ class ScreenOne(Screen):
         [chosen_directory] = instance.selection
         # self.parent.directory = chosen_directory + '\\'
         self.parent.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
+
 
 class FinishMarksPopup(Popup):
     def __init__(self, controls, **kwargs):  # controls is now the object where popup was called from.
@@ -375,7 +370,6 @@ class ControlPanel(Screen):
         self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
-        self.ids.current_file.text = self.files[self.i-1] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(self.files))
 
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
@@ -594,8 +588,10 @@ class ControlPanel(Screen):
                 self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
                 self.save_threshold_sonogram[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
 
-                # To write each one to it's own file --> this takes a long time and user has to wait between songs
-                # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
+                # start = time.time()
+                # # To write each one to it's own file --> this takes a long time and user has to wait between songs
+                # # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
+                # print(time.time()-start)
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):

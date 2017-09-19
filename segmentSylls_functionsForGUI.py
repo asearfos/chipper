@@ -10,13 +10,6 @@ from ifdvsonogramonly import ifdvsonogramonly
 
 def initialize(directory):
     files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
-    # F = len(files) + 1  # not sure if i really need the +1 (if not, then change range of for loop)
-
-    # # define overarching variables here
-    # analyzed_wav_files = []
-    # analyzed_wav_files.append('test.wav')
-    #
-    # wavlist = []
     return files
 
 
@@ -24,15 +17,6 @@ def initial_sonogram(i, files, directory):
     wavfile = files[i]
     song1, sample_rate = sf.read(directory + wavfile, always_2d=True)  # audio data always returned as 2d array
     song1 = song1[:, 0]  # make files mono
-
-    # wavfile  # not sure if we want this printed or not
-    # wavlist.append(wavfile)
-    #
-    # test_if_analyzed = wavlist[i] in analyzed_wav_files
-    # if not test_if_analyzed:
-    #     analyzed_wav_files.append(wavlist[i])
-    # # char(analyzed_wav_files) # don't think we need this
-    # file_number = analyzed_wav_files.index(wavlist[i])
 
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram = ifdvsonogramonly(song1, 44100, 1024, 1010, 2, 1, 3, 5, 5)
@@ -47,12 +31,6 @@ def high_pass_filter(filter_boundary, sonogram):
     [rows, cols] = np.shape(sonogram)
     sonogram[filter_boundary:rows, :] = 0
     return sonogram
-
-
-# def crop_sonogram(range, sonogram):
-#     [beginning, ending] = range
-#     sonogram[beginning:ending, :] = 0
-#     return sonogram
 
 
 def normalize_amplitude(sonogram):
@@ -155,35 +133,6 @@ def set_min_silence(min_silence, onsets, offsets2, silence_durations):
     return syllable_onsets, syllable_offsets
 
 
-# def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
-#     syllable_onsets = syllable_onsets[syllable_onsets != 0]
-#     syllable_offsets = syllable_offsets[syllable_offsets != 0]
-#     if syllable_offsets[0] < syllable_onsets[0]:  # make sure there is always first an onset
-#         np.delete(syllable_offsets, 0)
-#     for j in range(0, len(syllable_offsets) - 1):
-#         if syllable_offsets[j] - syllable_onsets[j] < min_syllable:  # sets minimum syllable size
-#             syllable_offsets[j] = 0
-#             syllable_onsets[j] = 0
-#     # remove zeros again after correcting for syllable size
-#     syllable_onsets = syllable_onsets[syllable_onsets != 0]
-#     syllable_offsets = syllable_offsets[syllable_offsets != 0]
-#
-#     syllable_marks = np.zeros(len(sum_sonogram_scaled))
-#     syllable_marks[syllable_onsets.astype(int)] = rows + 30
-#     syllable_marks[syllable_offsets.astype(int)] = rows + 10
-#
-#     return syllable_onsets, syllable_offsets, syllable_marks
-#
-#
-# def crop(bout_range, syllable_onsets, syllable_offsets, syllable_marks):
-#     [beginning, ending] = bout_range
-#     remove_onsets = syllable_onsets[np.logical_or(syllable_onsets <= beginning, syllable_onsets >= ending)]
-#     remove_offsets = syllable_offsets[np.logical_or(syllable_offsets <= beginning, syllable_offsets >= ending)]
-#     syllable_marks[remove_onsets.astype(int)] = 0
-#     syllable_marks[remove_offsets.astype(int)] = 0
-#
-#     return syllable_onsets, syllable_offsets, syllable_marks
-
 def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets):
     syllable_onsets = syllable_onsets[syllable_onsets != 0]
     syllable_offsets = syllable_offsets[syllable_offsets != 0]
@@ -206,11 +155,3 @@ def crop(bout_range, syllable_onsets, syllable_offsets):
     syllable_offsets = syllable_offsets[np.logical_and(syllable_offsets >= beginning, syllable_offsets <= ending)]
 
     return syllable_onsets, syllable_offsets
-
-# this was only to make the onsets and offsets different heigths in matlab plotting - got around this in python
-# def create_syllable_marks(syllable_onsets, syllable_offsets, sum_sonogram_scaled, rows):
-#     syllable_marks = np.zeros(len(sum_sonogram_scaled))
-#     syllable_marks[syllable_onsets.astype(int)] = rows + 30
-#     syllable_marks[syllable_offsets.astype(int)] = rows + 10
-#
-#     return syllable_marks

@@ -3,7 +3,7 @@
 #:import FileBrowser kivy.garden.filebrowser
 
 <Manager>:
-    ScreenOne:
+    FileExplorer:
     ControlPanel:
 
 <CustomLabel@Label>
@@ -98,7 +98,7 @@
         text: 'Close'
         on_release: root.quit_app()
 
-<ScreenOne>:
+<FileExplorer>:
     id: browse
     name: 'choose_file'
     FileBrowser:
