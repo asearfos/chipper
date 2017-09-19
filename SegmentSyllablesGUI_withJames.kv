@@ -90,9 +90,10 @@
             on_release: root.dismiss()
 
 <DonePopup>:
-    size_hint: .5, .5
+    size_hint: .3, .3
     auto_dismiss: False
     title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+    text_size: self.size
     Button:
         text: 'Close'
         on_release: root.quit_app()
@@ -173,7 +174,7 @@
                 on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
         GridLayout:
-            rows: 5
+            rows: 7
             cols: 1
             spacing: 20
             padding: 10
@@ -235,6 +236,18 @@
 
             GridLayout:
                 rows: 1
+                cols: 1
+                spacing: 10
+                padding: 10
+                size_hint_y: 0.5
+
+                Button:
+                    text: 'Reset Parameters'
+                    halign: 'center'
+                    on_release: controls.reset_parameters()
+
+            GridLayout:
+                rows: 1
                 cols: 2
                 spacing: 10
                 padding: 10
@@ -287,10 +300,27 @@
                 Button:
                     id: button_submit
                     text: 'SUBMIT'
-                    on_press: controls.save()
+                    on_release: controls.save()
 
                 Button:
                     id: button_toss
                     text: 'TOSS'
-                    on_press: controls.toss()
+                    on_release: controls.toss()
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                spacing: 10
+                padding: 10
+                size_hint_y: 0.5
+
+                Label:
+                    id: current_file
+                    halign: 'center'
+
+                Button:
+#                    size: add.size
+                    text: 'Back'
+                    on_release: controls.back()
+
 

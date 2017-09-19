@@ -1,3 +1,8 @@
+Problems with Scipy - couldn't get to work:
+    #import scipy.io as sp
+    #s = np.genfromtxt("C:/Users/abiga/Box Sync/Abigail_Nicole/SongAnalysis/song1mat.txt", delimiter='\n', usecols=0, dtype='float')
+    #sp.io.loadmat('C:\Users\abiga\Box Sync\Abigail_Nicole\SongAnalysis\song1_testingPython')
+
 instead of
     #from kivy.garden import matplotlib
 use the following code to make the backend for kivy work in matplotlib

@@ -7,6 +7,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.slider import Slider
+from kivy.uix.progressbar import ProgressBar
 from RangeSlider_FromGoogle import RangeSlider
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -25,15 +26,20 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 plt.style.use('dark_background')
-import pandas as pd
+
 
 from bisect import bisect_left, bisect_right, insort
 
 import re
 import numpy as np
+import pandas as pd
+import os
+import time
 import csv
 import math
 import matplotlib.transforms as tx
+from kivy.clock import Clock
+from time import sleep
 
 # import my own functions for data analysis
 import segmentSylls_functionsForGUI as seg
@@ -52,7 +58,6 @@ class ScreenOne(Screen):
         [chosen_directory] = instance.selection
         # self.parent.directory = chosen_directory + '\\'
         self.parent.directory = "C:/Users/abiga/Box Sync/Abigail_Nicole/TestingGUI/PracticeBouts/"
-
 
 class FinishMarksPopup(Popup):
     def __init__(self, controls, **kwargs):  # controls is now the object where popup was called from.
@@ -81,6 +86,7 @@ class DonePopup(Popup):
     def quit_app(self):
         print('song segmentation complete, Close SegmentSyllablesGUI.')
         quit()
+
 
 class ZoomPopup(Popup):
     def __init__(self, zoom_x, zoom_y, zoom_data, rows, cols, **kwargs):
@@ -184,7 +190,6 @@ class ControlPanel(Screen):
                     self.graph_location += 7
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
-                # if self.ids.syllable_toggle.state == 'normal':
                 if self.ids.syllable_beginning.state == 'down':
                     self.add_onsets()
                 else:
@@ -197,7 +202,6 @@ class ControlPanel(Screen):
         elif self.ids.delete.state == 'down':  # deleting
             if event.key == 'left':
                 self.index -= 1
-                # if self.ids.syllable_toggle.state == 'normal':
                 if self.ids.syllable_beginning.state == 'down':
                     if self.index < 0:
                         self.index = len(self.syllable_onsets) - 1
@@ -208,7 +212,6 @@ class ControlPanel(Screen):
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'right':
                 self.index += 1
-                # if self.ids.syllable_toggle.state == 'normal':
                 if self.ids.syllable_beginning.state == 'down':
                     if self.index >= len(self.syllable_onsets):
                         self.index = 0
@@ -218,7 +221,6 @@ class ControlPanel(Screen):
                         self.index = 0
                     self.update_mark(self.syllable_offsets[self.index])
             elif event.key == 'enter':
-                # if self.ids.syllable_toggle.state == 'normal':
                 if self.ids.syllable_beginning.state == 'down':
                     self.delete_onsets()
                 else:
@@ -231,13 +233,11 @@ class ControlPanel(Screen):
 
     def enter_mark(self):
         if self.ids.add.state == 'down':  # adding
-            # if self.ids.syllable_toggle.state == 'normal':
             if self.ids.syllable_beginning.state == 'down':
                 self.add_onsets()
             else:
                 self.add_offsets()
         elif self.ids.delete.state == 'down':  # deleting
-            # if self.ids.syllable_toggle.state == 'normal':
             if self.ids.syllable_beginning.state == 'down':
                 self.delete_onsets()
             else:
@@ -267,7 +267,6 @@ class ControlPanel(Screen):
         conversion = np.shape(self.sonogram)[1]/self.ids.graph_binary.size[0]
         self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
 
-        # if self.ids.syllable_toggle.state == 'normal':
         if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
         else:
@@ -277,7 +276,7 @@ class ControlPanel(Screen):
         # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
 
         # use one of the below options to graph as another color/group of lines
-        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=.5)
+        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=0.75)
         self.plot_binary_canvas.draw()
         # or can plot like this... not sure which is best
         # self.ax2.plot(np.repeat(graph_location, 3), np.tile([0, .75, np.nan], 1), linewidth=2, color='m', transform=self.trans)
@@ -317,7 +316,6 @@ class ControlPanel(Screen):
         conversion = np.shape(self.sonogram)[1] / self.ids.graph_binary.size[0]
         self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
 
-        # if self.ids.syllable_toggle.state == 'normal':
         if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
             # find nearest onset
@@ -329,7 +327,7 @@ class ControlPanel(Screen):
             self.index = self.takeClosest(self.syllable_offsets, self.graph_location)
             location = self.syllable_offsets[self.index]
 
-        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=0.5)
+        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=0.75)
         self.plot_binary_canvas.draw()
 
     def delete_onsets(self):
@@ -352,7 +350,44 @@ class ControlPanel(Screen):
         self.save_parameters = {}
         self.save_syllables = {}
         self.save_tossed = {}
+        self.save_threshold_sonogram = {}
         self.next()
+        self.output_path = self.parent.directory + "Output_" + time.strftime("%m%d%Y")
+        if not os.path.isdir(self.output_path):
+            os.makedirs(self.output_path)
+        # else:
+        #     print(self.output_path + ' already exists')
+        #     quit()
+
+    def reset_parameters(self):
+        self.filter_boundary = 0
+        self.percent_keep = 2
+        self.min_silence = 10
+        self.min_syllable = 20
+
+        # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
+        # TODO: connect defaults to .kv (would like to do this the other way around) or remove values from .kv
+        self.ids.slider_high_pass_filter.value = self.filter_boundary
+        self.ids.slider_threshold.value = self.percent_keep
+        self.ids.slider_min_silence.value = self.min_silence
+        self.ids.slider_min_syllable.value = self.min_syllable
+        self.ids.syllable_beginning.state = 'down'
+        self.ids.syllable_ending.state = 'normal'
+        self.ids.add.state = 'normal'
+        self.ids.delete.state = 'normal'
+        self.ids.current_file.text = self.files[self.i-1] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(self.files))
+
+        # connect size of sonogram to maximum of sliders for HPF and crop
+        [self.rows, self.cols] = np.shape(self.sonogram)
+        self.ids.slider_high_pass_filter.max = self.rows
+        self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
+        self.ids.range_slider_crop.value1 = self.bout_range[0]
+        self.ids.range_slider_crop.value2 = self.bout_range[1]
+        self.ids.range_slider_crop.min = self.bout_range[0]
+        self.ids.range_slider_crop.max = self.bout_range[1]
+
+        # run update to load images for the first time for this file
+        self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
     def next(self):
         # reset default parameters for new song (will be used by update to graph the first attempt)
@@ -367,10 +402,11 @@ class ControlPanel(Screen):
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
-        # self.ids.syllable_toggle.state = 'normal'
         self.ids.syllable_beginning.state = 'down'
+        self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
+        self.ids.current_file.text = self.files[self.i-1] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(self.files))
 
         # get initial data
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
@@ -467,8 +503,8 @@ class ControlPanel(Screen):
         # self.zoom_data = np.log(data+3)
 
         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
-        self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
-        self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=0.5, color='g', transform=self.trans)
+        self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.75, color='g', transform=self.trans)
+        self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=0.75, color='g', transform=self.trans)
         # self.add_on, = self.ax2.plot(np.repeat(x, 3), np.tile([0, .75, np.nan], len(x)), linewidth=2, color='g', transform=self.trans)
 
         scalebar = AnchoredSizeBar(self.ax2.transData,
@@ -526,6 +562,9 @@ class ControlPanel(Screen):
         # ymax = syllable_marks[syllable_marks != 0]
         # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
 
+    def back(self):
+        self.i -= 2
+        self.next()
 
     def save(self):
         if len(self.syllable_onsets) != len(self.syllable_offsets):
@@ -551,8 +590,12 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary
-                self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets, 'Offsets': self.syllable_offsets, 'ThresholdSonogram': self.thresh_sonogram}
+                self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
+                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
+                self.save_threshold_sonogram[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
+
+                # To write each one to it's own file --> this takes a long time and user has to wait between songs
+                # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
@@ -572,20 +615,21 @@ class ControlPanel(Screen):
 
     def write(self):
 
-        pd.DataFrame(self.thresh_sonogram).to_csv((self.parent.directory + 'testing.txt'), sep="\t")
-
-
         df_parameters = pd.DataFrame.from_dict(self.save_parameters, orient='index')
         df_parameters.index.name = 'FileName'
-        df_parameters.to_csv((self.parent.directory + 'segmentedSyllables_parameters.txt'), sep="\t")
+        df_parameters.to_csv((self.output_path + '\segmentedSyllables_parameters.txt'), sep="\t")
 
         df_syllables = pd.DataFrame.from_dict(self.save_syllables, orient='index')
         df_syllables.index.name = 'FileName'
-        df_syllables.to_csv((self.parent.directory + 'segmentedSyllables_syllables.txt'), sep="\t")
+        df_syllables.to_csv((self.output_path + '\segmentedSyllables_syllables.txt'), sep="\t")
+
+        df_threshold_sonogram = pd.DataFrame.from_dict(self.save_threshold_sonogram, orient='index')
+        df_threshold_sonogram.index.name = 'FileName'
+        df_threshold_sonogram.to_csv((self.output_path + '\\threshold_sonogram.txt'), sep="\t", header=False)
 
         df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
         # df_tossed.index.name = 'FileName'
-        df_tossed.to_csv((self.parent.directory + 'segmentedSyllables_tossed.txt'), sep="\t", index=False)
+        df_tossed.to_csv((self.output_path + '\segmentedSyllables_tossed.txt'), sep="\t", index=False)
 
         self.done_window()
 
@@ -630,5 +674,5 @@ class SegmentSyllablesGUI_withJamesApp(App):
 
 if __name__ == "__main__":
     Config.set('input', 'mouse', 'mouse,disable_multitouch')
-    # Window.fullscreen = 'auto'
+    Window.fullscreen = 'auto'
     SegmentSyllablesGUI_withJamesApp().run()
