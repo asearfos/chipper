@@ -6,7 +6,6 @@ import soundfile as sf
 from ifdvsonogramonly import ifdvsonogramonly
 #import matplotlib.pyplot as plt
 
-# TODO: clean up extra lines from MATLAB workflow
 
 def initialize(directory):
     files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
@@ -20,36 +19,31 @@ def initial_sonogram(i, files, directory):
 
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram = ifdvsonogramonly(song1, 44100, 1024, 1010, 2, 1, 3, 5, 5)
-    [rows, cols] = np.shape(sonogram)
+    [rows, cols] = sonogram.shape
     sonogram_padded = np.zeros((rows, cols + 300))
     sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
-    sonogram = sonogram_padded
-    return sonogram
+    return sonogram_padded
 
 
 def high_pass_filter(filter_boundary, sonogram):
-    [rows, cols] = np.shape(sonogram)
+    rows = sonogram.shape[0]
     sonogram[filter_boundary:rows, :] = 0
     return sonogram
 
 
 def normalize_amplitude(sonogram):
-    [rows, cols] = np.shape(sonogram)
+    [rows, cols] = sonogram.shape
 
     # sliding window average of amplitude
     amplitude_vector = np.squeeze(np.sum(sonogram, axis=0))
     amplitude_average_vector = np.zeros((len(amplitude_vector), 1))
 
     for f in range(0, np.size(amplitude_vector)):
-        if f - 500 <= 0:  # if the index is outside the bounds of the data (negative index)
-            vecstart = 0  # index to start window -> first one of array
-        else:
-            vecstart = f - 500
-        if f + 500 > len(
-                amplitude_vector):  # if the index is outside the bounds of the data (too large of index) (not really sure if I need this since an index outside automatically just goes to end and does not throw errow in Python)
-            vecend = len(amplitude_vector)  # index to end window -> the last one of the array
-        else:
-            vecend = f + 500 + 1  # have to add one in python since it is not inclusive
+        vecstart = max(0, f-500)  # index to start window -> first one of array, check if the index is outside the bounds of the data (negative index)
+        # index to end window -> the last one of the array
+        # if the index is outside the bounds of the data (too large of index) (not really sure if I need this since an index outside automatically just goes to end and does not throw errow in Python)
+        # else have to add one in python since it is not inclusive
+        vecend = len(amplitude_vector) if f + 500 > len(amplitude_vector) else f + 501
         amplitude_average_vector[f] = np.mean(amplitude_vector[vecstart:vecend])
 
     # use average amplitude to rescale and increase low amplitude sections
@@ -88,7 +82,7 @@ def threshold_image(top_threshold, scaled_sonogram):
 
 
 def initialize_onsets_offsets(sonogram_thresh):
-    [rows, cols] = np.shape(sonogram_thresh)
+    [rows, cols] = sonogram_thresh.shape
 
     # sonogram summed
     sum_sonogram = sum(sonogram_thresh)  # collapse matrix to one row by summing columns (gives total signal over time)
@@ -115,8 +109,8 @@ def initialize_onsets_offsets(sonogram_thresh):
     mean_silence_durations = []
     for j in range(0, len(onsets) - 1):
         silence_durations[j] = onsets[j] - offsets2[j]
-    mean_silence_durations.append(np.mean(
-        silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
+    mean_silence_durations.append(np.mean(silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
+
     return onsets, offsets2, silence_durations, sum_sonogram_scaled
 
 

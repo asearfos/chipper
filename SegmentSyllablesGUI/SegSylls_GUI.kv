@@ -1,0 +1,326 @@
+#:import MeshLinePlot kivy.garden.graph.MeshLinePlot
+#:import np numpy
+#:import FileBrowser kivy.garden.filebrowser
+
+<Manager>:
+    FileExplorer:
+    ControlPanel:
+
+<CustomLabel@Label>
+    color: 1, 1, 1, 1
+
+<FinishMarksPopup>
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'Before moving to a new task you must do one of the following:'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Button:
+            text: 'Accept'
+            on_press: root.controls.enter_mark()
+            on_release: root.dismiss()
+        Button:
+            text: 'Cancel'
+            on_press: root.controls.cancel_mark()
+            on_release: root.dismiss()
+        Label:
+            text: 'ProTip: You can press ENTER to accept or X to cancel to avoid this popup.'
+            text_size: self.size
+            halign: 'left'
+            valign: 'middle'
+
+<CheckLengthPopup>
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'WARNING: There is an unequal number of onsets and offsets. You must have an equal number to proceed to the next sample.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Number of onsets: ' + root.len_onsets + "\nNumber of offsets: " + root.len_offsets
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
+<CheckBeginningEndPopup>
+    size_hint: .25, .25
+    auto_dismiss: False
+    title: 'WARNING: You must start with an onset and end with an offset.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Starts with onset: ' + str(root.start_onset) + "\nEnds with offset: " + str(root.end_offset)
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
+#<ZoomPopup>
+##    top_image: test
+#    size_hint: .5, .5
+#    auto_dismiss: True
+#
+##    ImageSonogram
+##        id: test
+##        rows:1
+##        cols:1
+##        size_hint_x: 1
+
+<CheckOrderPopup>
+    size_hint: .5, .25
+    auto_dismiss: False
+    title: 'WARNING: The order of syllable onsets and offsets is nonsensical. You must alternate between onsets and offsets.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: 'Your current order is as follows with 0 as onsets and 1 as offsets:\n' + str(root.order)
+            text_size: self.size
+            halign: 'center'
+            valign: 'middle'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
+<DonePopup>:
+    size_hint: .3, .3
+    auto_dismiss: False
+    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+    text_size: self.size
+    Button:
+        text: 'Close'
+        on_release: root.quit_app()
+
+<FileExplorer>:
+    id: browse
+    name: 'choose_file'
+    FileBrowser:
+        id: file_browser
+        dirselect: True
+        on_success: browse._fbrowser_success(file_browser); app.root.current = 'control_panel'
+        on_canceled: browse._fbrowser_canceled(file_browser)
+
+<ImageSonogram>:
+
+#<ImageBinary>:
+
+<ControlPanel>:
+    id: controls
+    name: 'control_panel'
+    on_pre_enter: controls.setup()
+    top_image: graph_sonogram
+#    bottom_image: graph_binary
+
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: 10
+        spacing: 0
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 10
+            size_hint_x: .05
+
+            MySlider:
+                id: slider_high_pass_filter
+                orientation: 'vertical'
+                padding: 0
+                value_track: True
+                value_track_color: [.2, .7, 0.9, 1]
+                min: 0
+                step: 1
+                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+
+            GridLayout:
+
+            GridLayout:
+                size_hint: 1, 0.05
+
+        BoxLayout:
+            id: graphs
+            orientation: 'vertical'
+            spacing: 10
+
+            ImageSonogram:
+                id: graph_sonogram
+                rows: 1
+                cols: 1
+                size_hint_x: 1
+
+            GridLayout:
+                id: graph_binary
+                rows: 1
+                cols: 1
+                size_hint_x: 1
+
+#            ImageBinary:
+#                id: graph_binary
+#                rows: 1
+#                cols: 1
+#                size_hint_x: 1
+
+            MyRangeSlider:
+                id: range_slider_crop
+                size_hint: 1, 0.05
+                padding: 0
+                step: 1
+                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+
+        GridLayout:
+            rows: 7
+            cols: 1
+            spacing: 20
+            padding: 10
+            size_hint_x: .375
+
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 10
+                padding: 10
+
+                CustomLabel:
+                    text: 'Threshold: Top Percent of Signal'
+                MySlider:
+                    id: slider_threshold
+                    min: 0.10
+                    max: 3
+                    value: 2
+                    step: 0.10
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(round(slider_threshold.value,1))
+
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 10
+                padding: 10
+
+                CustomLabel:
+                    text: 'Minimum Silence Duration'
+                MySlider:
+                    id: slider_min_silence
+                    min: 1
+                    max: 100
+                    value: 10
+                    step: 1
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(slider_min_silence.value)
+
+            GridLayout:
+                rows: 3
+                cols: 1
+                spacing: 10
+                padding: 10
+
+                CustomLabel:
+                    text: 'Minimum Syllable Duration'
+                MySlider:
+                    id: slider_min_syllable
+                    min: 1
+                    max: 1000
+                    value: 20
+                    step: 1
+                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                CustomLabel:
+                    text: str(slider_min_syllable.value)
+
+            GridLayout:
+                rows: 1
+                cols: 1
+                spacing: 10
+                padding: 10
+                size_hint_y: 0.5
+
+                Button:
+                    text: 'Reset Parameters'
+                    halign: 'center'
+                    on_release: controls.reset_parameters()
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                spacing: 10
+                padding: 10
+
+                GridLayout:
+                    rows: 2
+                    cols: 1
+
+                    ToggleButton:
+                        id: syllable_beginning
+                        group: 'syllable_marks'
+                        text: 'Syllable\nBeginning'
+                        halign: 'center'
+                        on_press: syllable_beginning.state = 'down'
+
+                    ToggleButton:
+                        id: syllable_ending
+                        group: 'syllable_marks'
+                        text: 'Syllable\nEnding'
+                        halign: 'center'
+                        on_press: syllable_ending.state = 'down'
+
+#                    ToggleButton:
+#                        id: syllable_toggle
+#                        text: 'Syllable Ending' if self.state == 'down' else 'Syllable Beginning'
+
+                GridLayout:
+                    rows: 2
+                    cols: 1
+
+                    ToggleButton:
+                        id: add
+                        group: 'user_defined_syllables'
+                        text: 'Add'
+#                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.zoom(*args[1].pos)
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add_mark(*args[1].pos)
+
+                    ToggleButton:
+                        id: delete
+                        group: 'user_defined_syllables'
+                        text: 'Delete'
+                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.delete_mark(*args[1].pos)
+
+            GridLayout:
+                rows: 2
+                cols: 1
+                spacing: 10
+                padding: 10
+
+                Button:
+                    id: button_submit
+                    text: 'SUBMIT'
+                    on_release: controls.save()
+
+                Button:
+                    id: button_toss
+                    text: 'TOSS'
+                    on_release: controls.toss()
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                spacing: 10
+                padding: 10
+                size_hint_y: 0.5
+
+                Label:
+                    id: current_file
+                    halign: 'center'
+
+                Button:
+#                    size: add.size
+                    text: 'Back'
+                    on_release: controls.back()
+
+
