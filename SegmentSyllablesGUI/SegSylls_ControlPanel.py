@@ -2,7 +2,7 @@ from SegSylls_Popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEn
 # from SegSylls_ImageSonogram import ImageSonogram
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
-import segmentSylls_functionsForGUI as seg
+import SegSylls_functionsForGUI as seg
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
@@ -18,6 +18,8 @@ import pandas as pd
 import os
 import math
 import time
+import csv
+import json
 
 
 class ControlPanel(Screen):
@@ -25,6 +27,7 @@ class ControlPanel(Screen):
         self.top_image = ObjectProperty(None)
         self.mark_boolean = False
         self.click = 0
+        self.direction_to_int = {'left': -1, 'right': 1}
         # bottom_image = ObjectProperty(None)
 
         self.register_event_type('on_check_boolean')
@@ -43,15 +46,15 @@ class ControlPanel(Screen):
             ControlPanel.disabled = True
             return True
 
-    def move_mark(self, event):
+    def reset_panel(self):
+        self.mark_boolean = False
+        self.click = 0
+        ControlPanel.disabled = False
+
+    def move_mark(self, event, move_interval=7):
         if self.ids.add.state == 'down':  # adding
-            if event.key == 'left':
-                if self.graph_location >= 25:
-                    self.graph_location -= 7
-                self.update_mark(self.graph_location)
-            elif event.key == 'right':
-                if self.graph_location < self.cols-25: #the mark is not resolved on the screen past this even though it is still within the size of the image
-                    self.graph_location += 7
+            if event.key in self.direction_to_int and (25 <= self.graph_location < self.cols-25):
+                self.graph_location += self.direction_to_int[event.key]*move_interval
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
                 if self.ids.syllable_beginning.state == 'down':
@@ -64,23 +67,17 @@ class ControlPanel(Screen):
             elif event.key == 'x':
                 self.cancel_mark()
         elif self.ids.delete.state == 'down':  # deleting
-            if event.key == 'left':
-                self.index -= 1
-                if self.ids.syllable_beginning.state == 'down':
+            if event.key in self.direction_to_int:
+                self.index += self.direction_to_int[event.key]
+                if self.ids.syllable_beginning.state == 'down':  # onsets
                     if self.index < 0:
                         self.index = len(self.syllable_onsets) - 1
-                    self.update_mark(self.syllable_onsets[self.index])
-                else:
-                    if self.index < 0:
-                        self.index = len(self.syllable_offsets) - 1
-                    self.update_mark(self.syllable_offsets[self.index])
-            elif event.key == 'right':
-                self.index += 1
-                if self.ids.syllable_beginning.state == 'down':
                     if self.index >= len(self.syllable_onsets):
                         self.index = 0
                     self.update_mark(self.syllable_onsets[self.index])
-                else:
+                else:  # offsets
+                    if self.index < 0:
+                        self.index = len(self.syllable_offsets) - 1
                     if self.index >= len(self.syllable_offsets):
                         self.index = 0
                     self.update_mark(self.syllable_offsets[self.index])
@@ -361,8 +358,9 @@ class ControlPanel(Screen):
         # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
 
     def back(self):
-        self.i -= 2
-        self.next()
+        if self.i != 1:
+            self.i -= 2
+            self.next()
 
     def save(self):
         if len(self.syllable_onsets) != len(self.syllable_offsets):
@@ -388,13 +386,50 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary
+                start = time.time()
                 self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
                 self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
                 self.save_threshold_sonogram[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
+                print('appending', time.time() - start)
 
-                # start = time.time()
-                # # To write each one to it's own file --> this takes a long time and user has to wait between songs
-                # # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
+                start = time.time()
+                self.save_test1 = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
+                self.save_test2 = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
+                self.save_test = {'Sonogram': self.thresh_sonogram.tolist()}
+                print('individual', time.time() - start)
+
+                start = time.time()
+                filename = self.output_path + '\jsontesting' + self.files[self.i - 1] + '.txt'
+                dictionaries = [self.save_test1, self.save_test2, self.save_test]
+                print('multidict', time.time() - start)
+
+                start = time.time()
+
+                fout = open(filename, 'w')
+                # json_dict = json.dumps(self.save_test)
+                # fout.wrtie(json_dict)
+                for dict in dictionaries:
+                    json_dict = json.dumps(dict)
+                    fout.write(json_dict + '\n')
+                fout.close()
+                print('total write time', time.time() - start)
+
+                # self.write_content_to_file(
+                #     filename=self.output_path + '\save_parameters' + self.files[self.i - 1] + '.txt',
+                #     header=['FileName', 'HighPassFilter', 'BoutRange', 'PercentSignalKept', 'MinSilenceDuration', 'MinSyllableDuration'],
+                #     values=self.save_test1)
+                # self.write_content_to_file(
+                #     filename=self.output_path + '\save_syllables' + self.files[self.i - 1] + '.txt',
+                #     header=['Onsets', 'Offsets'],
+                #     values=self.save_test2)
+                # self.write_content_to_file(
+                #     filename=self.output_path + '\\threshold_sonogram' + self.files[self.i - 1] + '.txt',
+                #     header=['Sonogram'],
+                #     values=self.save_test)
+
+                # To write each one to it's own file --> this takes a long time and user has to wait between songs
+                # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
+
                 # print(time.time()-start)
 
                 # write if last file otherwise go to next file
@@ -402,6 +437,8 @@ class ControlPanel(Screen):
                     self.write()
                 else:
                     self.next()
+                # print(time.time()-start)
+
 
     def toss(self):
         # save file name to dictionary
@@ -412,6 +449,40 @@ class ControlPanel(Screen):
             self.write()
         else:
             self.next()
+
+    def write_content_to_file(self, filename, header, values, delimiter='\t'):
+        fout = open((filename), 'w')
+        output_file = csv.writer(fout, delimiter='\t')
+        output_file.writerows(values.keys())
+        # output_file.writerows(values.values())
+        fout.close()
+
+    # def write_content_to_file(self, filename, header, values, delimiter='\t'):
+    #     fout = open((filename), 'w')
+    #     output_file = csv.DictWriter(fout, header, delimiter='\t')
+    #     output_file.writeheader()
+    #     output_file.writerow(values)
+    #     fout.close()
+
+    # def write(self):
+    #
+    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_parameters',
+    #     #                            header=['FileName', 'HighPassFilter', 'PercentSignalKept', 'MinSilenceDuration', 'MinSyllableDuration'],
+    #     #                            values=self.save_parameters.items())
+    #     #
+    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_syllables',
+    #     #                            header=['FileName', 'Onsets', 'Offsets'],
+    #     #                            values=self.save_syllables.items())
+    #     #
+    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_tossed',
+    #     #                            header=['FileName'],
+    #     #                            values=self.save_tossed.items())
+    #
+    #     self.write_content_to_file(filename=self.output_path + '\\threshold_sonogram' + self.files[self.i-1] + '.txt',
+    #                                header=['Sonogram'],
+    #                                values=self.save_threshold_sonogram.items())
+    #
+    #     # self.done_window()
 
     def write(self):
 
