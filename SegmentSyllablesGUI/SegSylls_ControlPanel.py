@@ -20,6 +20,7 @@ import math
 import time
 import csv
 import json
+import gzip
 
 
 class ControlPanel(Screen):
@@ -200,17 +201,15 @@ class ControlPanel(Screen):
     def setup(self):
         self.i = 0
         self.files = seg.initialize(self.parent.directory)
-        self.save_parameters = {}
-        self.save_syllables = {}
+        self.file_names = [os.path.splitext(self.files[i])[0] for i in range(len(self.files))]
+        self.save_parameters_all = {}
+        self.save_syllables_all = {}
         self.save_tossed = {}
-        self.save_threshold_sonogram = {}
+        self.save_threshold_sonogram_all = {}
         self.next()
-        self.output_path = self.parent.directory + "Output_" + time.strftime("%m%d%Y")
+        self.output_path = self.parent.directory + "Output_" + time.strftime("%Y%m%d_T%H%M%S")
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
-        # else:
-        #     print(self.output_path + ' already exists')
-        #     quit()
 
     def set_song_params(self, filter_boundary=0, percent_keep=2, min_silence=10, min_syllable=20):
         self.filter_boundary = filter_boundary
@@ -386,59 +385,25 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary
-                start = time.time()
-                self.save_parameters[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-                self.save_syllables[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
-                self.save_threshold_sonogram[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
-                print('appending', time.time() - start)
+                self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
+                self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
+                self.save_threshold_sonogram_all[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
 
-                start = time.time()
-                self.save_test1 = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-                self.save_test2 = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
-                self.save_test = {'Sonogram': self.thresh_sonogram.tolist()}
-                print('individual', time.time() - start)
+                filename_gzip = self.output_path + '/output_' + self.file_names[self.i - 1] + '.gzip'
+                dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[self.i-1]], self.save_threshold_sonogram_all[self.files[self.i-1]]]
 
-                start = time.time()
-                filename = self.output_path + '\jsontesting' + self.files[self.i - 1] + '.txt'
-                dictionaries = [self.save_test1, self.save_test2, self.save_test]
-                print('multidict', time.time() - start)
-
-                start = time.time()
-
-                fout = open(filename, 'w')
-                # json_dict = json.dumps(self.save_test)
-                # fout.wrtie(json_dict)
-                for dict in dictionaries:
-                    json_dict = json.dumps(dict)
-                    fout.write(json_dict + '\n')
+                fout = gzip.open(filename_gzip, 'wb')
+                for d in dictionaries:
+                    json_str = json.dumps(d) + '\n'
+                    json_bytes = json_str.encode('utf-8')
+                    fout.write(json_bytes)
                 fout.close()
-                print('total write time', time.time() - start)
-
-                # self.write_content_to_file(
-                #     filename=self.output_path + '\save_parameters' + self.files[self.i - 1] + '.txt',
-                #     header=['FileName', 'HighPassFilter', 'BoutRange', 'PercentSignalKept', 'MinSilenceDuration', 'MinSyllableDuration'],
-                #     values=self.save_test1)
-                # self.write_content_to_file(
-                #     filename=self.output_path + '\save_syllables' + self.files[self.i - 1] + '.txt',
-                #     header=['Onsets', 'Offsets'],
-                #     values=self.save_test2)
-                # self.write_content_to_file(
-                #     filename=self.output_path + '\\threshold_sonogram' + self.files[self.i - 1] + '.txt',
-                #     header=['Sonogram'],
-                #     values=self.save_test)
-
-                # To write each one to it's own file --> this takes a long time and user has to wait between songs
-                # pd.DataFrame(self.thresh_sonogram).to_csv((self.output_path + "\\threshold_sonogram_" + self.files[self.i-1] + '.txt'), sep="\t", index=False, header=False)
-
-                # print(time.time()-start)
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
                     self.write()
                 else:
                     self.next()
-                # print(time.time()-start)
-
 
     def toss(self):
         # save file name to dictionary
@@ -450,57 +415,18 @@ class ControlPanel(Screen):
         else:
             self.next()
 
-    def write_content_to_file(self, filename, header, values, delimiter='\t'):
-        fout = open((filename), 'w')
-        output_file = csv.writer(fout, delimiter='\t')
-        output_file.writerows(values.keys())
-        # output_file.writerows(values.values())
-        fout.close()
-
-    # def write_content_to_file(self, filename, header, values, delimiter='\t'):
-    #     fout = open((filename), 'w')
-    #     output_file = csv.DictWriter(fout, header, delimiter='\t')
-    #     output_file.writeheader()
-    #     output_file.writerow(values)
-    #     fout.close()
-
-    # def write(self):
-    #
-    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_parameters',
-    #     #                            header=['FileName', 'HighPassFilter', 'PercentSignalKept', 'MinSilenceDuration', 'MinSyllableDuration'],
-    #     #                            values=self.save_parameters.items())
-    #     #
-    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_syllables',
-    #     #                            header=['FileName', 'Onsets', 'Offsets'],
-    #     #                            values=self.save_syllables.items())
-    #     #
-    #     # self.write_content_to_file(filename=self.parent.directory + 'segmentedSyllables_tossed',
-    #     #                            header=['FileName'],
-    #     #                            values=self.save_tossed.items())
-    #
-    #     self.write_content_to_file(filename=self.output_path + '\\threshold_sonogram' + self.files[self.i-1] + '.txt',
-    #                                header=['Sonogram'],
-    #                                values=self.save_threshold_sonogram.items())
-    #
-    #     # self.done_window()
-
     def write(self):
 
-        df_parameters = pd.DataFrame.from_dict(self.save_parameters, orient='index')
+        df_parameters = pd.DataFrame.from_dict(self.save_parameters_all, orient='index')
         df_parameters.index.name = 'FileName'
-        df_parameters.to_csv((self.output_path + '\segmentedSyllables_parameters.txt'), sep="\t")
+        df_parameters.to_csv((self.output_path + '/segmentedSyllables_parameters_all.txt'), sep="\t")
 
-        df_syllables = pd.DataFrame.from_dict(self.save_syllables, orient='index')
+        df_syllables = pd.DataFrame.from_dict(self.save_syllables_all, orient='index')
         df_syllables.index.name = 'FileName'
-        df_syllables.to_csv((self.output_path + '\segmentedSyllables_syllables.txt'), sep="\t")
-
-        df_threshold_sonogram = pd.DataFrame.from_dict(self.save_threshold_sonogram, orient='index')
-        df_threshold_sonogram.index.name = 'FileName'
-        df_threshold_sonogram.to_csv((self.output_path + '\\threshold_sonogram.txt'), sep="\t", header=False)
+        df_syllables.to_csv((self.output_path + '/segmentedSyllables_syllables_all.txt'), sep="\t")
 
         df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
-        # df_tossed.index.name = 'FileName'
-        df_tossed.to_csv((self.output_path + '\segmentedSyllables_tossed.txt'), sep="\t", index=False)
+        df_tossed.to_csv((self.output_path + '/segmentedSyllables_tossed.txt'), sep="\t", index=False)
 
         self.done_window()
 

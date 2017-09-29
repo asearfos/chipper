@@ -4,4 +4,9 @@ kivy  # follow instructions found here: https://kivy.org/docs/installation/insta
 matplotlib
 soundfile
 numpy
-SciPy  # maybe
+scipy # maybe
+
+
+# for analysis:
+json
+scikit-image
