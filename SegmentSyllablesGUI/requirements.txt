@@ -1,12 +1,7 @@
-# https://conda.io/miniconda.html
 pandas
-kivy  # follow instructions found here: https://kivy.org/docs/installation/installation-windows.html
 matplotlib
 soundfile
 numpy
-scipy # maybe
-
-
-# for analysis:
-json
+kivy-garden
 scikit-image
+garden install graph, filebrowser, matplotlib

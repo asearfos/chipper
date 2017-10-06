@@ -207,7 +207,7 @@ class ControlPanel(Screen):
         self.save_tossed = {}
         self.save_threshold_sonogram_all = {}
         self.next()
-        self.output_path = self.parent.directory + "Output_" + time.strftime("%Y%m%d_T%H%M%S")
+        self.output_path = self.parent.directory + "SeqSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
@@ -389,15 +389,15 @@ class ControlPanel(Screen):
                 self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
                 self.save_threshold_sonogram_all[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
 
-                filename_gzip = self.output_path + '/output_' + self.file_names[self.i - 1] + '.gzip'
+                filename_gzip = self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip'
                 dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[self.i-1]], self.save_threshold_sonogram_all[self.files[self.i-1]]]
 
-                fout = gzip.open(filename_gzip, 'wb')
-                for d in dictionaries:
-                    json_str = json.dumps(d) + '\n'
-                    json_bytes = json_str.encode('utf-8')
-                    fout.write(json_bytes)
-                fout.close()
+                with gzip.open(filename_gzip, 'wb') as fout:
+                    for d in dictionaries:
+                        json_str = json.dumps(d) + '\n'
+                        json_bytes = json_str.encode('utf-8')
+                        fout.write(json_bytes)
+                    fout.close()
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):

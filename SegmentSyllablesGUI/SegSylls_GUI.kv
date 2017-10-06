@@ -92,7 +92,8 @@
 <DonePopup>:
     size_hint: .3, .3
     auto_dismiss: False
-    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+#    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
+    title: 'All parameters, onsets, and offsets have been saved!'
     text_size: self.size
     Button:
         text: 'Close'
@@ -270,10 +271,6 @@
                         halign: 'center'
                         on_press: syllable_ending.state = 'down'
 
-#                    ToggleButton:
-#                        id: syllable_toggle
-#                        text: 'Syllable Ending' if self.state == 'down' else 'Syllable Beginning'
-
                 GridLayout:
                     rows: 2
                     cols: 1
@@ -319,7 +316,6 @@
                     halign: 'center'
 
                 Button:
-#                    size: add.size
                     text: 'Back'
                     on_release: controls.back()
 
