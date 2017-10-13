@@ -54,25 +54,6 @@ def normalize_amplitude(sonogram):
     return scaled_sonogram
 
 
-# def threshold_image(percent_keep, scaled_sonogram):
-#     [rows, cols] = np.shape(scaled_sonogram)
-#     num_elements = rows*cols
-#     sonogram_binary = scaled_sonogram/np.max(scaled_sonogram)  # scaling before making binary
-#     # sonogram_vector = np.reshape(sonogram_binary, num_elements, 1)  # TODO: use flatten
-#     sonogram_vector = sonogram_binary.flatten(order='F')
-#     sonogram_vector_sorted = np.sort(sonogram_vector)  # TODO: try bottleneck
-#     # sonogram_vector_sorted = bn.partition(sonogram_vector)
-#
-#     # making sonogram_binary actually binary now by keeping some top percentage of the signal
-#     decimal_keep = percent_keep/100
-#     top_percent = sonogram_vector_sorted[int(num_elements-round(num_elements*decimal_keep, 0))]  # find value at keep boundary
-#     sonogram_thresh = np.zeros((rows, cols))
-#     sonogram_thresh[sonogram_binary < top_percent] = 0
-#     sonogram_thresh[sonogram_binary > top_percent] = 1
-#     print(sonogram_thresh.shape)
-#
-#     return sonogram_thresh
-
 def threshold_image(top_threshold, scaled_sonogram):
     percentile = np.percentile(scaled_sonogram, 100-top_threshold)
     sonogram_thresh = np.zeros(scaled_sonogram.shape)
@@ -89,54 +70,50 @@ def initialize_onsets_offsets(sonogram_thresh):
     sum_sonogram_scaled = (sum_sonogram / max(sum_sonogram) * rows)
 
     # create a vector that equals 1 when amplitude exceeds threshold and 0 when it is below
-    high_amp = sum_sonogram_scaled > 4
+    high_amp = sum_sonogram_scaled > 4  # threshold: must have more than 4 voxels of signal at a particular time to keep
     high_amp = [int(x) for x in high_amp]
     high_amp[0] = 0
     high_amp[-1] = 0
-    onsets = np.nonzero(np.diff(high_amp) == 1)
-    onsets = np.squeeze(onsets)
-    offsets = np.nonzero(np.diff(high_amp) == -1)
-    offsets = np.squeeze(offsets)
-    offsets2 = np.zeros(len(offsets) + 1)
-    # push offset index by one because when diff is taken it places it in the element before the zeros
-    for j in range(0, len(offsets)):
-        offsets2[j + 1] = offsets[j]
-    offsets2[0] = 1
-    onsets = np.append(onsets, len(sum_sonogram_scaled))
 
-    # define silence durations
-    silence_durations = np.zeros(len(onsets) - 1)
-    mean_silence_durations = []
-    for j in range(0, len(onsets) - 1):
-        silence_durations[j] = onsets[j] - offsets2[j]
-    mean_silence_durations.append(np.mean(silence_durations))  # different from MATLAB code in that it does not add it to index = file_number; not sure if this will matter
+    # add one so that the onsets are the first column with signal and offsets are the first column after signal
+    # (for analysis: this will keep the durations correct when subtracting and python indexing correct for syll-images)
+    onsets = np.where(np.diff(high_amp) == 1)[0] + 1
+    offsets = np.where(np.diff(high_amp) == - 1)[0] + 1
 
-    return onsets, offsets2, silence_durations, sum_sonogram_scaled
+    silence_durations = [onsets[i] - offsets[i-1] for i in range(1, len(onsets))]
+
+    return onsets, offsets, silence_durations, sum_sonogram_scaled
 
 
-def set_min_silence(min_silence, onsets, offsets2, silence_durations):
-    syllable_onsets = np.zeros(len(onsets))
-    syllable_offsets = np.zeros(len(onsets))
-    for j in range(0, len(silence_durations)):
-        if silence_durations[j] > min_silence:  # sets minimum silence
-            syllable_onsets[j] = onsets[j]
-            syllable_offsets[j] = offsets2[j]
-    syllable_offsets[0] = 0
-    syllable_offsets[len(silence_durations)] = offsets2[len(offsets2) - 1]
+def set_min_silence(min_silence, onsets, offsets, silence_durations):
+    syllable_onsets = []
+    syllable_offsets = []
+
+    # keep first onsets
+    syllable_onsets.append(onsets[0])
+
+    # check if you keep onsets and offsets around the silences based on silence threshold
+    for j in range(len(silence_durations)):
+        if silence_durations[j] > min_silence:
+            syllable_onsets.append(onsets[j+1])
+            syllable_offsets.append(offsets[j])
+
+    # keep last offset
+    syllable_offsets.append(offsets[-1])
 
     return syllable_onsets, syllable_offsets
 
 
 def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets):
-    syllable_onsets = syllable_onsets[syllable_onsets != 0]
-    syllable_offsets = syllable_offsets[syllable_offsets != 0]
-    if syllable_offsets[0] < syllable_onsets[0]:  # make sure there is always first an onset
-        np.delete(syllable_offsets, 0)
-    for j in range(0, len(syllable_offsets) - 1):
+    syllable_onsets = np.asarray(syllable_onsets)
+    syllable_offsets = np.asarray(syllable_offsets)
+
+    for j in range(len(syllable_offsets)):
         if syllable_offsets[j] - syllable_onsets[j] < min_syllable:  # sets minimum syllable size
             syllable_offsets[j] = 0
             syllable_onsets[j] = 0
-    # remove zeros again after correcting for syllable size
+
+    # remove zeros after correcting for syllable size
     syllable_onsets = syllable_onsets[syllable_onsets != 0]
     syllable_offsets = syllable_offsets[syllable_offsets != 0]
 
@@ -149,3 +126,13 @@ def crop(bout_range, syllable_onsets, syllable_offsets):
     syllable_offsets = syllable_offsets[np.logical_and(syllable_offsets >= beginning, syllable_offsets <= ending)]
 
     return syllable_onsets, syllable_offsets
+
+
+
+
+
+
+
+
+
+

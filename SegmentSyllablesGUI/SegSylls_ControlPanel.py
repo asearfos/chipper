@@ -282,8 +282,8 @@ class ControlPanel(Screen):
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
         self.thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
-        onsets, offsets2, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(self.thresh_sonogram)
-        syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets2, silence_durations)
+        onsets, offsets, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(self.thresh_sonogram)
+        syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets, silence_durations)
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
 
