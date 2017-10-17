@@ -252,7 +252,9 @@ class ControlPanel(Screen):
         self.set_params_in_kv()
 
         # update the label stating the current file and the file number out of total number of files
-        self.ids.current_file.text = self.files[self.i-1] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(self.files))
+        # use self.i since you have not yet incremented
+        self.ids.current_file.text = self.file_names[self.i] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(
+            self.files))
 
         # get initial data
         self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
@@ -384,7 +386,7 @@ class ControlPanel(Screen):
                 check_order.order = binary_list
                 check_order.open()
             else:
-                # save parameters to dictionary
+                # save parameters to dictionary; note we use self.i-1 since i is incremented at the end of next()
                 self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
                 self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
                 self.save_threshold_sonogram_all[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}

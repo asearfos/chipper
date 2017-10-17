@@ -22,13 +22,13 @@ For lack of a better name, at the moment, "ifdgram" is the new sonogram
 
  Choose sigma small to represent sound in a time-like fashion - as a
  series of clicks, or sigma large, to represent sound in a frequency-like
- fasion, as a series of tones. For most signals of interest, intermediate
+ fashion, as a series of tones. For most signals of interest, intermediate
  values of sigma are best.
 -------
  [ZOOMT] sets the temporal resolution of the final image typically ZOOMT=1.
 -------
-[ZOOMF] sets the resultion of final image in Frequency. Res=ZOOMF*(N/2)
- In contrast to ZOOMT, it is typically useful to set ZOOMF great than one,
+[ZOOMF] sets the resolution of final image in Frequency. Res=ZOOMF*(N/2)
+ In contrast to ZOOMT, it is typically useful to set ZOOMF great than one.
 ------
 
 [TL] temporal locking window in pixels
