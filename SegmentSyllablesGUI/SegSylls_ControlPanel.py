@@ -206,6 +206,7 @@ class ControlPanel(Screen):
         self.save_syllables_all = {}
         self.save_tossed = {}
         self.save_threshold_sonogram_all = {}
+        self.save_conversions_all = {}
         self.next()
         self.output_path = self.parent.directory + "SeqSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
         if not os.path.isdir(self.output_path):
@@ -216,6 +217,11 @@ class ControlPanel(Screen):
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
+        self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
+        self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
+                                                           1)) + " ms"
+        self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
+                                                            1)) + " ms"
 
     def set_params_in_kv(self):
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
@@ -228,6 +234,11 @@ class ControlPanel(Screen):
         self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
+        self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
+        self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
+                                                           1)) + " ms"
+        self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
+                                                            1)) + " ms"
 
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
@@ -247,19 +258,20 @@ class ControlPanel(Screen):
         self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
     def next(self):
+        # get initial data
+        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel = seg.initial_sonogram(self.i, self.files,
+                                                                               self.parent.directory)
+
+        # TODO: see if this can be changed to reset_parameters
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.set_song_params()
         self.set_params_in_kv()
+        self.connect_song_shape_to_kv()
 
         # update the label stating the current file and the file number out of total number of files
         # use self.i since you have not yet incremented
         self.ids.current_file.text = self.file_names[self.i] + '\nFile ' + str(self.i+1) + ' out of ' + str(len(
             self.files))
-
-        # get initial data
-        self.sonogram = seg.initial_sonogram(self.i, self.files, self.parent.directory)
-
-        self.connect_song_shape_to_kv()
 
         # initialize the matplotlib figures/axes (no data yet)
         self.top_image.image_sonogram_initial(self.rows, self.cols)  # TODO: decide if rows and cols should be self variables instead of passing into functions
@@ -280,7 +292,7 @@ class ControlPanel(Screen):
         # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram
         hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
         scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
-        self.top_image.image_sonogram(hpf_sonogram)
+        self.top_image.image_sonogram(scaled_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
         self.thresh_sonogram = seg.threshold_image(percent_keep, scaled_sonogram)
@@ -311,8 +323,10 @@ class ControlPanel(Screen):
         self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.75, color='g', transform=self.trans)
         self.lines_off, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .90, np.nan], 1), linewidth=0.75, color='g', transform=self.trans)
 
+        hundredMillisecondsInPixels = 100/self.millisecondsPerPixel
+
         scalebar = AnchoredSizeBar(self.ax2.transData,
-                                   100, '100', 1,
+                                   hundredMillisecondsInPixels, '100 ms', 1,
                                    pad=0.1,
                                    color='white',
                                    frameon=False,
@@ -387,12 +401,21 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary; note we use self.i-1 since i is incremented at the end of next()
-                self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary, 'BoutRange': self.bout_range, 'PercentSignalKept': self.percent_keep, 'MinSilenceDuration': self.min_silence, 'MinSyllableDuration': self.min_syllable}
-                self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(), 'Offsets': self.syllable_offsets.tolist()}
+                self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary,
+                                                                  'BoutRange': self.bout_range,
+                                                                  'PercentSignalKept': self.percent_keep,
+                                                                  'MinSilenceDuration': self.min_silence,
+                                                                  'MinSyllableDuration': self.min_syllable}
+                self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(),
+                                                                 'Offsets': self.syllable_offsets.tolist()}
                 self.save_threshold_sonogram_all[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
+                self.save_conversions_all[self.files[self.i-1]] = {'timeAxisConversion': self.millisecondsPerPixel,
+                                                                   'freqAxisConversion': self.hertzPerPixel}
 
                 filename_gzip = self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip'
-                dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[self.i-1]], self.save_threshold_sonogram_all[self.files[self.i-1]]]
+                dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[
+                    self.i-1]], self.save_threshold_sonogram_all[self.files[self.i-1]], self.save_conversions_all[
+                    self.files[self.i-1]]]
 
                 with gzip.open(filename_gzip, 'wb') as fout:
                     for d in dictionaries:

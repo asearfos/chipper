@@ -61,16 +61,25 @@ Comment: As in the previous example, log scaling of the ifdgram,
 may be optimal for most sounds.
 """
 
-def ifdvsonogramonly(s, SAMPLING, N, OVERLAP, sigma, ZOOMT, ZOOMF, TL, FL):
+
+def ifdvsonogramonly(s, SAMPLING, N, OVERLAP, sigma):
+    # t -> mean of the Gaussian window
     t = np.arange(-N/2+1, N/2+1, 1)
 
+    # sigma -> standard deviation of the window (spread of the Gaussian)
     sigma = (sigma/1000)*SAMPLING
     w = np.exp(-(t/sigma)**2)
 
+    # Gaussian windowed spectrogram
     # Found Fs default in matlab is 1 (for spectrogram) and 2 for specgram and in python it is 2
-    [q, frequencies, t] = plt.mlab.specgram(s, NFFT=N, Fs=1, window=w, noverlap=OVERLAP, mode='complex') + np.spacing(1)  # Gaussian windowed spectrogram
-    sonogram = q
-    sonogram = abs(np.flipud(sonogram))  # this is the standard sonogram
-    return sonogram
+    [sonogram_raw, frequencies, t] = plt.mlab.specgram(s, NFFT=N, Fs=1, window=w, noverlap=OVERLAP, mode='complex') + \
+                           np.spacing(1)
+    sonogram = abs(np.flipud(sonogram_raw))  # this is the standard sonogram
+
+    # Conversion factors for sonogram output
+    timeAxis_conversion = ((N-OVERLAP)/SAMPLING)*1000  # milliseconds per pixel
+    freqAxis_conversion = (SAMPLING/2)/((N/2)+1)  # Hz per pixel
+
+    return sonogram, timeAxis_conversion, freqAxis_conversion
 
 
