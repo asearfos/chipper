@@ -5,7 +5,13 @@ import pandas as pd
 import os
 import time
 import glob
+from scipy.ndimage.measurements import label as label2
 from skimage.measure import label, regionprops
+from skimage.color import label2rgb
+from matplotlib import pyplot as plt
+import matplotlib.transforms as tx
+import matplotlib.patches as mpatches
+
 
 class SyllableAnalysis(object):
     def __init__(self, filepath, output_path):
@@ -13,10 +19,20 @@ class SyllableAnalysis(object):
         # file names
         dirname, basename = os.path.split(filepath)
         file_name = os.path.splitext(basename)[0]
+        # output_path = dirname + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S") + '/'
 
         # load data
         self.onsets, self.offsets, self.threshold_sonogram, self.millisecondsPerPixel, self.hertzPerPixel = \
             self.load_bout_data(dirname, basename)
+
+        # fig, ax = plt.subplots()
+        # ax.imshow(self.threshold_sonogram)
+        # syllable_marks = np.append(self.onsets, self.offsets)
+        # ymin = np.zeros(len(syllable_marks))
+        # ymax = 513
+        # ax.vlines(syllable_marks, ymin=ymin, ymax=ymax, colors='m', linewidth=0.5)
+        # plt.show()
+        # # print('sonogram size', self.threshold_sonogram.shape)
 
         # run analysis
         syllable_durations, num_syllables, bout_stats = self.get_bout_stats()
@@ -51,6 +67,14 @@ class SyllableAnalysis(object):
     Write output.
     """
     def output_bout_data(self, output_path, file_name, output_dict):
+        # if not os.path.isdir(output_path):
+        #     os.makedirs(output_path)
+        # df_output = pd.DataFrame.from_dict(output_dict, orient='index')
+        # df_output = df_output.transpose()
+        # # df_output.index.name = 'FileName'
+        # # df_output.columns = [file_name]
+        # df_output.to_csv((output_path + 'AnalysisOutput_' + file_name + '.txt'), sep="\t", header=False)
+
         df_output = pd.DataFrame.from_dict(output_dict, orient='index')
         df_output.columns = [file_name]
         df_output = df_output.transpose()
@@ -160,6 +184,15 @@ class SyllableAnalysis(object):
             syll_1 = self.threshold_sonogram[:, self.onsets[a]:(self.onsets[a] + min_length)]
             syll_2 = self.threshold_sonogram[:, (self.onsets[b] + m):(self.onsets[b] + min_length + m)]
             syllable_correlation.append((sum(sum(syll_1*syll_2))/max_overlap)*100)
+
+            # print('onset', self.onsets[b], 'offset', self.offsets[b])
+            # print('corrd', self.onsets[b] + m, (self.onsets[b] + min_length + m))
+            #
+            # if m > shift_factor-2:
+            #     fig, ax = plt.subplots()
+            #     ax.imshow(self.threshold_sonogram)
+            #     ax.vlines((self.onsets[b] + min_length + m), ymin=0, ymax=513, colors='m', linewidth=0.5)
+            #     plt.show()
 
         return syllable_correlation
 
@@ -277,6 +310,39 @@ class SyllableAnalysis(object):
                                                                         # ^connectivity 1=4 or 2=8(include diagonals)
         props = regionprops(labeled_sonogram)
 
+        # # image the threshold_sonogram (without zeroing before first onset and after last offset)
+        # # overlay boxes outlining each note
+        # fig, ax = plt.subplots()
+        # ax.imshow(self.threshold_sonogram)
+        # print(len(props))
+        # for region in props:
+        #     # take regions with large enough areas
+        #     if region.area > 60:
+        #         # draw rectangle around segmented coins
+        #         minr, minc, maxr, maxc = region.bbox
+        #         rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr,
+        #                                   fill=False, edgecolor='red', linewidth=2)
+        #         ax.add_patch(rect)
+        #
+        # ax.set_axis_off()
+        # plt.tight_layout()
+        # plt.show()
+
+
+        # labeled_sonogram2, num_notes2 = label2(self.threshold_sonogram)
+
+        # # image_label_overlay = label2rgb(labeled_sonogram, image=self.threshold_sonogram)
+        # imgplot = plt.imshow(labeled_sonogram, cmap='spectral')
+        # # imgplot = plt.imshow(self.threshold_sonogram)
+        # plt.colorbar()
+        # # imgplot.set_cmap('nipy_spectral')
+        # plt.show()
+        #
+        # plt.imshow(labeled_sonogram2)
+        # plt.colorbar()
+        # plt.show()
+        # plt.title('ndimage')
+
         return num_notes, props
 
     def get_note_stats(self, num_syllables, note_size_thresh=60):
@@ -287,6 +353,12 @@ class SyllableAnalysis(object):
         notes_freq_range_upper = []
         notes_freq_range_lower = []
         note_length = []
+
+        # # note stats per bout
+        # num_flat = 0
+        # num_upsweeps = 0
+        # num_downsweeps = 0
+        # num_parabolas = 0
 
         for j in range(num_notes):
             # note_ycoords = []  # clear/initialize for each note
@@ -308,6 +380,52 @@ class SyllableAnalysis(object):
                 notes_freq_range_lower.append(max_row)  # max row is not inclusive (first zero row after the labeled section)
 
                 note_length.append(np.shape(sonogram_one_note)[1])
+                #
+                # # fit quadratic to notes
+                # for i in range(note_length[j]):
+                #     note_ycoords.append(np.mean(np.nonzero(sonogram_one_note[:, i])[0]))
+                # note_xcoords = np.arange(0, note_length[j])
+                # poly = np.polyfit(note_xcoords, note_ycoords, deg=2)
+                # a = poly[0]
+                # b = poly[1]
+                # x_vertex = -b/(2*a)  # gives x position of max or min of quadratic
+                # # print('original', poly)
+                #
+                # # # new package
+                # # import numpy.polynomial.polynomial as poly
+                # # coefs = poly.polyfit(note_xcoords, note_ycoords, 2)
+                # # # print('new poly', coefs)
+                # # x_new = np.linspace(note_xcoords[0], note_xcoords[-1], num=len(note_xcoords)*10)
+                # # ffit = poly.polyval(x_new, coefs)
+                # # # plt.scatter(note_xcoords, note_ycoords)
+                # # # plt.plot(x_new, ffit)
+                # # # plt.imshow(sonogram_one_note)
+                # # # plt.show()
+                #
+                # # classify shape of note
+                # if np.isclose(a, 0, rtol=9e-02, atol=9e-02):  # check if the note is linear
+                #     if np.isclose(b, 0, rtol=9e-02, atol=9e-02):
+                #         num_flat += 1
+                #         # print('is flat')
+                #     elif b > 0:  # b is the slope if the poly is actually linear
+                #         num_upsweeps += 1
+                #         # print('is upsweep')
+                #     else:
+                #         num_downsweeps += 1
+                #         # print('is downsweep')
+                # # now categorize non-linear notes
+                # elif x_vertex < .2*note_length[j]:
+                #     if a > 0:
+                #         num_upsweeps += 1
+                #     else:
+                #         num_downsweeps += 1
+                # elif x_vertex > .8*note_length[j]:
+                #     if a > 0:
+                #         num_downsweeps += 1
+                #     else:
+                #         num_upsweeps += 1
+                # else:  # the vertex is not within the first or last 20% of the note
+                #     num_parabolas += 1
 
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
@@ -319,11 +437,28 @@ class SyllableAnalysis(object):
         basic_note_stats = self.get_basic_stats(note_length_array_scaled, 'note_duration', '(ms)')
         note_freq_stats = self.get_freq_stats(notes_freq_range_upper, notes_freq_range_lower, 'notes')
 
+        # note_categories = {'num_flat': num_flat/num_notes_updated, 'num_upsweeps': num_upsweeps/num_notes_updated,
+        #                    'num_downsweeps': num_downsweeps/num_notes_updated, 'num_parabolas':
+        #                        num_parabolas/num_notes_updated}
+        # note_categories = {'num_flat': num_flat, 'num_upsweeps': num_upsweeps,
+        #                    'num_downsweeps': num_downsweeps, 'num_parabolas':
+        #                        num_parabolas}
+
         note_stats = self.update_dict([note_counts, basic_note_stats, note_freq_stats])
         return note_stats
 
 
+
 # part that actually calls/runs code
+# # filepath = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
+# #            'testing\OneBout\Output_20171004_T141722\output_b1s white crowned sparrow 66722amp.gzip'
+# filepath_newOnOff = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
+#                     'testing\OneBout\SeqSyllsOutput_20171013_T164506\SegSyllsOutput_b1s white crowned sparrow 66722amp.gzip'
+# filepath_withConversions = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
+#                            'testing\OneBout\SeqSyllsOutput_20171020_T144430\SegSyllsOutput_b1s white crowned sparrow 66722amp.gzip'
+#
+# SyllableAnalysis(filepath_withConversions)
+
 
 directory_regRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\TestingAxes\ControlChippies' \
            '\SegSyllsOutput_20171022_T193442/'
@@ -336,6 +471,7 @@ directory_oneBout = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white cro
 
 directory = directory_doubleRes
 files = glob.glob(directory + '*.gzip')
+# output_path = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S") + '/'
 output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
 
 for f in files:
