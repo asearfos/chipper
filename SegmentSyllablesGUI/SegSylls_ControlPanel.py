@@ -208,7 +208,7 @@ class ControlPanel(Screen):
         self.save_threshold_sonogram_all = {}
         self.save_conversions_all = {}
         self.next()
-        self.output_path = self.parent.directory + "SeqSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+        self.output_path = self.parent.directory + "SegSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
@@ -222,6 +222,8 @@ class ControlPanel(Screen):
                                                            1)) + " ms"
         self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
                                                             1)) + " ms"
+        self.ids.slider_min_silence.max = 50/self.millisecondsPerPixel  # want max to be 50ms
+        self.ids.slider_min_syllable.max = 350/self.millisecondsPerPixel  # want max to be 350ms
 
     def set_params_in_kv(self):
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
@@ -234,11 +236,13 @@ class ControlPanel(Screen):
         self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
-        self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
-        self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
-                                                           1)) + " ms"
-        self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
-                                                            1)) + " ms"
+        # self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
+        # self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
+        #                                                    1)) + " ms"
+        # self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
+        #                                                     1)) + " ms"
+        # self.ids.slider_min_silence.max = 50/self.millisecondsPerPixel  # want max to be 50ms
+        # self.ids.slider_min_syllable.max = 350/self.millisecondsPerPixel  # want max to be 350ms
 
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
@@ -262,7 +266,6 @@ class ControlPanel(Screen):
         self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel = seg.initial_sonogram(self.i, self.files,
                                                                                self.parent.directory)
 
-        # TODO: see if this can be changed to reset_parameters
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.set_song_params()
         self.set_params_in_kv()
@@ -285,6 +288,8 @@ class ControlPanel(Screen):
 
     def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable):
         # update variables based on input to function
+        if filter_boundary == 0:  # throws index error if 0 -> have to at least still include one row
+            filter_boundary = 1
         self.set_song_params(filter_boundary=filter_boundary, percent_keep=percent_keep, min_silence=min_silence, min_syllable=min_syllable)
         self.bout_range = bout_range
         sonogram = self.sonogram.copy()  # must do this for image to update for some reason

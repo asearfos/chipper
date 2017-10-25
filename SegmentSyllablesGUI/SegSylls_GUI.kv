@@ -210,7 +210,6 @@
                 MySlider:
                     id: slider_min_silence
                     min: 1
-                    max: 100
                     value: 10
                     step: 1
                     on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
@@ -228,7 +227,6 @@
                 MySlider:
                     id: slider_min_syllable
                     min: 1
-                    max: 1000
                     value: 20
                     step: 1
                     on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
@@ -309,7 +307,6 @@
                 cols: 1
                 spacing: 10
                 padding: 10
-#                size_hint_y: 0.5
 
                 Label:
                     id: current_file

@@ -19,7 +19,6 @@ def initial_sonogram(i, files, directory):
 
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 1024, 1010, 2)
-    # sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 2048, 2048-7, 2)
     [rows, cols] = sonogram.shape
     sonogram_padded = np.zeros((rows, cols + 300))
     sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
