@@ -1,0 +1,10 @@
+FileName	HighPassFilter	BoutRange	PercentSignalKept	MinSilenceDuration	MinSyllableDuration
+15421_44k_b7of11.wav	458	[0.0, 8657]	2.0	10	20
+176207_44k_b1of4.wav	440	[356.0, 8906.0]	1.6	37	20
+190909_44k_b11of11.wav	466	[500.0, 8805]	2.0	10	20
+224604_44k_b4of7.wav	453	[401.0, 4117.0]	1.8	10	20
+87491_44k_b1of4.wav	470	[583.0, 8944.0]	2.0	45	20
+XC125186_b2of8.wav	468	[535.0, 7823]	2.0	10	20
+XC1256_b1of1.wav	365	[0, 5216]	2.0	28	20
+XC141461_b18of27.wav	463	[401.0, 2864.0]	1.2	88	1
+XC81357_b4of4.wav	444	[1602.0, 15159.0]	1.9	31	124
