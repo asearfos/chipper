@@ -212,7 +212,7 @@ class ControlPanel(Screen):
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
-    def set_song_params(self, filter_boundary=0, percent_keep=2, min_silence=10, min_syllable=20):
+    def set_song_params(self, filter_boundary=0, percent_keep=3, min_silence=10, min_syllable=20):
         self.filter_boundary = filter_boundary
         self.percent_keep = percent_keep
         self.min_silence = min_silence
@@ -322,7 +322,8 @@ class ControlPanel(Screen):
         self.fig2.add_axes(self.ax2)
 
         # plot data
-        self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='jet', extent=[0, self.cols, 0, self.rows], aspect='auto')
+        self.plot_binary = self.ax2.imshow(np.log(data+3), cmap='hot', extent=[0, self.cols, 0, self.rows],
+                                           aspect='auto')
 
         self.trans = tx.blended_transform_factory(self.ax2.transData, self.ax2.transAxes)
         self.lines_on, = self.ax2.plot(np.repeat(0, 3), np.tile([0, .75, np.nan], 1), linewidth=0.75, color='g', transform=self.trans)

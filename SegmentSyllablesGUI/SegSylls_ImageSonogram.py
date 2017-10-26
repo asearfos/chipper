@@ -20,7 +20,8 @@ class ImageSonogram(GridLayout):
         self.fig1.add_axes(self.ax1)
 
         # plot data
-        self.plot_sonogram = self.ax1.imshow(np.log(data + 3), cmap='jet', extent=[0, cols, 0, rows], aspect='auto')
+        self.plot_sonogram = self.ax1.imshow(np.log(data + 3), cmap='hot', extent=[0, cols, 0, rows],
+                                             aspect='auto')
 
         # create widget
         self.clear_widgets()
