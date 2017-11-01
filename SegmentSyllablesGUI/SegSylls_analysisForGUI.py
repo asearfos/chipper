@@ -5,7 +5,10 @@ import pandas as pd
 import os
 import time
 import glob
+import multiprocessing as mp
 from skimage.measure import label, regionprops
+from line_profiler import LineProfiler
+
 
 class SyllableAnalysis(object):
     def __init__(self, filepath, output_path):
@@ -150,16 +153,17 @@ class SyllableAnalysis(object):
         for j in range(len(self.onsets)):
             start = self.onsets[j]
             stop = self.offsets[j]
-            sonogram_self_correlation[j] = sum(sum(self.threshold_sonogram[:, start:stop]*self.threshold_sonogram[:,
-                                                                                          start:stop]))
+            sonogram_self_correlation[j] = (self.threshold_sonogram[:, start:stop]*self.threshold_sonogram[:,
+                                                                                          start:stop]).sum()
         return sonogram_self_correlation
 
     def calc_syllable_correlation(self, a, b, shift_factor, min_length, max_overlap):
         syllable_correlation = []
-        for m in range(shift_factor + 1):
+        scale_factor = 100./max_overlap
+        for m in range(shift_factor+1):
             syll_1 = self.threshold_sonogram[:, self.onsets[a]:(self.onsets[a] + min_length)]
             syll_2 = self.threshold_sonogram[:, (self.onsets[b] + m):(self.onsets[b] + min_length + m)]
-            syllable_correlation.append((sum(sum(syll_1*syll_2))/max_overlap)*100)
+            syllable_correlation.append(scale_factor*(syll_1*syll_2).sum())
 
         return syllable_correlation
 
@@ -334,15 +338,24 @@ directory_doubleRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\Testing
 directory_oneBout = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
                     'testing\OneBout\SegSyllsOutput_20171024_T160406/'
 
-directory = directory_doubleRes
-files = glob.glob(directory + '*.gzip')
-output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+# if __name__ == '__main__':
+#
+#     directory = directory_doubleRes
+#     files = glob.glob(directory + '*.gzip')
+#     output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+#
+#     for f in files:
+#         SyllableAnalysis(f, output_file)
 
-for f in files:
-    SyllableAnalysis(f, output_file)
+if __name__ == '__main__':
 
+    directory = directory_oneBout
+    output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
 
-
+    for f in os.listdir(directory):
+        if f.endswith('gzip'):
+            f = os.path.join(directory, f)
+            SyllableAnalysis(f, output_file)
 
 
 
