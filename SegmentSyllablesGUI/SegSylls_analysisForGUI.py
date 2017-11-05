@@ -25,7 +25,7 @@ class SongAnalysis(object):
         final_output = processes.map(self.run_analysis, files)
         self.output_bout_data(output_path, file_names, final_output)
 
-        super(SyllableAnalysis, self).__init__()
+        super(SongAnalysis, self).__init__()
 
     def run_analysis(self, filepath):
         # file names

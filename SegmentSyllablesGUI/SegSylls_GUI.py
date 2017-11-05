@@ -20,7 +20,8 @@ import sys
 
 class SegSylls_GUIApp(App):
     def build(self):
-        self.icon = 'C:/Users/abiga/Box Sync/SongGUI/SegSyllsGUI_v10252017\SP1.ico'
+        dir = os.path.dirname(__file__)
+        self.icon = os.path.join(dir, 'SP1.png')
         return Manager()
 
 # add function if using --onefile in PyInstaller
@@ -32,6 +33,7 @@ class SegSylls_GUIApp(App):
 #     return os.path.join(os.path.abspath("."))
 
 try:  # needed for PyInstaller to work with --windowed option and not throw fatal error
+    # print('Please wait while loading Chipper...')
     if __name__ == "__main__":
         # kivy.resources.resource_add_path(resourcePath())  # add this line if using --onefile in PyInstaller
         Config.set('input', 'mouse', 'mouse,disable_multitouch')
