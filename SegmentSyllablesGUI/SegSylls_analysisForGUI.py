@@ -4,18 +4,32 @@ import gzip
 import pandas as pd
 import os
 import time
-import glob
 import multiprocessing as mp
 from skimage.measure import label, regionprops
-from line_profiler import LineProfiler
 
 
-class SyllableAnalysis(object):
-    def __init__(self, filepath, output_path):
+class SongAnalysis(object):
+    def __init__(self, cores, directory, output_path=None):
 
+        if output_path is None:
+            output_path = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+
+        files = []
+        file_names = []
+        for f in os.listdir(directory):
+            if f.endswith('gzip'):
+                files.append(os.path.join(directory, f))
+                file_names.append(f)
+
+        processes = mp.Pool(cores)
+        final_output = processes.map(self.run_analysis, files)
+        self.output_bout_data(output_path, file_names, final_output)
+
+        super(SyllableAnalysis, self).__init__()
+
+    def run_analysis(self, filepath):
         # file names
         dirname, basename = os.path.split(filepath)
-        file_name = os.path.splitext(basename)[0]
 
         # load data
         self.onsets, self.offsets, self.threshold_sonogram, self.millisecondsPerPixel, self.hertzPerPixel = \
@@ -28,9 +42,7 @@ class SyllableAnalysis(object):
 
         # write output
         final_output = self.update_dict([bout_stats, syllable_stats, note_stats])
-        self.output_bout_data(output_path, file_name, final_output)
-
-        super(SyllableAnalysis, self).__init__()
+        return final_output
 
     """ 
     Load sonogram and syllable marks (onsets and offsets).
@@ -54,14 +66,19 @@ class SyllableAnalysis(object):
     Write output.
     """
     def output_bout_data(self, output_path, file_name, output_dict):
-        df_output = pd.DataFrame.from_dict(output_dict, orient='index')
-        df_output.columns = [file_name]
-        df_output = df_output.transpose()
-        if not os.path.isfile(output_path + '.txt'):
-            df_output.index.name = 'FileName'
-            df_output.to_csv((output_path + '.txt'), sep="\t")
+        df_output = pd.DataFrame.from_dict(output_dict)
+        df_output.index = [file_name]
+
+        if not os.path.isfile(output_path + '.txt') and not os.path.isfile(output_path):
+            if output_path.endswith('.txt'):
+                df_output.to_csv(output_path, sep="\t", index_label='FileName')
+            else:
+                df_output.to_csv((output_path + '.txt'), sep="\t", index_label='FileName')
         else:
-            df_output.to_csv((output_path + '.txt'), sep="\t", mode='a', header=False)
+            if output_path.endswith('.txt'):
+                df_output.to_csv(output_path, sep="\t", mode='a', header=False)
+            else:
+                df_output.to_csv(output_path + '.txt', sep="\t", mode='a', header=False)
 
     """
     General methods
@@ -299,8 +316,7 @@ class SyllableAnalysis(object):
             sonogram_one_note = props[j].filled_image
 
             if np.size(sonogram_one_note) <= note_size_thresh:  # check the note is large enough to be a note and not
-                # just
-                # noise
+                # just noise
                 note_length.append(0)  # place holder
                 num_notes_updated -= 1
                 # print('not a note')
@@ -338,44 +354,9 @@ directory_doubleRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\Testing
 directory_oneBout = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
                     'testing\OneBout\SegSyllsOutput_20171024_T160406/'
 
-# if __name__ == '__main__':
-#
-#     directory = directory_doubleRes
-#     files = glob.glob(directory + '*.gzip')
-#     output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
-#
-#     for f in files:
-#         SyllableAnalysis(f, output_file)
 
 if __name__ == '__main__':
-
-    directory = directory_oneBout
-    output_file = directory + "/AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
-
-    for f in os.listdir(directory):
-        if f.endswith('gzip'):
-            f = os.path.join(directory, f)
-            SyllableAnalysis(f, output_file)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    SongAnalysis(2, directory_oneBout)
 
 
 
