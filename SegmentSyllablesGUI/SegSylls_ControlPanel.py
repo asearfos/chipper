@@ -205,7 +205,6 @@ class ControlPanel(Screen):
         self.save_parameters_all = {}
         self.save_syllables_all = {}
         self.save_tossed = {}
-        self.save_threshold_sonogram_all = {}
         self.save_conversions_all = {}
         self.next()
         self.output_path = self.parent.directory + "SegSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
@@ -414,13 +413,12 @@ class ControlPanel(Screen):
                                                                   'MinSyllableDuration': self.min_syllable}
                 self.save_syllables_all[self.files[self.i-1]] = {'Onsets': self.syllable_onsets.tolist(),
                                                                  'Offsets': self.syllable_offsets.tolist()}
-                self.save_threshold_sonogram_all[self.files[self.i-1]] = {'Sonogram': self.thresh_sonogram.tolist()}
                 self.save_conversions_all[self.files[self.i-1]] = {'timeAxisConversion': self.millisecondsPerPixel,
                                                                    'freqAxisConversion': self.hertzPerPixel}
 
                 filename_gzip = self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip'
                 dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[
-                    self.i-1]], self.save_threshold_sonogram_all[self.files[self.i-1]], self.save_conversions_all[
+                    self.i-1]], {'Sonogram': self.thresh_sonogram.tolist()}, self.save_conversions_all[
                     self.files[self.i-1]]]
 
                 with gzip.open(filename_gzip, 'wb') as fout:
