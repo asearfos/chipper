@@ -32,6 +32,15 @@ class ControlPanel(Screen):
         # bottom_image = ObjectProperty(None)
 
         self.register_event_type('on_check_boolean')
+
+        self.fig2, self.ax2 = plt.subplots()
+        self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
+        self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
+
+        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+        self.ax2.set_axis_off()
+        self.fig2.add_axes(self.ax2)
+
         super(ControlPanel, self).__init__(**kwargs)
 
     def on_check_boolean(self):
@@ -311,11 +320,9 @@ class ControlPanel(Screen):
 
     def image_binary_initial(self):
         data = np.zeros((self.rows, self.cols))
-        # self.lines = {}
-        self.fig2, self.ax2 = plt.subplots()
-        # x = [0]
 
         # make plot take up the entire space
+        self.ax2.clear()
         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
         self.fig2.add_axes(self.ax2)
@@ -339,14 +346,9 @@ class ControlPanel(Screen):
         self.ax2.add_artist(scalebar)
 
         self.ids.graph_binary.clear_widgets()
-        self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
-        self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
 
     def image_binary(self):
-        # self.ids.graph_binary.clear_widgets()
-        # self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
-        # self.ids.graph_binary.add_widget(self.plot_binary_canvas)
         self.plot_binary.set_data(np.log(self.thresh_sonogram+3))
         self.plot_binary.autoscale()
 
