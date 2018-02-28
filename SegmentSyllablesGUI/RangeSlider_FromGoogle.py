@@ -1,3 +1,4 @@
+# from https://groups.google.com/forum/#!topic/kivy-users/oMFx0YKW5oA
 #: -*- encoding: utf-8 -*-
 from kivy.lang import Builder
 from kivy.metrics import sp

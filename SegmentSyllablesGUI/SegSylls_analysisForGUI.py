@@ -345,18 +345,35 @@ class SongAnalysis(object):
 
 # part that actually calls/runs code
 
-directory_regRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\TestingAxes\ControlChippies' \
-           '\SegSyllsOutput_20171022_T193442/'
+# directory_regRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\TestingAxes\ControlChippies' \
+#            '\SegSyllsOutput_20171022_T193442/'
+#
+# directory_doubleRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\TestingAxes\ControlChippies' \
+#               '\SegSyllsOutput_20171024_T101407/'
+#
+# directory_oneBout = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
+#                     'testing\OneBout\SegSyllsOutput_20171024_T160406/'
 
-directory_doubleRes = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\TestingAxes\ControlChippies' \
-              '\SegSyllsOutput_20171024_T101407/'
+# all folders from 10/19 --> used the old GUI to parse so has slightly different output
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs\SeqSyllsOutput_20171019_T131457"
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs\SeqSyllsOutput_20171019_T135230"
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs\SeqSyllsOutput_20171019_T144320"
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs\SeqSyllsOutput_20171019_T150333"
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs\SeqSyllsOutput_20171019_T152225"
 
-directory_oneBout = 'C:/Users/abiga\Box Sync\Abigail_Nicole\TestingGUI\white crowned sparrows for ' \
-                    'testing\OneBout\SegSyllsOutput_20171024_T160406/'
 
+# directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs2"
+# directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\Chipper_vAlpha\ForCollaborators\SegSyllsOutput_20180205_T222752"
+directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\Kids Practice Chipper"
+
+folders = [os.path.join(directory, f) for f in os.listdir(directory)]
 
 if __name__ == '__main__':
-    SongAnalysis(2, directory_oneBout)
+    for i in folders:
+        print(i)
+        SongAnalysis(2, i)
+    # SongAnalysis(2, directory)
+
 
 
 
