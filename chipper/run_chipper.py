@@ -19,7 +19,7 @@ import os
 import sys
 
 
-class SegSylls_GUIApp(App):
+class run_chipperApp(App):
     def build(self):
         dir = os.path.dirname(__file__)
         self.icon = os.path.join(dir, 'SP1.png')
@@ -39,6 +39,6 @@ try:  # needed for PyInstaller to work with --windowed option and not throw fata
         # kivy.resources.resource_add_path(resourcePath())  # add this line if using --onefile in PyInstaller
         Config.set('input', 'mouse', 'mouse,disable_multitouch')
         # Window.fullscreen = 'auto'
-        SegSylls_GUIApp().run()
+        run_chipperApp().run()
 except:
     pass
