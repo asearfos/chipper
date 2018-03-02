@@ -27,5 +27,5 @@ class CheckOrderPopup(Popup):
 
 class DonePopup(Popup):
     def quit_app(self):
-        print('song segmentation complete, Close SegmentSyllablesGUI.')
+        print('song segmentation complete, Close chipper.')
         quit()
