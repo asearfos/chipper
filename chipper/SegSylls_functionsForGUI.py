@@ -3,7 +3,7 @@ import numpy as np
 import glob
 import os
 import soundfile as sf
-from ifdvsonogramonly import ifdvsonogramonly
+from chipper.ifdvsonogramonly import ifdvsonogramonly
 #import matplotlib.pyplot as plt
 
 

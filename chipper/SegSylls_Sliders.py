@@ -1,5 +1,5 @@
 from kivy.uix.slider import Slider
-from RangeSlider_FromGoogle import RangeSlider
+from chipper.RangeSlider_FromGoogle import RangeSlider
 
 
 class MySlider(Slider):
