@@ -1,9 +1,9 @@
-from chipper.SegSylls_Popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
     DonePopup
 # from SegSylls_ImageSonogram import ImageSonogram
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
-import chipper.SegSylls_functionsForGUI as seg
+import chipper.functions as seg
 
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")

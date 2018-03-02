@@ -5,13 +5,13 @@ Logger.disabled = True
 # sys.path.insert(0, 'bin')
 kivy.require('1.10.0')
 
-from chipper.SegSylls_Manager import Manager
-from chipper.SegSylls_FileExplorer import FileExplorer
-from chipper.SegSylls_ControlPanel import ControlPanel
-from chipper.SegSylls_Popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
+from chipper.manager import Manager
+from chipper.file_explorer import FileExplorer
+from chipper.control_panel import ControlPanel
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
     DonePopup
-from chipper.SegSylls_Sliders import MySlider, MyRangeSlider
-from chipper.SegSylls_ImageSonogram import ImageSonogram
+from chipper.sliders import MySlider, MyRangeSlider
+from chipper.image_sonogram import ImageSonogram
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
