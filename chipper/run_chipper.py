@@ -5,12 +5,13 @@ Logger.disabled = True
 # sys.path.insert(0, 'bin')
 kivy.require('1.10.0')
 
-from SegSylls_Manager import Manager
-from SegSylls_FileExplorer import FileExplorer
-from SegSylls_ControlPanel import ControlPanel
-from SegSylls_Popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, DonePopup
-from SegSylls_Sliders import MySlider, MyRangeSlider
-from SegSylls_ImageSonogram import ImageSonogram
+from chipper.manager import Manager
+from chipper.file_explorer import FileExplorer
+from chipper.control_panel import ControlPanel
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
+    DonePopup
+from chipper.sliders import MySlider, MyRangeSlider
+from chipper.image_sonogram import ImageSonogram
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
@@ -18,7 +19,7 @@ import os
 import sys
 
 
-class SegSylls_GUIApp(App):
+class run_chipperApp(App):
     def build(self):
         dir = os.path.dirname(__file__)
         self.icon = os.path.join(dir, 'SP1.png')
@@ -38,6 +39,6 @@ try:  # needed for PyInstaller to work with --windowed option and not throw fata
         # kivy.resources.resource_add_path(resourcePath())  # add this line if using --onefile in PyInstaller
         Config.set('input', 'mouse', 'mouse,disable_multitouch')
         # Window.fullscreen = 'auto'
-        SegSylls_GUIApp().run()
+        run_chipperApp().run()
 except:
     pass
