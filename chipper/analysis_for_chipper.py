@@ -21,7 +21,14 @@ class SongAnalysis(object):
                 files.append(os.path.join(directory, f))
                 file_names.append(f)
 
-        processes = mp.Pool(cores)
+        # this allows you to give the function directories that do not contain gzips without writing a file
+        # if this is not in place, then a file will be created with FileName in the header but no other headers and
+        # then will be used for same output path and headers will never be added.
+        if len(files) == 0:
+            print('return')
+            return
+
+        processes = mp.Pool(cores, maxtasksperchild=1000)
         final_output = processes.map(self.run_analysis, files)
         self.output_bout_data(output_path, file_names, final_output)
 
@@ -84,10 +91,16 @@ class SongAnalysis(object):
     General methods
     """
     def get_basic_stats(self, durations, data_type, units):
-        stats = {'largest_' + data_type + units: max(durations),
-                 'smallest_' + data_type + units: min(durations),
-                 'avg_' + data_type + units: np.mean(durations),
-                 'std_' + data_type + units: np.std(durations, ddof=1)}
+        if len(durations) == 0:  # just in case there is one syllable and so silence_durations is empty
+            stats = {'largest_' + data_type + units: 'NA',
+                     'smallest_' + data_type + units: 'NA',
+                     'avg_' + data_type + units: 'NA',
+                     'std_' + data_type + units: 'NA'}
+        else:
+            stats = {'largest_' + data_type + units: max(durations),
+                     'smallest_' + data_type + units: min(durations),
+                     'avg_' + data_type + units: np.mean(durations),
+                     'std_' + data_type + units: np.std(durations, ddof=1)}
         return stats
 
     def update_dict(self, dictionaries):
@@ -259,21 +272,28 @@ class SongAnalysis(object):
         num_unique_syllables = len(np.unique(syllable_pattern_checked))
         num_syllables_per_num_unique = num_syllables / num_unique_syllables
 
-        # determine how often the next syllable is the same as the previous syllable (for chippies, should be one
-        # less than number of syllables in the bout)
-        sequential_rep1 = len(np.where(np.diff(syllable_pattern_checked) == 0)[0])/(len(syllable_pattern_checked)-1)
+        if num_syllables > 1:
+            # determine how often the next syllable is the same as the previous syllable (for chippies, should be one
+            # less than number of syllables in the bout)
+            sequential_rep1 = len(np.where(np.diff(syllable_pattern_checked) == 0)[0])/(len(syllable_pattern_checked)-1)
 
-        # determine syllable stereotypy
-        syllable_stereotypy = self.calc_syllable_stereotypy(sonogram_correlation, syllable_pattern_checked)
-        mean_syllable_stereotypy = np.nanmean(syllable_stereotypy)
-        std_syllable_stereotypy = np.nanstd(syllable_stereotypy, ddof=1)
+            # determine syllable stereotypy
+            syllable_stereotypy = self.calc_syllable_stereotypy(sonogram_correlation, syllable_pattern_checked)
+            mean_syllable_stereotypy = np.nanmean(syllable_stereotypy)
+            std_syllable_stereotypy = np.nanstd(syllable_stereotypy, ddof=1)
+            syllable_stereotypy_final = syllable_stereotypy[~np.isnan(syllable_stereotypy)]
+        else:
+            sequential_rep1 = 'NA'
+            syllable_stereotypy_final = 'NA'
+            mean_syllable_stereotypy = 'NA'
+            std_syllable_stereotypy = 'NA'
 
         syllable_stats_general = {'syll_correlation_threshold': corr_thresh,
                                   'num_unique_syllables': num_unique_syllables,
                                   'num_syllables_per_num_unique': num_syllables_per_num_unique,
                                   'syllable_pattern': syllable_pattern_checked.tolist(),
                                   'sequential_repetition': sequential_rep1,
-                                  'syllable_stereotypy': syllable_stereotypy[~np.isnan(syllable_stereotypy)],
+                                  'syllable_stereotypy': syllable_stereotypy_final,
                                   'mean_syllable_stereotypy': mean_syllable_stereotypy,
                                   'std_syllable_stereotypy': std_syllable_stereotypy}
 
@@ -364,15 +384,16 @@ class SongAnalysis(object):
 
 # directory = "C:/Users/abiga\Box Sync\SongGUI\SydnieJunco\Outputs2"
 # directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\Chipper_vAlpha\ForCollaborators\SegSyllsOutput_20180205_T222752"
-directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\Kids Practice Chipper"
+# directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\Kids Practice Chipper"
+directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnalysisCode"
 
-folders = [os.path.join(directory, f) for f in os.listdir(directory)]
+# folders = [os.path.join(directory, f) for f in os.listdir(directory)]
 
 if __name__ == '__main__':
-    for i in folders:
-        print(i)
-        SongAnalysis(2, i)
-    # SongAnalysis(2, directory)
+    # for i in folders:
+    #     print(i)
+    #     SongAnalysis(1, i)
+    SongAnalysis(1, directory)
 
 
 
