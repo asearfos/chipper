@@ -1,11 +1,13 @@
-from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
-    DonePopup
+import matplotlib
+from kivy.properties import ObjectProperty
 # from SegSylls_ImageSonogram import ImageSonogram
 from kivy.uix.screenmanager import Screen
-from kivy.properties import ObjectProperty
-import chipper.functions as seg
 
-import matplotlib
+import chipper.functions as seg
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, \
+    CheckBeginningEndPopup, CheckOrderPopup, \
+    DonePopup
+
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
@@ -19,9 +21,8 @@ import pandas as pd
 import os
 import math
 import time
-import csv
-import json
-import gzip
+from chipper.utils import save_gzip_pickle
+
 
 
 class ControlPanel(Screen):
@@ -246,12 +247,12 @@ class ControlPanel(Screen):
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
         # self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
-        # self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
+        # self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.ms_per_pixel,
         #                                                    1)) + " ms"
-        # self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,
+        # self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.ms_per_pixel,
         #                                                     1)) + " ms"
-        # self.ids.slider_min_silence.max = 50/self.millisecondsPerPixel  # want max to be 50ms
-        # self.ids.slider_min_syllable.max = 350/self.millisecondsPerPixel  # want max to be 350ms
+        # self.ids.slider_min_silence.max = 50/self.ms_per_pixel  # want max to be 50ms
+        # self.ids.slider_min_syllable.max = 350/self.ms_per_pixel  # want max to be 350ms
 
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
@@ -420,16 +421,14 @@ class ControlPanel(Screen):
                                                                    'freqAxisConversion': self.hertzPerPixel}
 
                 filename_gzip = self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip'
-                dictionaries = [self.save_parameters_all[self.files[self.i-1]], self.save_syllables_all[self.files[
-                    self.i-1]], {'Sonogram': self.thresh_sonogram.tolist()}, self.save_conversions_all[
-                    self.files[self.i-1]]]
 
-                with gzip.open(filename_gzip, 'wb') as fout:
-                    for d in dictionaries:
-                        json_str = json.dumps(d) + '\n'
-                        json_bytes = json_str.encode('utf-8')
-                        fout.write(json_bytes)
-                    fout.close()
+                dictionaries = [
+                    self.save_parameters_all[self.files[self.i - 1]],
+                    self.save_syllables_all[self.files[self.i - 1]],
+                    {'Sonogram': self.thresh_sonogram.tolist()},
+                    self.save_conversions_all[self.files[self.i - 1]]
+                ]
+                save_gzip_pickle(filename_gzip, dictionaries)
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
