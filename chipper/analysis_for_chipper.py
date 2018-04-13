@@ -256,6 +256,8 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
     return sonogram_correlation, sonogram_correlation_binary
 
 
+# TODO This is the the most time consuming function.
+# Parallization should be here
 def calc_corr(sonogram, onsets, a, b, shift_factor, min_length, max_overlap):
     syllable_correlation = np.zeros(shift_factor + 1)
     scale_factor = 100. / max_overlap
