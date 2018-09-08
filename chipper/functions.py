@@ -5,24 +5,47 @@ import os
 import soundfile as sf
 from chipper.ifdvsonogramonly import ifdvsonogramonly
 #import matplotlib.pyplot as plt
+import chipper.utils as utils
+import gzip
 
 
 def initialize(directory):
     files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
+    # look for a gzip from a previous run
     return files
 
+def load_bout_data(f_name):
+    """
+    Load sonogram and syllable marks (onsets and offsets).
+    """
+    try:
+        song_data = utils.load_gz_p(f_name)
+    except:
+        song_data = utils.load_old(f_name)
+    params = song_data[0]
+    return params
 
 def initial_sonogram(i, files, directory):
     wavfile = files[i]
     song1, sample_rate = sf.read(directory + wavfile, always_2d=True)  # audio data always returned as 2d array
     song1 = song1[:, 0]  # make files mono
 
+    # check if there is a corresponding gzip from a previous run
+    zip_file = glob.glob(directory + '/SegSyllsOutput*/' + 'SegSyllsOutput_' + wavfile.replace('.wav', '') + '.gzip')
+
+    if zip_file:
+        # if there is corresponding zip file, open and use the saved parameters
+        params = load_bout_data(zip_file[0])
+    else:
+        params = []
+
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 1024, 1010, 2)
     [rows, cols] = sonogram.shape
     sonogram_padded = np.zeros((rows, cols + 300))
     sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
-    return sonogram_padded, millisecondsPerPixel, hertzPerPixel
+
+    return sonogram_padded, millisecondsPerPixel, hertzPerPixel, params
 
 
 def high_pass_filter(filter_boundary, sonogram):

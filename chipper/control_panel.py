@@ -273,11 +273,25 @@ class ControlPanel(Screen):
 
     def next(self):
         # get initial data
-        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel = seg.initial_sonogram(self.i, self.files,
+        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params = seg.initial_sonogram(self.i, self.files,
                                                                                self.parent.directory)
-
+        print(params)
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.set_song_params()
+        self.set_params_in_kv()
+        self.connect_song_shape_to_kv()
+
+        # set parameters if already run through chipper before (params from gzip)
+        if params:
+            # TODO standardize or rename filter_boundary, sometimes have to do rows-filter_boundary and others not
+            self.filter_boundary = self.rows - params['HighPassFilter']
+            print(self.bout_range)
+            self.bout_range = params['BoutRange']
+            print(self.bout_range)
+            self.percent_keep = params['PercentSignalKept']
+            self.min_silence = params['MinSilenceDuration']
+            self.min_syllable = params['MinSyllableDuration']
+
         self.set_params_in_kv()
         self.connect_song_shape_to_kv()
 
@@ -292,7 +306,6 @@ class ControlPanel(Screen):
 
         # run update to load images for the first time for this file
         self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
-
         # increment i so next file will be opened on submit/toss
         self.i += 1
 
@@ -314,6 +327,7 @@ class ControlPanel(Screen):
         onsets, offsets, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(self.thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets, silence_durations)
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
+        print(bout_range)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
 
         self.image_binary()
