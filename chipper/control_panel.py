@@ -222,8 +222,10 @@ class ControlPanel(Screen):
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
-    def set_song_params(self, filter_boundary=0, percent_keep=3, min_silence=10, min_syllable=20):
+    def set_song_params(self, filter_boundary=0, bout_range=None, percent_keep=3, min_silence=10, min_syllable=20):
         self.filter_boundary = filter_boundary
+        if bout_range is None:
+            self.bout_range = []
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
@@ -258,11 +260,12 @@ class ControlPanel(Screen):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
         self.ids.slider_high_pass_filter.max = self.rows
-        self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
+        if not self.bout_range:
+            self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
         self.ids.range_slider_crop.value1 = self.bout_range[0]
         self.ids.range_slider_crop.value2 = self.bout_range[1]
-        self.ids.range_slider_crop.min = self.bout_range[0]
-        self.ids.range_slider_crop.max = self.bout_range[1]
+        self.ids.range_slider_crop.min = 0
+        self.ids.range_slider_crop.max = self.cols
 
     def reset_parameters(self):
         self.set_song_params()
@@ -273,9 +276,9 @@ class ControlPanel(Screen):
 
     def next(self):
         # get initial data
-        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params = seg.initial_sonogram(self.i, self.files,
-                                                                               self.parent.directory)
-        print(params)
+        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params, prev_onsets, prev_offsets = \
+            seg.initial_sonogram(self.i, self.files, self.parent.directory)
+
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.set_song_params()
         self.set_params_in_kv()
@@ -285,9 +288,7 @@ class ControlPanel(Screen):
         if params:
             # TODO standardize or rename filter_boundary, sometimes have to do rows-filter_boundary and others not
             self.filter_boundary = self.rows - params['HighPassFilter']
-            print(self.bout_range)
             self.bout_range = params['BoutRange']
-            print(self.bout_range)
             self.percent_keep = params['PercentSignalKept']
             self.min_silence = params['MinSilenceDuration']
             self.min_syllable = params['MinSyllableDuration']
@@ -305,15 +306,27 @@ class ControlPanel(Screen):
         self.image_binary_initial()
 
         # run update to load images for the first time for this file
-        self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+        if prev_onsets.size:
+            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence,
+                        self.min_syllable, prev_run_onsets=prev_onsets, prev_run_offsets=prev_offsets)
+        else:
+            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+
         # increment i so next file will be opened on submit/toss
         self.i += 1
 
-    def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable):
+    def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable, prev_run_onsets=None,
+               prev_run_offsets=None):
+
+        if prev_run_onsets is None:
+            prev_run_onsets = np.empty([0])
+            prev_run_offsets = np.empty([0])
+
         # update variables based on input to function
         if filter_boundary == 0:  # throws index error if 0 -> have to at least still include one row
             filter_boundary = 1
-        self.set_song_params(filter_boundary=filter_boundary, percent_keep=percent_keep, min_silence=min_silence, min_syllable=min_syllable)
+        self.set_song_params(filter_boundary=filter_boundary, bout_range=bout_range, percent_keep=percent_keep,
+                             min_silence=min_silence, min_syllable=min_syllable)
         self.bout_range = bout_range
         sonogram = self.sonogram.copy()  # must do this for image to update for some reason
 
@@ -327,8 +340,11 @@ class ControlPanel(Screen):
         onsets, offsets, silence_durations, sum_sonogram_scaled = seg.initialize_onsets_offsets(self.thresh_sonogram)
         syllable_onsets, syllable_offsets = seg.set_min_silence(min_silence, onsets, offsets, silence_durations)
         syllable_onsets, syllable_offsets = seg.set_min_syllable(min_syllable, syllable_onsets, syllable_offsets)
-        print(bout_range)
         self.syllable_onsets, self.syllable_offsets = seg.crop(bout_range, syllable_onsets, syllable_offsets)
+
+        if prev_run_onsets.size:
+            self.syllable_onsets = prev_run_onsets
+            self.syllable_offsets = prev_run_offsets
 
         self.image_binary()
         self.image_syllable_marks()

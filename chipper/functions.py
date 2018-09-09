@@ -23,7 +23,9 @@ def load_bout_data(f_name):
     except:
         song_data = utils.load_old(f_name)
     params = song_data[0]
-    return params
+    onsets = np.asarray(song_data[1]['Onsets'], dtype='int')
+    offsets = np.asarray(song_data[1]['Offsets'], dtype='int')
+    return params, onsets, offsets
 
 def initial_sonogram(i, files, directory):
     wavfile = files[i]
@@ -35,9 +37,11 @@ def initial_sonogram(i, files, directory):
 
     if zip_file:
         # if there is corresponding zip file, open and use the saved parameters
-        params = load_bout_data(zip_file[0])
+        params, prev_onsets, prev_offsets = load_bout_data(zip_file[0])
     else:
         params = []
+        prev_onsets = np.empty([0])
+        prev_offsets = np.empty([0])
 
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 1024, 1010, 2)
@@ -45,7 +49,7 @@ def initial_sonogram(i, files, directory):
     sonogram_padded = np.zeros((rows, cols + 300))
     sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
 
-    return sonogram_padded, millisecondsPerPixel, hertzPerPixel, params
+    return sonogram_padded, millisecondsPerPixel, hertzPerPixel, params, prev_onsets, prev_offsets
 
 
 def high_pass_filter(filter_boundary, sonogram):
