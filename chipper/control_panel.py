@@ -218,7 +218,8 @@ class ControlPanel(Screen):
         self.save_tossed = {}
         self.save_conversions_all = {}
         self.next()
-        self.output_path = self.parent.directory + "SegSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+        #ToDo: add "_reChipper" to end of output_path if previous .gzips were used.
+        self.output_path = self.parent.directory + "SegSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")  # + "_reChipper"
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 

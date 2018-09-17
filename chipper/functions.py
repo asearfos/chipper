@@ -33,7 +33,8 @@ def initial_sonogram(i, files, directory):
     song1 = song1[:, 0]  # make files mono
 
     # check if there is a corresponding gzip from a previous run
-    zip_file = glob.glob(directory + '/SegSyllsOutput*/' + 'SegSyllsOutput_' + wavfile.replace('.wav', '') + '.gzip')
+    zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] + '/**/' + 'SegSyllsOutput_' +
+                         wavfile.replace('.wav', '') + '.gzip', recursive=True)
 
     if zip_file:
         # if there is corresponding zip file, open and use the saved parameters
