@@ -6,7 +6,6 @@ import soundfile
 from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT, Tree
 from PyInstaller.utils.hooks import collect_submodules
 from kivy import garden
-from kivy.deps import sdl2, glew
 from kivy.tools.packaging.pyinstaller_hooks import get_deps_minimal, hookspath, \
     runtime_hooks
 
@@ -16,10 +15,14 @@ if sys.platform == 'darwin':
 elif sys.platform == 'win32':
     OS = 'WINDOWS'
     _libname = 'libsndfile' + _architecture()[0] + '.dll'
+
     import win32timezone
+    from kivy.deps import sdl2, glew
+
 else:
     print("Not MAC or WINDOWS")
     quit()
+_path = os.path.abspath(os.path.join('..', 'chipper'))
 
 kivy_stuff = get_deps_minimal(camera=False, spelling=False, video=False)
 
@@ -47,24 +50,13 @@ binaries = [
 ]
 
 datas = [
-    (os.path.dirname(garden.__file__), 'kivy\\garden'),
+    (os.path.dirname(garden.__file__), os.path.join('kivy', 'garden')),
 ]
 if OS == 'WINDOWS':
     datas += [(os.path.abspath(win32timezone.__file__), '.'), ]
+datas += [(_path, 'chipper')]
 
-for i, d in dict(pathex=['.'],
-                 binaries=binaries,
-                 excludes=excludes,
-                 datas=datas,
-                 hookspath=hookspath(),
-                 runtime_hooks=runtime_hooks(),
-                 win_no_prefer_redirects=False,
-                 win_private_assemblies=False,
-                 cipher=block_cipher,
-                 hiddenimports=hiddenimports).items():
-    print(i, d)
-
-a = Analysis(['..\\chipper\\run_chipper.py'],
+a = Analysis([os.path.join(_path, 'run_chipper.py')],
              pathex=['.'],
              binaries=binaries,
              excludes=excludes,
@@ -88,15 +80,25 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True,
-          icon='..\\chipper\\SP1.ico'
+          icon=os.path.join(_path, 'SP1.ico')
           )
 
-coll = COLLECT(exe,
-               Tree('..\\chipper'),
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
-               strip=False,
-               upx=True,
-               name='chipper_test')
+if OS == 'MAC':
+    coll = COLLECT(exe,
+                   Tree(_path),
+                   a.binaries,
+                   a.zipfiles,
+                   a.datas,
+                   strip=False,
+                   upx=True,
+                   name='chipper_test')
+else:
+    coll = COLLECT(exe,
+                   Tree(_path),
+                   a.binaries,
+                   a.zipfiles,
+                   a.datas,
+                   *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+                   strip=False,
+                   upx=True,
+                   name='chipper_test')
