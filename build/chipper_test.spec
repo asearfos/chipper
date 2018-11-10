@@ -46,12 +46,17 @@ block_cipher = None
 win_no_prefer_redirects = False
 win_private_assemblies = False
 binaries = [
-    (sound_path, '_soundfile_data')
+    (sound_path, '_soundfile_data'),
+    ('/usr/local/lib/libpng16.16.dylib', '.'),
+    ('/usr/local/lib/libjpeg.9.dylib', '.'),
+    ('/usr/local/lib/libSDL2.dylib', '.'),
+    ('/usr/local/lib/libfreetype.6.dylib', '.')
 ]
 
 datas = [
     (os.path.dirname(garden.__file__), os.path.join('kivy', 'garden')),
 ]
+print(datas)
 if OS == 'WINDOWS':
     datas += [(os.path.abspath(win32timezone.__file__), '.'), ]
 datas += [(_path, 'chipper')]
