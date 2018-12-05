@@ -241,7 +241,6 @@ class ControlPanel(Screen):
     def set_params_in_kv(self):
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
         # TODO: connect defaults to .kv (would like to do this the other way around) or remove values from .kv
-        self.ids.slider_high_pass_filter.value = self.filter_boundary
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
@@ -260,6 +259,9 @@ class ControlPanel(Screen):
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
+        self.ids.slider_high_pass_filter.value1 = self.filter_boundary
+        self.ids.slider_high_pass_filter.value2 = self.rows
+        self.ids.slider_high_pass_filter.min = 0
         self.ids.slider_high_pass_filter.max = self.rows
         if not self.bout_range:
             self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
