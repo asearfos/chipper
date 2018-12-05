@@ -24,7 +24,7 @@ import time
 from chipper.utils import save_gzip_pickle
 
 
-
+# TODO improve how self variables are being used; some have the same variable but not self as function inputs....
 class ControlPanel(Screen):
     def __init__(self, **kwargs):
         self.top_image = ObjectProperty(None)
@@ -223,10 +223,16 @@ class ControlPanel(Screen):
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
-    def set_song_params(self, filter_boundary=0, bout_range=None, percent_keep=3, min_silence=10, min_syllable=20):
-        self.filter_boundary = filter_boundary
+    def set_song_params(self, filter_boundary=None, bout_range=None, percent_keep=3, min_silence=10,
+                        min_syllable=20):
+        if filter_boundary is None:
+            self.filter_boundary = []
+        else:
+            self.filter_boundary = filter_boundary
         if bout_range is None:
             self.bout_range = []
+        else:
+            self.bout_range = bout_range
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
@@ -259,8 +265,10 @@ class ControlPanel(Screen):
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
-        self.ids.slider_high_pass_filter.value1 = self.filter_boundary
-        self.ids.slider_high_pass_filter.value2 = self.rows
+        if not self.filter_boundary:
+            self.filter_boundary = [0, self.rows]
+        self.ids.slider_high_pass_filter.value1 = self.filter_boundary[0]
+        self.ids.slider_high_pass_filter.value2 = self.filter_boundary[1]
         self.ids.slider_high_pass_filter.min = 0
         self.ids.slider_high_pass_filter.max = self.rows
         if not self.bout_range:
@@ -289,9 +297,9 @@ class ControlPanel(Screen):
 
         # set parameters if already run through chipper before (params from gzip)
         if params:
-            if params['HighPassFilter'] > 250:
-                # this is added because the high pass filter used to be rows-hpf boundary
-                self.filter_boundary = self.rows - params['HighPassFilter']
+            if type(params['HighPassFilter']) is not list:
+                # this is added because we used to only have a high pass filter (single slider versus range slider)
+                self.filter_boundary = [self.rows - params['HighPassFilter'], self.rows]
             else:
                 self.filter_boundary = params['HighPassFilter']
             self.bout_range = params['BoutRange']
@@ -323,18 +331,22 @@ class ControlPanel(Screen):
 
     def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable, prev_run_onsets=None,
                prev_run_offsets=None):
-
         if prev_run_onsets is None:
             prev_run_onsets = np.empty([0])
             prev_run_offsets = np.empty([0])
 
         # update variables based on input to function
-        if filter_boundary == self.rows:  # throws index error if equal to max of the slider (total number of rows) ->
-            # have to at least still include one row of the image
-            filter_boundary = self.rows-1
+        # hpf throws index error if both slider values are equal (you are selecting no rows of the sonogram),
+        # so make sure they are never equal
+        if filter_boundary[0] == self.rows:
+            filter_boundary[0] = self.rows-1
+        elif filter_boundary[1] == 0:
+            filter_boundary[1] = 1
+        elif filter_boundary[0] == filter_boundary[1]:
+            filter_boundary[1] = filter_boundary[0] + 1
+
         self.set_song_params(filter_boundary=filter_boundary, bout_range=bout_range, percent_keep=percent_keep,
                              min_silence=min_silence, min_syllable=min_syllable)
-        self.bout_range = bout_range
         sonogram = self.sonogram.copy()  # must do this for image to update for some reason
 
         # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram

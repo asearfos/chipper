@@ -55,7 +55,8 @@ def initial_sonogram(i, files, directory):
 
 def high_pass_filter(filter_boundary, sonogram):
     rows = sonogram.shape[0]
-    sonogram[(rows - filter_boundary):rows, :] = 0
+    sonogram[(rows - int(filter_boundary[0])):rows, :] = 0  # high pass filter
+    sonogram[0:(rows-int(filter_boundary[1])), :] = 0  # low pass filter
     return sonogram
 
 
