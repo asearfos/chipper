@@ -275,7 +275,7 @@ class ControlPanel(Screen):
         self.set_params_in_kv()
         self.connect_song_shape_to_kv()
 
-        self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+        self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
     def next(self):
         # get initial data
@@ -289,8 +289,11 @@ class ControlPanel(Screen):
 
         # set parameters if already run through chipper before (params from gzip)
         if params:
-            # TODO standardize or rename filter_boundary, sometimes have to do rows-filter_boundary and others not
-            self.filter_boundary = self.rows - params['HighPassFilter']
+            if params['HighPassFilter'] > 250:
+                # this is added because the high pass filter used to be rows-hpf boundary
+                self.filter_boundary = self.rows - params['HighPassFilter']
+            else:
+                self.filter_boundary = params['HighPassFilter']
             self.bout_range = params['BoutRange']
             self.percent_keep = params['PercentSignalKept']
             self.min_silence = params['MinSilenceDuration']
@@ -310,10 +313,10 @@ class ControlPanel(Screen):
 
         # run update to load images for the first time for this file
         if prev_onsets.size:
-            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence,
+            self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence,
                         self.min_syllable, prev_run_onsets=prev_onsets, prev_run_offsets=prev_offsets)
         else:
-            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+            self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
         # increment i so next file will be opened on submit/toss
         self.i += 1
@@ -326,8 +329,9 @@ class ControlPanel(Screen):
             prev_run_offsets = np.empty([0])
 
         # update variables based on input to function
-        if filter_boundary == 0:  # throws index error if 0 -> have to at least still include one row
-            filter_boundary = 1
+        if filter_boundary == self.rows:  # throws index error if equal to max of the slider (total number of rows) ->
+            # have to at least still include one row of the image
+            filter_boundary = self.rows-1
         self.set_song_params(filter_boundary=filter_boundary, bout_range=bout_range, percent_keep=percent_keep,
                              min_silence=min_silence, min_syllable=min_syllable)
         self.bout_range = bout_range

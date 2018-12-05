@@ -136,7 +136,7 @@
 #                value_track: True
 #                value_track_color: [.2, .7, 0.9, 1]
                 step: 1
-                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
             GridLayout:
 
@@ -171,7 +171,7 @@
                 size_hint: 1, 0.05
                 padding: 0
                 step: 1
-                on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
         GridLayout:
             rows: 7
@@ -194,7 +194,7 @@
                     max: 6
                     value: 3
                     step: 0.10
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     id: slider_threshold_label
 
@@ -211,7 +211,7 @@
                     min: 1
                     value: 10
                     step: 1
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     id: slider_min_silence_label
 
@@ -228,7 +228,7 @@
                     min: 1
                     value: 20
                     step: 1
-                    on_release: controls.update(slider_high_pass_filter.max-int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_release: controls.update(int(slider_high_pass_filter.value1), range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     id: slider_min_syllable_label
 
