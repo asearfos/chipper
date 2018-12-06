@@ -290,6 +290,12 @@ class ControlPanel(Screen):
         self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params, prev_onsets, prev_offsets = \
             seg.initial_sonogram(self.i, self.files, self.parent.directory)
 
+        if len(self.save_parameters_all) > 0:
+            if self.files[self.i] in self.save_parameters_all:
+                params = self.save_parameters_all[self.files[self.i]]
+                prev_onsets = np.asarray(self.save_syllables_all[self.files[self.i]]['Onsets'])
+                prev_offsets = np.asarray(self.save_syllables_all[self.files[self.i]]['Offsets'])
+
         # reset default parameters for new song (will be used by update to graph the first attempt)
         self.set_song_params()
         self.set_params_in_kv()
