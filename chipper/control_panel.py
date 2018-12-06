@@ -24,7 +24,7 @@ import time
 from chipper.utils import save_gzip_pickle
 
 
-
+# TODO improve how self variables are being used; some have the same variable but not self as function inputs....
 class ControlPanel(Screen):
     def __init__(self, **kwargs):
         self.top_image = ObjectProperty(None)
@@ -223,10 +223,16 @@ class ControlPanel(Screen):
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
-    def set_song_params(self, filter_boundary=0, bout_range=None, percent_keep=3, min_silence=10, min_syllable=20):
-        self.filter_boundary = filter_boundary
+    def set_song_params(self, filter_boundary=None, bout_range=None, percent_keep=3, min_silence=10,
+                        min_syllable=20):
+        if filter_boundary is None:
+            self.filter_boundary = []
+        else:
+            self.filter_boundary = filter_boundary
         if bout_range is None:
             self.bout_range = []
+        else:
+            self.bout_range = bout_range
         self.percent_keep = percent_keep
         self.min_silence = min_silence
         self.min_syllable = min_syllable
@@ -241,7 +247,6 @@ class ControlPanel(Screen):
     def set_params_in_kv(self):
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
         # TODO: connect defaults to .kv (would like to do this the other way around) or remove values from .kv
-        self.ids.slider_high_pass_filter.value = self.filter_boundary
         self.ids.slider_threshold.value = self.percent_keep
         self.ids.slider_min_silence.value = self.min_silence
         self.ids.slider_min_syllable.value = self.min_syllable
@@ -260,7 +265,12 @@ class ControlPanel(Screen):
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
-        self.ids.slider_high_pass_filter.max = self.rows
+        if not self.filter_boundary:
+            self.filter_boundary = [0, self.rows]
+        self.ids.slider_frequency_filter.value1 = self.filter_boundary[0]
+        self.ids.slider_frequency_filter.value2 = self.filter_boundary[1]
+        self.ids.slider_frequency_filter.min = 0
+        self.ids.slider_frequency_filter.max = self.rows
         if not self.bout_range:
             self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
         self.ids.range_slider_crop.value1 = self.bout_range[0]
@@ -273,7 +283,7 @@ class ControlPanel(Screen):
         self.set_params_in_kv()
         self.connect_song_shape_to_kv()
 
-        self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+        self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
     def next(self):
         # get initial data
@@ -287,8 +297,11 @@ class ControlPanel(Screen):
 
         # set parameters if already run through chipper before (params from gzip)
         if params:
-            # TODO standardize or rename filter_boundary, sometimes have to do rows-filter_boundary and others not
-            self.filter_boundary = self.rows - params['HighPassFilter']
+            if 'HighPassFilter' in params:
+                # this is added because we used to only have a high pass filter (single slider versus range slider)
+                self.filter_boundary = [self.rows - params['HighPassFilter'], self.rows]
+            else:
+                self.filter_boundary = params['FrequencyFilter']
             self.bout_range = params['BoutRange']
             self.percent_keep = params['PercentSignalKept']
             self.min_silence = params['MinSilenceDuration']
@@ -308,32 +321,45 @@ class ControlPanel(Screen):
 
         # run update to load images for the first time for this file
         if prev_onsets.size:
-            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence,
+            self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence,
                         self.min_syllable, prev_run_onsets=prev_onsets, prev_run_offsets=prev_offsets)
         else:
-            self.update(self.rows-self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
+            self.update(self.filter_boundary, self.bout_range, self.percent_keep, self.min_silence, self.min_syllable)
 
         # increment i so next file will be opened on submit/toss
         self.i += 1
 
     def update(self, filter_boundary, bout_range, percent_keep, min_silence, min_syllable, prev_run_onsets=None,
                prev_run_offsets=None):
-
         if prev_run_onsets is None:
             prev_run_onsets = np.empty([0])
             prev_run_offsets = np.empty([0])
 
+        # TODO: this is current fix for range slider, could fix in range_slider_from_google.py instead of here
+        # have to check list from range sliders to make sure the first one is less than the second
+        # if they are not in ascending order, must reverse the list
+        if filter_boundary[1] < filter_boundary[0]:
+            filter_boundary.reverse()
+        if bout_range[1] < bout_range[0]:
+            bout_range.reverse()
+
         # update variables based on input to function
-        if filter_boundary == 0:  # throws index error if 0 -> have to at least still include one row
-            filter_boundary = 1
+        # frequency_filter throws index error if both slider values are equal (you are selecting no rows of the
+        # sonogram), so make sure they are never equal
+        if filter_boundary[0] == self.rows:
+            filter_boundary[0] = self.rows-1
+        elif filter_boundary[1] == 0:
+            filter_boundary[1] = 1
+        elif filter_boundary[0] == filter_boundary[1]:
+            filter_boundary[1] = filter_boundary[0] + 1
+
         self.set_song_params(filter_boundary=filter_boundary, bout_range=bout_range, percent_keep=percent_keep,
                              min_silence=min_silence, min_syllable=min_syllable)
-        self.bout_range = bout_range
         sonogram = self.sonogram.copy()  # must do this for image to update for some reason
 
         # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram
-        hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
-        scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
+        freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
+        scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
         self.top_image.image_sonogram(scaled_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
@@ -441,7 +467,7 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary; note we use self.i-1 since i is incremented at the end of next()
-                self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary,
+                self.save_parameters_all[self.files[self.i-1]] = {'FrequencyFilter': self.filter_boundary,
                                                                   'BoutRange': self.bout_range,
                                                                   'PercentSignalKept': self.percent_keep,
                                                                   'MinSilenceDuration': self.min_silence,
