@@ -267,10 +267,10 @@ class ControlPanel(Screen):
         [self.rows, self.cols] = np.shape(self.sonogram)
         if not self.filter_boundary:
             self.filter_boundary = [0, self.rows]
-        self.ids.slider_high_pass_filter.value1 = self.filter_boundary[0]
-        self.ids.slider_high_pass_filter.value2 = self.filter_boundary[1]
-        self.ids.slider_high_pass_filter.min = 0
-        self.ids.slider_high_pass_filter.max = self.rows
+        self.ids.slider_frequency_filter.value1 = self.filter_boundary[0]
+        self.ids.slider_frequency_filter.value2 = self.filter_boundary[1]
+        self.ids.slider_frequency_filter.min = 0
+        self.ids.slider_frequency_filter.max = self.rows
         if not self.bout_range:
             self.bout_range = [0, self.cols]  # TODO: make self.cols instead so you don't create arrays in multiple places
         self.ids.range_slider_crop.value1 = self.bout_range[0]
@@ -297,11 +297,11 @@ class ControlPanel(Screen):
 
         # set parameters if already run through chipper before (params from gzip)
         if params:
-            if type(params['HighPassFilter']) is not list:
+            if 'HighPassFilter' in params:
                 # this is added because we used to only have a high pass filter (single slider versus range slider)
                 self.filter_boundary = [self.rows - params['HighPassFilter'], self.rows]
             else:
-                self.filter_boundary = params['HighPassFilter']
+                self.filter_boundary = params['FrequencyFilter']
             self.bout_range = params['BoutRange']
             self.percent_keep = params['PercentSignalKept']
             self.min_silence = params['MinSilenceDuration']
@@ -335,9 +335,17 @@ class ControlPanel(Screen):
             prev_run_onsets = np.empty([0])
             prev_run_offsets = np.empty([0])
 
+        # TODO: this is current fix for range slider, could fix in range_slider_from_google.py instead of here
+        # have to check list from range sliders to make sure the first one is less than the second
+        # if they are not in ascending order, must reverse the list
+        if filter_boundary[1] < filter_boundary[0]:
+            filter_boundary.reverse()
+        if bout_range[1] < bout_range[0]:
+            bout_range.reverse()
+
         # update variables based on input to function
-        # hpf throws index error if both slider values are equal (you are selecting no rows of the sonogram),
-        # so make sure they are never equal
+        # frequency_filter throws index error if both slider values are equal (you are selecting no rows of the
+        # sonogram), so make sure they are never equal
         if filter_boundary[0] == self.rows:
             filter_boundary[0] = self.rows-1
         elif filter_boundary[1] == 0:
@@ -350,8 +358,8 @@ class ControlPanel(Screen):
         sonogram = self.sonogram.copy()  # must do this for image to update for some reason
 
         # run HPF, scale based on average amplitude (increases low amplitude sections), and graph sonogram
-        hpf_sonogram = seg.high_pass_filter(filter_boundary, sonogram)
-        scaled_sonogram = seg.normalize_amplitude(hpf_sonogram)
+        freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
+        scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
         self.top_image.image_sonogram(scaled_sonogram)
 
         # apply threshold to signal, calculate onsets and offsets, plot resultant binary sonogram
@@ -459,7 +467,7 @@ class ControlPanel(Screen):
                 check_order.open()
             else:
                 # save parameters to dictionary; note we use self.i-1 since i is incremented at the end of next()
-                self.save_parameters_all[self.files[self.i-1]] = {'HighPassFilter': self.filter_boundary,
+                self.save_parameters_all[self.files[self.i-1]] = {'FrequencyFilter': self.filter_boundary,
                                                                   'BoutRange': self.bout_range,
                                                                   'PercentSignalKept': self.percent_keep,
                                                                   'MinSilenceDuration': self.min_silence,
