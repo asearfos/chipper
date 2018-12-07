@@ -493,6 +493,10 @@ class ControlPanel(Screen):
                 ]
                 save_gzip_pickle(filename_gzip, dictionaries)
 
+                # remove from tossed list if file ends up being submitted
+                if self.i - 1 in self.save_tossed:
+                    del self.save_tossed[self.i - 1]
+
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
                     self.write()
@@ -502,6 +506,13 @@ class ControlPanel(Screen):
     def toss(self):
         # save file name to dictionary
         self.save_tossed[self.i-1] = {'FileName': self.files[self.i-1]}
+
+        # remove from saved parameters and associated gzip if file ends up being tossed
+        if self.files[self.i - 1] in self.save_parameters_all:
+            del self.save_parameters_all[self.files[self.i - 1]]
+            del self.save_syllables_all[self.files[self.i - 1]]
+            del self.save_conversions_all[self.files[self.i - 1]]
+            os.remove(self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip')
 
         # write if last file otherwise go to next file
         if self.i == len(self.files):
