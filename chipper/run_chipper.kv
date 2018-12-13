@@ -193,13 +193,13 @@
             cols: 1
 
             Label:
-                size_hint_y: 0.3
+                size_hint_y: 0.25
                 text_size: self.size
                 text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, analyze previously segmented syllables or perform both. Adjust settings if desired.'
                 valign: 'center'
 
             StackLayout:
-                size_hint_y: 0.3
+                size_hint_y: 0.25
                 CheckBox:
                     id: chipper
                     group: 'chipper_analyze'
@@ -262,7 +262,7 @@
                     on_press: analyze._do_press()
 
             BoxLayout:
-                size_hint_y: 0.1
+                size_hint_y: 0.05
 
             GridLayout:
                 rows: 1
@@ -280,7 +280,20 @@
 #                    size_hint: (1, 1) if chipper_and_analyze.active else (0, 0)
 #                    opacity: 1 if chipper_and_analyze.active else 0
                     padding: 10
-                    spacing: 10
+                    spacing: 8
+
+                    CheckBox:
+                        id: find_prev_gzips
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    RadioLabel:
+                        text: 'Search for previously used parameters\n(note: slower loading time)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.14
+                        disabled: False if chipper.active else True
+                        on_press: find_prev_gzips._do_press()
 
                     PercentInput:
                         id: signal_threshold_input
@@ -307,8 +320,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.1
+                        size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
                     TextInput:
@@ -322,8 +334,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.1
+                        size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
                     TextInput:
@@ -337,8 +348,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.1
+                        size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
                     TextInput:
@@ -352,8 +362,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.1
+                        size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
                     TextInput:
@@ -367,8 +376,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.1
+                        size_hint: 0.85, 0.1
                         disabled: False if analyze.active else True
 
                     PercentInput:
@@ -382,8 +390,7 @@
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint_x: 0.85
-                        size_hint_y: 0.14
+                        size_hint: 0.85, 0.1
                         disabled: False if analyze.active else True
 
             GridLayout:
