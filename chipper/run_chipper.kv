@@ -1,13 +1,17 @@
 #:import MeshLinePlot kivy.garden.graph.MeshLinePlot
 #:import np numpy
 #:import FileBrowser kivy.garden.filebrowser
+#:import webbrowser webbrowser
 
 <Manager>:
+    LandingPage:
     FileExplorer:
     ControlPanel:
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
+
+<RadioLabel@ButtonBehavior+Label>
 
 <FinishMarksPopup>
     size_hint: .25, .25
@@ -98,6 +102,304 @@
     Button:
         text: 'Close'
         on_release: root.quit_app()
+
+<LandingPage>:
+    id: welcome
+    name: 'landing_page'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: 10
+        spacing: 10
+
+        StackLayout:
+            size_hint_x: 0.6
+
+            Image:
+                source:'ChipperIcon.png'
+                size_hint_y: 0.3
+
+            BoxLayout:
+                size_hint_y: 0.3
+
+            Label:
+                id: version_label
+                markup: True
+                text: '[b]Version:[/b] alpha'
+                size_hint_y: 0.1
+
+            GridLayout:
+                rows: 9
+                cols: 1
+                size_hint_y: 0.3
+
+                Label:
+                    id: general_info
+                    markup: True
+                    text: '[b]General Information:[/b]'
+                Label:
+                    id: created_by
+                    markup: True
+                    text: 'Created by Abigail Searfoss'
+                Label:
+                    id: created_by
+                    markup: True
+                    text: 'From Creanza Laboratory'
+                Label:
+                    id: publication
+                    markup: True
+                    text: 'Publication in Press'
+                Label:
+                    id: blank
+                    markup: True
+                    text: '\n'
+
+
+                Label:
+                    id: links_header
+                    markup: True
+                    text: '[b]Useful Links:[/b]'
+                Label:
+                    id: hyperlink1
+                    markup: True
+                    text: '[ref=https://github.com/asearfos/chipper][color=044900][u][b]Chipper GitHub[/u][/b][/color][/ref]'
+                    on_ref_press: webbrowser.open('https://github.com/asearfos/chipper')
+                Label:
+                    id: hyperlink2
+                    markup: True
+                    text: '[ref=https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing][color=044900][u][b]Chipper Instructions[/u][/b][/color][/ref]'
+                    on_ref_press: webbrowser.open('https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing')
+                Label:
+                    id: analysis_outputs
+                    markup: True
+                    text: '[color=044900][u][b]Analysis Outputs Defined[/u][/b][/color]'
+
+        Widget:
+            id: separator
+            size_hint_x: None
+            width: 3
+            canvas:
+                Color:
+                    rgb: .345, .345, .345
+                Rectangle:
+                    pos: separator.center_x, 0
+                    size: separator.width, root.height
+
+        BoxLayout:
+            size_hint_x: 0.03
+
+        GridLayout:
+            rows: 5
+            cols: 1
+
+            Label:
+                size_hint_y: 0.3
+                text_size: self.size
+                text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, analyze previously segmented syllables or perform both. Adjust settings if desired.'
+                valign: 'center'
+
+            StackLayout:
+                size_hint_y: 0.3
+                CheckBox:
+                    id: chipper
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                    active: True
+                RadioLabel:
+                    id: chipper_label
+                    text: 'Syllable Segmentation'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: chipper_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: chipper._do_press()
+
+                CheckBox:
+                    id: determine_note_thresh
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: determine_note_thresh_label
+                    text: 'Determine Note Size Threshold (pixels)'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: determine_note_thresh_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: determine_note_thresh._do_press()
+
+                CheckBox:
+                    id: determine_syllsim_thresh
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: determine_syllsim_thresh_label
+                    text: 'Determine Syllable Similarity Threshold (%)'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: determine_syllsim_thresh_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: determine_syllsim_thresh._do_press()
+
+                CheckBox:
+                    id: analyze
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: analyze_label
+                    text: 'Song Analysis'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: analyze_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: analyze._do_press()
+
+            BoxLayout:
+                size_hint_y: 0.1
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                size_hint_x: 0.3
+
+                BoxLayout:
+                    size_hint_x: 0.1
+                    size_hint_y: 1
+
+                StackLayout: # <--- I want to show/hide this menu
+                    id: chipper_menu
+#                    width: 120 if chipper_and_analyze.active else 0
+#                    height: 120
+#                    size_hint: (1, 1) if chipper_and_analyze.active else (0, 0)
+#                    opacity: 1 if chipper_and_analyze.active else 0
+                    padding: 10
+                    spacing: 10
+
+                    PercentInput:
+                        id: signal_threshold_input
+                        input_filter: 'float'
+                        hint_text: '2'
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Top Percent of Signal Kept'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: highpass_input
+                        input_filter: 'int'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'High Pass Filter'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: lowpass_input
+                        input_filter: 'int'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Low Pass Filter'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: minsilence_input
+                        input_filter: 'int'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Minimum Silence Duration'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: minsyllable_input
+                        input_filter: 'int'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Minimum Syllable Duration'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: note_thresh_input
+                        input_filter: 'int'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if analyze.active else True
+                    Label:
+                        text: 'Note Size Threshold (pixels)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.1
+                        disabled: False if analyze.active else True
+
+                    PercentInput:
+                        id: syll_sim_input
+                        input_filter: 'float'
+                        hint_text: '40'
+                        size_hint: 0.15, 0.1
+                        disabled: False if analyze.active else True
+                    Label:
+                        text: '% Syllable Similarity (> are same syllable)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint_x: 0.85
+                        size_hint_y: 0.14
+                        disabled: False if analyze.active else True
+
+            GridLayout:
+                size_hint_y: 0.2
+                rows: 1
+                cols: 3
+                padding: 10
+
+                BoxLayout:
+
+                Button:
+                    id: start_chipper
+                    text: 'START'
+                    on_release: app.root.current = 'choose_file'
+
+                BoxLayout:
 
 <FileExplorer>:
     id: browse
