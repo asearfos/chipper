@@ -5,8 +5,16 @@
 
 <Manager>:
     LandingPage:
+        id: welcome
+        name: 'landing_page'
     FileExplorer:
     ControlPanel:
+#        id: controls
+        name: 'control_panel'
+        user_signal_thresh: welcome.user_signal_thresh
+        user_min_silence: welcome.user_min_silence
+        user_min_syllable: welcome.user_min_syllable
+
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
@@ -104,9 +112,9 @@
         on_release: root.quit_app()
 
 <LandingPage>:
-    id: welcome
-    name: 'landing_page'
-
+    user_signal_thresh: signal_threshold_input.text
+    user_min_silence: min_silence_input.text
+    user_min_syllable: min_syllable_input.text
     BoxLayout:
         orientation: 'horizontal'
         padding: 10
@@ -273,7 +281,7 @@
                     size_hint_x: 0.1
                     size_hint_y: 1
 
-                StackLayout: # <--- I want to show/hide this menu
+                StackLayout: # <--- to show/hide this menu see comments
                     id: chipper_menu
 #                    width: 120 if chipper_and_analyze.active else 0
 #                    height: 120
@@ -287,7 +295,7 @@
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
                     RadioLabel:
-                        text: 'Search for previously used parameters\n(note: slower loading time)'
+                        text: 'Search for previously used parameters\n(note: slower loading time, will override defaults)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -295,70 +303,51 @@
                         disabled: False if chipper.active else True
                         on_press: find_prev_gzips._do_press()
 
-                    PercentInput:
+                    NumericInput:
                         id: signal_threshold_input
                         input_filter: 'float'
-                        hint_text: '2'
+                        min_value: 0.1
+                        max_value: 6
+                        text: '3'
+                        padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
                     Label:
-                        text: 'Top Percent of Signal Kept'
+                        text: 'Top Percent of Signal Kept (.1-6%)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
                         size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
-                    TextInput:
-                        id: highpass_input
-                        input_filter: 'int'
-                        hint_text: '40'
+                    NumericInput:
+                        id: min_silence_input
+                        input_filter: 'float'
+                        min_value: 0
+                        max_value: 50
+                        text: '10'
+                        padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
                     Label:
-                        text: 'High Pass Filter'
+                        text: 'Minimum Silence Duration (0-50ms)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
                         size_hint: 0.85, 0.1
                         disabled: False if chipper.active else True
 
-                    TextInput:
-                        id: lowpass_input
-                        input_filter: 'int'
-                        hint_text: '40'
+                    NumericInput:
+                        id: min_syllable_input
+                        input_filter: 'float'
+                        min_value: 0
+                        max_value: 350
+                        text: '20'
+                        padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
                     Label:
-                        text: 'Low Pass Filter'
-                        halign: 'left'
-                        valign: 'center'
-                        text_size: self.size
-                        size_hint: 0.85, 0.1
-                        disabled: False if chipper.active else True
-
-                    TextInput:
-                        id: minsilence_input
-                        input_filter: 'int'
-                        hint_text: '40'
-                        size_hint: 0.15, 0.1
-                        disabled: False if chipper.active else True
-                    Label:
-                        text: 'Minimum Silence Duration'
-                        halign: 'left'
-                        valign: 'center'
-                        text_size: self.size
-                        size_hint: 0.85, 0.1
-                        disabled: False if chipper.active else True
-
-                    TextInput:
-                        id: minsyllable_input
-                        input_filter: 'int'
-                        hint_text: '40'
-                        size_hint: 0.15, 0.1
-                        disabled: False if chipper.active else True
-                    Label:
-                        text: 'Minimum Syllable Duration'
+                        text: 'Minimum Syllable Duration (0-350 ms)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -368,7 +357,8 @@
                     TextInput:
                         id: note_thresh_input
                         input_filter: 'int'
-                        hint_text: '40'
+                        text: '120'
+                        padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
                     Label:
@@ -379,10 +369,13 @@
                         size_hint: 0.85, 0.1
                         disabled: False if analyze.active else True
 
-                    PercentInput:
+                    NumericInput:
                         id: syll_sim_input
                         input_filter: 'float'
-                        hint_text: '40'
+                        min_value: 0
+                        max_value: 100
+                        text: '40'
+                        padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
                     Label:
@@ -423,7 +416,10 @@
 
 <ControlPanel>:
     id: controls
-    name: 'control_panel'
+#    name: 'control_panel'
+    user_signal_thresh: '3'
+    user_min_silence: '10'
+    user_min_syllable: '20'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 #    bottom_image: graph_binary
@@ -499,10 +495,10 @@
                     text: 'Threshold: Top Percent of Signal'
                 MySlider:
                     id: slider_threshold
-                    min: 0.10
+                    min: 0.1
                     max: 6
-                    value: 3
-                    step: 0.10
+                    value: float(root.user_signal_thresh)
+                    step: 0.1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     id: slider_threshold_label
@@ -518,7 +514,7 @@
                 MySlider:
                     id: slider_min_silence
                     min: 1
-                    value: 10
+                    value: root.user_min_silence
                     step: 1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
@@ -535,7 +531,7 @@
                 MySlider:
                     id: slider_min_syllable
                     min: 1
-                    value: 20
+                    value: root.user_min_syllable
                     step: 1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:

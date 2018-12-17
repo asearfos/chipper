@@ -223,8 +223,8 @@ class ControlPanel(Screen):
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
 
-    def set_song_params(self, filter_boundary=None, bout_range=None, percent_keep=3, min_silence=10,
-                        min_syllable=20):
+    def set_song_params(self, filter_boundary=None, bout_range=None, percent_keep=None, min_silence=None,
+                        min_syllable=None):
         if filter_boundary is None:
             self.filter_boundary = []
         else:
@@ -233,10 +233,28 @@ class ControlPanel(Screen):
             self.bout_range = []
         else:
             self.bout_range = bout_range
-        self.percent_keep = percent_keep
-        self.min_silence = min_silence
-        self.min_syllable = min_syllable
-        self.ids.slider_threshold_label.text = str(round(self.percent_keep, 1)) + "%"
+
+        if percent_keep is None:
+            self.percent_keep = self.ids.slider_threshold.value
+        else:
+            self.percent_keep = percent_keep
+
+        if min_silence is None:
+            self.min_silence = self.ids.slider_min_silence.value/self.millisecondsPerPixel
+            if self.min_silence == 0:
+                self.min_silence = self.ids.slider_min_silence.min
+        else:
+            self.min_silence = min_silence
+
+        if min_syllable is None:
+            self.min_syllable = self.ids.slider_min_syllable.value/self.millisecondsPerPixel
+            if self.min_syllable == 0:
+                self.min_syllable = self.ids.slider_min_syllable.min
+        else:
+            self.min_syllable = min_syllable
+
+        self.ids.slider_threshold_label.text = str(self.percent_keep) + "%"
+        # have to round these because of the conversion
         self.ids.slider_min_silence_label.text = str(round(self.min_silence*self.millisecondsPerPixel,
                                                            1)) + " ms"
         self.ids.slider_min_syllable_label.text = str(round(self.min_syllable*self.millisecondsPerPixel,

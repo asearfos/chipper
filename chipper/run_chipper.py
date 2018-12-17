@@ -13,7 +13,7 @@ from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEnd
     DonePopup
 from chipper.sliders import MySlider, MyRangeSlider
 from chipper.image_sonogram import ImageSonogram
-from chipper.text_inputs import PercentInput
+from chipper.text_inputs import NumericInput
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
