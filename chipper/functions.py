@@ -14,6 +14,7 @@ def initialize(directory):
     # look for a gzip from a previous run
     return files
 
+
 def load_bout_data(f_name):
     """
     Load sonogram and syllable marks (onsets and offsets).
@@ -27,14 +28,18 @@ def load_bout_data(f_name):
     offsets = np.asarray(song_data[1]['Offsets'], dtype='int')
     return params, onsets, offsets
 
-def initial_sonogram(i, files, directory):
+
+def initial_sonogram(i, files, directory, find_gzips):
     wavfile = files[i]
     song1, sample_rate = sf.read(directory + wavfile, always_2d=True)  # audio data always returned as 2d array
     song1 = song1[:, 0]  # make files mono
 
-    # check if there is a corresponding gzip from a previous run
-    zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] + '/**/' + 'SegSyllsOutput_' +
-                         wavfile.replace('.wav', '') + '.gzip', recursive=True)
+    if find_gzips:
+        # check if there is a corresponding gzip from a previous run
+        zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] + '/**/' + 'SegSyllsOutput_' +
+                             wavfile.replace('.wav', '') + '.gzip', recursive=True)
+    else:
+        zip_file = []
 
     if zip_file:
         # if there is corresponding zip file, open and use the saved parameters

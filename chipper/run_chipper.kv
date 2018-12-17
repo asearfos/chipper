@@ -14,6 +14,7 @@
         user_signal_thresh: welcome.user_signal_thresh
         user_min_silence: welcome.user_min_silence
         user_min_syllable: welcome.user_min_syllable
+        find_gzips: welcome.find_gzips
 
 
 <CustomLabel@Label>
@@ -115,6 +116,7 @@
     user_signal_thresh: signal_threshold_input.text
     user_min_silence: min_silence_input.text
     user_min_syllable: min_syllable_input.text
+    find_gzips: find_prev_gzips.active
     BoxLayout:
         orientation: 'horizontal'
         padding: 10
@@ -420,6 +422,7 @@
     user_signal_thresh: '3'
     user_min_silence: '10'
     user_min_syllable: '20'
+    find_gzips: False
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 #    bottom_image: graph_binary

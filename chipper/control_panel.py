@@ -1,5 +1,5 @@
 import matplotlib
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, BooleanProperty
 # from SegSylls_ImageSonogram import ImageSonogram
 from kivy.uix.screenmanager import Screen
 
@@ -26,6 +26,8 @@ from chipper.utils import save_gzip_pickle
 
 # TODO improve how self variables are being used; some have the same variable but not self as function inputs....
 class ControlPanel(Screen):
+    find_gzips = BooleanProperty()
+
     def __init__(self, **kwargs):
         self.top_image = ObjectProperty(None)
         self.mark_boolean = False
@@ -306,7 +308,7 @@ class ControlPanel(Screen):
     def next(self):
         # get initial data
         self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params, prev_onsets, prev_offsets = \
-            seg.initial_sonogram(self.i, self.files, self.parent.directory)
+            seg.initial_sonogram(self.i, self.files, self.parent.directory, find_gzips=self.find_gzips)
 
         if len(self.save_parameters_all) > 0:
             if self.files[self.i] in self.save_parameters_all:
