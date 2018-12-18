@@ -1,13 +1,26 @@
 #:import MeshLinePlot kivy.garden.graph.MeshLinePlot
 #:import np numpy
 #:import FileBrowser kivy.garden.filebrowser
+#:import webbrowser webbrowser
 
 <Manager>:
+    LandingPage:
+        id: welcome
+        name: 'landing_page'
     FileExplorer:
     ControlPanel:
+#        id: controls
+        name: 'control_panel'
+        user_signal_thresh: welcome.user_signal_thresh
+        user_min_silence: welcome.user_min_silence
+        user_min_syllable: welcome.user_min_syllable
+        find_gzips: welcome.find_gzips
+
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
+
+<RadioLabel@ButtonBehavior+Label>
 
 <FinishMarksPopup>
     size_hint: .25, .25
@@ -99,6 +112,297 @@
         text: 'Close'
         on_release: root.quit_app()
 
+<LandingPage>:
+    user_signal_thresh: signal_threshold_input.text
+    user_min_silence: min_silence_input.text
+    user_min_syllable: min_syllable_input.text
+    find_gzips: find_prev_gzips.active
+    BoxLayout:
+        orientation: 'horizontal'
+        padding: 10
+        spacing: 10
+
+        StackLayout:
+            size_hint_x: 0.6
+
+            Image:
+                source:'ChipperIcon.png'
+                size_hint_y: 0.3
+
+            BoxLayout:
+                size_hint_y: 0.3
+
+            Label:
+                id: version_label
+                markup: True
+                text: '[b]Version:[/b] alpha'
+                size_hint_y: 0.1
+
+            GridLayout:
+                rows: 9
+                cols: 1
+                size_hint_y: 0.3
+
+                Label:
+                    id: general_info
+                    markup: True
+                    text: '[b]General Information:[/b]'
+                Label:
+                    id: created_by
+                    markup: True
+                    text: 'Created by Abigail Searfoss'
+                Label:
+                    id: created_by
+                    markup: True
+                    text: 'From Creanza Laboratory'
+                Label:
+                    id: publication
+                    markup: True
+                    text: 'Publication in Press'
+                Label:
+                    id: blank
+                    markup: True
+                    text: '\n'
+
+
+                Label:
+                    id: links_header
+                    markup: True
+                    text: '[b]Useful Links:[/b]'
+                Label:
+                    id: hyperlink1
+                    markup: True
+                    text: '[ref=https://github.com/asearfos/chipper][color=044900][u][b]Chipper GitHub[/u][/b][/color][/ref]'
+                    on_ref_press: webbrowser.open('https://github.com/asearfos/chipper')
+                Label:
+                    id: hyperlink2
+                    markup: True
+                    text: '[ref=https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing][color=044900][u][b]Chipper Instructions[/u][/b][/color][/ref]'
+                    on_ref_press: webbrowser.open('https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing')
+                Label:
+                    id: analysis_outputs
+                    markup: True
+                    text: '[color=044900][u][b]Analysis Outputs Defined[/u][/b][/color]'
+
+        Widget:
+            id: separator
+            size_hint_x: None
+            width: 3
+            canvas:
+                Color:
+                    rgb: .345, .345, .345
+                Rectangle:
+                    pos: separator.center_x, 0
+                    size: separator.width, root.height
+
+        BoxLayout:
+            size_hint_x: 0.03
+
+        GridLayout:
+            rows: 5
+            cols: 1
+
+            Label:
+                size_hint_y: 0.25
+                text_size: self.size
+                text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, analyze previously segmented syllables or perform both. Adjust settings if desired.'
+                valign: 'center'
+
+            StackLayout:
+                size_hint_y: 0.25
+                CheckBox:
+                    id: chipper
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                    active: True
+                RadioLabel:
+                    id: chipper_label
+                    text: 'Syllable Segmentation'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: chipper_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: chipper._do_press()
+
+                CheckBox:
+                    id: determine_note_thresh
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: determine_note_thresh_label
+                    text: 'Determine Note Size Threshold (pixels)'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: determine_note_thresh_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: determine_note_thresh._do_press()
+
+                CheckBox:
+                    id: determine_syllsim_thresh
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: determine_syllsim_thresh_label
+                    text: 'Determine Syllable Similarity Threshold (%)'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: determine_syllsim_thresh_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: determine_syllsim_thresh._do_press()
+
+                CheckBox:
+                    id: analyze
+                    group: 'chipper_analyze'
+                    size_hint_x: 0.1
+                    size_hint_y: 0.3
+                RadioLabel:
+                    id: analyze_label
+                    text: 'Song Analysis'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: analyze_label.width, None
+                    size_hint_x: 0.9
+                    size_hint_y: 0.3
+                    on_press: analyze._do_press()
+
+            BoxLayout:
+                size_hint_y: 0.05
+
+            GridLayout:
+                rows: 1
+                cols: 2
+                size_hint_x: 0.3
+
+                BoxLayout:
+                    size_hint_x: 0.1
+                    size_hint_y: 1
+
+                StackLayout: # <--- to show/hide this menu see comments
+                    id: chipper_menu
+#                    width: 120 if chipper_and_analyze.active else 0
+#                    height: 120
+#                    size_hint: (1, 1) if chipper_and_analyze.active else (0, 0)
+#                    opacity: 1 if chipper_and_analyze.active else 0
+                    padding: 10
+                    spacing: 8
+
+                    CheckBox:
+                        id: find_prev_gzips
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    RadioLabel:
+                        text: 'Search for previously used parameters\n(note: slower loading time, will override defaults)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.14
+                        disabled: False if chipper.active else True
+                        on_press: find_prev_gzips._do_press()
+
+                    NumericInput:
+                        id: signal_threshold_input
+                        input_filter: 'float'
+                        min_value: 0.1
+                        max_value: 6
+                        text: '3'
+                        padding: [6, ( self.height - self.line_height )/2]
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Top Percent of Signal Kept (.1-6%)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if chipper.active else True
+
+                    NumericInput:
+                        id: min_silence_input
+                        input_filter: 'float'
+                        min_value: 0
+                        max_value: 50
+                        text: '10'
+                        padding: [6, ( self.height - self.line_height )/2]
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Minimum Silence Duration (0-50ms)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if chipper.active else True
+
+                    NumericInput:
+                        id: min_syllable_input
+                        input_filter: 'float'
+                        min_value: 0
+                        max_value: 350
+                        text: '20'
+                        padding: [6, ( self.height - self.line_height )/2]
+                        size_hint: 0.15, 0.1
+                        disabled: False if chipper.active else True
+                    Label:
+                        text: 'Minimum Syllable Duration (0-350 ms)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if chipper.active else True
+
+                    TextInput:
+                        id: note_thresh_input
+                        input_filter: 'int'
+                        text: '120'
+                        padding: [6, ( self.height - self.line_height )/2]
+                        size_hint: 0.15, 0.1
+                        disabled: False if analyze.active else True
+                    Label:
+                        text: 'Note Size Threshold (pixels)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if analyze.active else True
+
+                    NumericInput:
+                        id: syll_sim_input
+                        input_filter: 'float'
+                        min_value: 0
+                        max_value: 100
+                        text: '40'
+                        padding: [6, ( self.height - self.line_height )/2]
+                        size_hint: 0.15, 0.1
+                        disabled: False if analyze.active else True
+                    Label:
+                        text: '% Syllable Similarity (> are same syllable)'
+                        halign: 'left'
+                        valign: 'center'
+                        text_size: self.size
+                        size_hint: 0.85, 0.1
+                        disabled: False if analyze.active else True
+
+            GridLayout:
+                size_hint_y: 0.2
+                rows: 1
+                cols: 3
+                padding: 10
+
+                BoxLayout:
+
+                Button:
+                    id: start_chipper
+                    text: 'START'
+                    on_release: app.root.current = 'choose_file'
+
+                BoxLayout:
+
 <FileExplorer>:
     id: browse
     name: 'choose_file'
@@ -114,7 +418,11 @@
 
 <ControlPanel>:
     id: controls
-    name: 'control_panel'
+#    name: 'control_panel'
+    user_signal_thresh: '3'
+    user_min_silence: '10'
+    user_min_syllable: '20'
+    find_gzips: False
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 #    bottom_image: graph_binary
@@ -190,10 +498,10 @@
                     text: 'Threshold: Top Percent of Signal'
                 MySlider:
                     id: slider_threshold
-                    min: 0.10
+                    min: 0.1
                     max: 6
-                    value: 3
-                    step: 0.10
+                    value: float(root.user_signal_thresh)
+                    step: 0.1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
                     id: slider_threshold_label
@@ -209,7 +517,7 @@
                 MySlider:
                     id: slider_min_silence
                     min: 1
-                    value: 10
+                    value: root.user_min_silence
                     step: 1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
@@ -226,7 +534,7 @@
                 MySlider:
                     id: slider_min_syllable
                     min: 1
-                    value: 20
+                    value: root.user_min_syllable
                     step: 1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
