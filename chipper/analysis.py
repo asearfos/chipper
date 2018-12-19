@@ -1,11 +1,54 @@
 import os
 import time
+import threading
 
 import numpy as np
 import pandas as pd
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
+from kivy.uix.screenmanager import Screen
+from kivy.properties import StringProperty
+
+
+class Analysis(Screen):
+
+    def __init__(self, *args, **kwargs):
+        super(Analysis, self).__init__(*args, **kwargs)
+
+    def thread_process(self):
+        threading.Thread(target=self.process).start()
+
+    def process(self):
+        print(self.parent.directory)
+        self.analyze(self.parent.directory, n_cores=None, out_path=None)
+
+    def analyze(self, directory, n_cores=None, out_path=None):
+        if out_path is None:
+            out_path = directory + "/AnalysisOutput_" + time.strftime(
+                "%Y%m%d_T%H%M%S")
+
+        files = []
+        file_names = []
+        for f in os.listdir(directory):
+            if f.endswith('gzip'):
+                files.append(os.path.join(directory, f))
+                file_names.append(f)
+
+        assert len(files) != 0, "No gzipped files in {}".format(directory)
+
+        # final_output = [Song(i).run_analysis() for i in files]
+        final_output = []
+        count = 0
+        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        for i in files:
+            count += 1
+            final_output.append(Song(i).run_analysis())
+            self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        # processes = mp.Pool(cores, maxtasksperchild=1000)
+        # final_output = processes.map(self.run_analysis, files)
+        output_bout_data(out_path, file_names, final_output)
+        self.ids.analysis_done.disabled = False
 
 
 class Song(object):
@@ -293,24 +336,32 @@ def get_notes(threshold_sonogram, onsets, offsets):
     return num_notes, props
 
 
-def analyze(directory, n_cores, out_path):
-    if out_path is None:
-        out_path = directory + "/AnalysisOutput_" + time.strftime(
-            "%Y%m%d_T%H%M%S")
-
-    files = []
-    file_names = []
-    for f in os.listdir(directory):
-        if f.endswith('gzip'):
-            files.append(os.path.join(directory, f))
-            file_names.append(f)
-
-    assert len(files) != 0, "No gzipped files in {}".format(directory)
-
-    final_output = [Song(i).run_analysis() for i in files]
-    # processes = mp.Pool(cores, maxtasksperchild=1000)
-    # final_output = processes.map(self.run_analysis, files)
-    output_bout_data(out_path, file_names, final_output)
+# def analyze(directory, n_cores=None, out_path=None, var=None):
+#     if out_path is None:
+#         out_path = directory + "/AnalysisOutput_" + time.strftime(
+#             "%Y%m%d_T%H%M%S")
+#
+#     files = []
+#     file_names = []
+#     for f in os.listdir(directory):
+#         if f.endswith('gzip'):
+#             files.append(os.path.join(directory, f))
+#             file_names.append(f)
+#
+#     assert len(files) != 0, "No gzipped files in {}".format(directory)
+#
+#     # final_output = [Song(i).run_analysis() for i in files]
+#     final_output = []
+#     count = 0
+#     for i in files:
+#         count += 1
+#         final_output.append(Song(i).run_analysis())
+#         if var.on_file is not None:
+#             # var.on_file = str(count)
+#             var.processing_count.text = str(count)
+#     # processes = mp.Pool(cores, maxtasksperchild=1000)
+#     # final_output = processes.map(self.run_analysis, files)
+#     output_bout_data(out_path, file_names, final_output)
 
 
 def calc_max_correlation(onsets, offsets, sonogram):

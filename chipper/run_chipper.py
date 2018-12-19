@@ -6,6 +6,7 @@ Logger.disabled = True
 kivy.require('1.10.0')
 
 from chipper.manager import Manager
+from chipper.analysis import Analysis
 from chipper.landing_page import LandingPage
 from chipper.file_explorer import FileExplorer
 from chipper.control_panel import ControlPanel

@@ -8,6 +8,10 @@
         id: welcome
         name: 'landing_page'
     FileExplorer:
+        radio_chipper: welcome.radio_chipper
+        radio_note: welcome.radio_note
+        radio_syllsim: welcome.radio_syllsim
+        radio_analyze: welcome.radio_analyze
     ControlPanel:
 #        id: controls
         name: 'control_panel'
@@ -15,7 +19,8 @@
         user_min_silence: welcome.user_min_silence
         user_min_syllable: welcome.user_min_syllable
         find_gzips: welcome.find_gzips
-
+    Analysis:
+        name: 'analysis'
 
 <CustomLabel@Label>
     color: 1, 1, 1, 1
@@ -112,11 +117,64 @@
         text: 'Close'
         on_release: root.quit_app()
 
+<StartSegmentationPopup>
+    size_hint: .5, .3
+    auto_dismiss: False
+    title: 'Do you want to segment ' + root.len_files + ' WAV files?'
+#    text_size: self.size
+    BoxLayout:
+        orientation: 'horizontal'
+
+        Button:
+            text: 'Back'
+            on_release: root.dismiss()
+        Button:
+            text: 'Begin\nSegmentation'
+            halign: 'center'
+            on_release: app.root.current = 'control_panel'; root.dismiss()
+
+<StartAnalysisPopup>
+    size_hint: .3, .3
+    auto_dismiss: False
+    title: 'Do you want to analyze ' + root.len_files + ' gzips?'
+#    text_size: self.size
+    BoxLayout:
+        orientation: 'horizontal'
+
+        Button:
+            text: 'Back'
+            on_release: root.dismiss()
+        Button:
+            text: 'Run'
+            on_release: app.root.current = 'analysis'; root.dismiss()
+
+<NoGzipsFoundPopup>
+    size_hint: 0.5, 0.3
+    auto_dismiss: False
+    title: 'There are no gzips in the path you selected.'
+    BoxLayout:
+        Button:
+            text: 'Back'
+            on_release: root.dismiss()
+
+<NoWavsFoundPopup>
+    size_hint: 0.3, 0.3
+    auto_dismiss: False
+    title: 'There are no WAV files in the path you selected.'
+    BoxLayout:
+        Button:
+            text: 'Back'
+            on_release: root.dismiss()
+
 <LandingPage>:
     user_signal_thresh: signal_threshold_input.text
     user_min_silence: min_silence_input.text
     user_min_syllable: min_syllable_input.text
     find_gzips: find_prev_gzips.active
+    radio_chipper: chipper.active
+    radio_note: determine_note_thresh.active
+    radio_syllsim: determine_syllsim_thresh.active
+    radio_analyze: analyze.active
     BoxLayout:
         orientation: 'horizontal'
         padding: 10
@@ -409,8 +467,8 @@
     FileBrowser:
         id: file_browser
         dirselect: True
-        on_success: browse._fbrowser_success(file_browser); app.root.current = 'control_panel'
-        on_canceled: browse._fbrowser_canceled(file_browser)
+        on_success: browse._fbrowser_success(file_browser); #app.root.current = 'control_panel'
+        on_canceled: app.root.current = 'landing_page' # browse._fbrowser_canceled(file_browser)
 
 <ImageSonogram>:
 
@@ -622,5 +680,50 @@
                 Button:
                     text: 'Back'
                     on_release: controls.back()
+
+<Analysis>:
+    id: processing
+    on_enter: processing.thread_process()
+
+    GridLayout:
+        rows: 5
+        cols: 1
+
+        CustomLabel:
+            text: 'Your files are being processed:'
+            font_size: '18sp'
+        CustomLabel:
+            id: processing_count
+            text: ''
+            font_size: '16sp'
+
+        BoxLayout:
+            size_hint_y: 0.75
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.5
+
+            BoxLayout:
+                size_hint_x: 0.25
+
+            Button:
+                text: 'Close without finishing.'
+                on_release: quit() # needs to be fixed, does not stop processing
+
+            BoxLayout:
+                size_hint_x: 0.25
+
+            Button:
+                id: analysis_done
+                text: 'Return to Home'
+                disabled: True
+                on_release: app.root.current = 'landing_page'
+
+            BoxLayout:
+                size_hint_x: 0.25
+
+        BoxLayout:
+            size_hint_y: 0.25
 
 
