@@ -23,6 +23,13 @@ import sys
 
 
 class run_chipperApp(App):
+    # # will need if the thread for analysis is not daemon
+    # def on_stop(self):
+    #     # The Kivy event loop is about to stop, set a stop signal;
+    #     # otherwise the app window will close, but the Python process will
+    #     # keep running until all secondary threads exit.
+    #     self.root.current_screen.stop.set()
+
     def build(self):
         dir = os.path.dirname(__file__)
         self.icon = os.path.join(dir, 'SP1.png')

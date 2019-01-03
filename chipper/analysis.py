@@ -14,15 +14,15 @@ from kivy.properties import StringProperty
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
+    # stop = threading.Event()  # will need if the thread for analysis is not daemon
+
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
 
     def thread_process(self):
-        threading.Thread(target=self.process).start()
-
-    def process(self):
-        print(self.parent.directory)
-        self.analyze(self.parent.directory, n_cores=None, out_path=None)
+        th = threading.Thread(target=self.analyze, args=(self.parent.directory, ))
+        th.daemon = True  #TODO: check this is safe to do; seemed to be easiest way to close program during analysis
+        th.start()
 
     def analyze(self, directory, n_cores=None, out_path=None):
         if out_path is None:
@@ -43,12 +43,22 @@ class Analysis(Screen):
         count = 0
         self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
         for i in files:
-            count += 1
-            final_output.append(Song(i, self.user_note_thresh, self.user_syll_sim_thresh).run_analysis())
-            self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+            # # way to check if analyze has been canceled without exiting (however it finishes the file it is on first)
+            # # make sure to uncomment stop above init and in the run_chipper.py file
+            # while True:
+            #     if self.stop.is_set():
+            #         print(self.stop.is_set())
+            #         # Stop running this thread so the main Python process can exit.
+            #         return
+                count += 1
+                final_output.append(Song(i, self.user_note_thresh, self.user_syll_sim_thresh).run_analysis())
+                if count < len(files):
+                    self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
         # processes = mp.Pool(cores, maxtasksperchild=1000)
         # final_output = processes.map(self.run_analysis, files)
         output_bout_data(out_path, file_names, final_output)
+        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
 
@@ -338,7 +348,7 @@ def get_notes(threshold_sonogram, onsets, offsets):
 
     return num_notes, props
 
-
+#TODO: May want to add this back so it can be run from the command line rather than only in the GUI
 # def analyze(directory, n_cores=None, out_path=None, var=None):
 #     if out_path is None:
 #         out_path = directory + "/AnalysisOutput_" + time.strftime(

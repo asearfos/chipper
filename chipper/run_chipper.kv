@@ -1,6 +1,7 @@
 #:import MeshLinePlot kivy.garden.graph.MeshLinePlot
 #:import np numpy
 #:import FileBrowser kivy.garden.filebrowser
+#:import ProgressSpinner kivy.garden.progressspinner
 #:import webbrowser webbrowser
 
 <Manager>:
@@ -692,7 +693,8 @@
     on_enter: processing.thread_process()
 
     GridLayout:
-        rows: 5
+        id: analysis_layout
+        rows: 6
         cols: 1
 
         CustomLabel:
@@ -702,6 +704,24 @@
             id: processing_count
             text: ''
             font_size: '16sp'
+
+        ProgressSpinner:
+            id: progress_spinner
+            _size: min(self.height, self.width)
+            _rsize: self._size / 4.
+            _stroke: max(0.1, self._rsize / 20. if self.stroke_width is None else self.stroke_width)
+            _radius: self._rsize - self._stroke * 2.
+
+            canvas:
+                Color:
+                    rgba: self.color
+                Line:
+                    circle:
+                        (self.center_x, self.center_y, self._radius,
+                        self._angle_center + self._angle_start,
+                        self._angle_center + self._angle_end)
+                    width: self._stroke
+            speed: 0.7
 
         BoxLayout:
             size_hint_y: 0.75
@@ -714,8 +734,9 @@
                 size_hint_x: 0.25
 
             Button:
-                text: 'Close without finishing.'
-                on_release: quit() # needs to be fixed, does not stop processing
+                text: 'Cancel Analysis and Exit'
+#                on_release: root.stop.set(); app.root.current = 'landing_page' # just stops thread, does not exit
+                on_release: App.get_running_app().stop()
 
             BoxLayout:
                 size_hint_x: 0.25
