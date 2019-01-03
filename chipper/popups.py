@@ -29,3 +29,20 @@ class DonePopup(Popup):
     def quit_app(self):
         print('song segmentation complete, Close chipper.')
         quit()
+
+
+class StartSegmentationPopup(Popup):
+    len_files = StringProperty()
+
+
+class StartAnalysisPopup(Popup):
+    len_files = StringProperty()
+
+
+class NoGzipsFoundPopup(Popup):
+    pass
+
+
+class NoWavsFoundPopup(Popup):
+    pass
+

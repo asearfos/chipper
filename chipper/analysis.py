@@ -1,16 +1,72 @@
 import os
 import time
+import threading
 
 import numpy as np
 import pandas as pd
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
+from kivy.uix.screenmanager import Screen
+from kivy.properties import StringProperty
+
+
+class Analysis(Screen):
+    user_note_thresh = StringProperty()
+    user_syll_sim_thresh = StringProperty()
+    # stop = threading.Event()  # will need if the thread for analysis is not daemon
+
+    def __init__(self, *args, **kwargs):
+        super(Analysis, self).__init__(*args, **kwargs)
+
+    def thread_process(self):
+        th = threading.Thread(target=self.analyze, args=(self.parent.directory, ))
+        th.daemon = True  #TODO: check this is safe to do; seemed to be easiest way to close program during analysis
+        th.start()
+
+    def analyze(self, directory, n_cores=None, out_path=None):
+        if out_path is None:
+            out_path = directory + "/AnalysisOutput_" + time.strftime(
+                "%Y%m%d_T%H%M%S")
+
+        files = []
+        file_names = []
+        for f in os.listdir(directory):
+            if f.endswith('gzip'):
+                files.append(os.path.join(directory, f))
+                file_names.append(f)
+
+        assert len(files) != 0, "No gzipped files in {}".format(directory)
+
+        # final_output = [Song(i).run_analysis() for i in files]
+        final_output = []
+        count = 0
+        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        for i in files:
+            # # way to check if analyze has been canceled without exiting (however it finishes the file it is on first)
+            # # make sure to uncomment stop above init and in the run_chipper.py file
+            # while True:
+            #     if self.stop.is_set():
+            #         print(self.stop.is_set())
+            #         # Stop running this thread so the main Python process can exit.
+            #         return
+                count += 1
+                final_output.append(Song(i, self.user_note_thresh, self.user_syll_sim_thresh).run_analysis())
+                if count < len(files):
+                    self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        # processes = mp.Pool(cores, maxtasksperchild=1000)
+        # final_output = processes.map(self.run_analysis, files)
+        output_bout_data(out_path, file_names, final_output)
+        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
+        self.ids.analysis_done.disabled = False
 
 
 class Song(object):
-    def __init__(self, file_name):
+    def __init__(self, file_name, note_thresh, syll_sim_thresh):
         self.file_name = file_name
+        self.note_thresh = int(note_thresh)
+        self.syll_sim_thresh = float(syll_sim_thresh)
         self.onsets = None
         self.offsets = None
         self.threshold_sonogram = None
@@ -43,9 +99,9 @@ class Song(object):
         bout_stats = get_bout_stats(self.syll_dur, self.n_syll, self.offsets,
                                     self.onsets, self.ms_per_pixel)
 
-        syllable_stats = self.get_syllable_stats(self.n_syll)
+        syllable_stats = self.get_syllable_stats(self.syll_sim_thresh)
 
-        note_stats = self.get_note_stats(self.n_syll)
+        note_stats = self.get_note_stats(self.n_syll, self.note_thresh)
 
         # write output
         final_output = update_dict([bout_stats, syllable_stats, note_stats])
@@ -102,7 +158,7 @@ class Song(object):
         note_stats = update_dict([note_counts, basic_note_stats, freq_stats])
         return note_stats
 
-    def get_syllable_stats(self, corr_thresh=50):
+    def get_syllable_stats(self, corr_thresh=50.0):
 
         # get syllable correlations for entire sonogram
         son_corr, son_corr_bin = get_sonogram_correlation(
@@ -221,7 +277,7 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
-                             corr_thresh=50):
+                             corr_thresh=50.0):
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
@@ -292,25 +348,33 @@ def get_notes(threshold_sonogram, onsets, offsets):
 
     return num_notes, props
 
-
-def analyze(directory, n_cores, out_path):
-    if out_path is None:
-        out_path = directory + "/AnalysisOutput_" + time.strftime(
-            "%Y%m%d_T%H%M%S")
-
-    files = []
-    file_names = []
-    for f in os.listdir(directory):
-        if f.endswith('gzip'):
-            files.append(os.path.join(directory, f))
-            file_names.append(f)
-
-    assert len(files) != 0, "No gzipped files in {}".format(directory)
-
-    final_output = [Song(i).run_analysis() for i in files]
-    # processes = mp.Pool(cores, maxtasksperchild=1000)
-    # final_output = processes.map(self.run_analysis, files)
-    output_bout_data(out_path, file_names, final_output)
+#TODO: May want to add this back so it can be run from the command line rather than only in the GUI
+# def analyze(directory, n_cores=None, out_path=None, var=None):
+#     if out_path is None:
+#         out_path = directory + "/AnalysisOutput_" + time.strftime(
+#             "%Y%m%d_T%H%M%S")
+#
+#     files = []
+#     file_names = []
+#     for f in os.listdir(directory):
+#         if f.endswith('gzip'):
+#             files.append(os.path.join(directory, f))
+#             file_names.append(f)
+#
+#     assert len(files) != 0, "No gzipped files in {}".format(directory)
+#
+#     # final_output = [Song(i).run_analysis() for i in files]
+#     final_output = []
+#     count = 0
+#     for i in files:
+#         count += 1
+#         final_output.append(Song(i).run_analysis())
+#         if var.on_file is not None:
+#             # var.on_file = str(count)
+#             var.processing_count.text = str(count)
+#     # processes = mp.Pool(cores, maxtasksperchild=1000)
+#     # final_output = processes.map(self.run_analysis, files)
+#     output_bout_data(out_path, file_names, final_output)
 
 
 def calc_max_correlation(onsets, offsets, sonogram):
@@ -447,7 +511,7 @@ directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnaly
 
 if __name__ == '__main__':
     one_song = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206\SegSyllsOutput_26292371_b5of6.gzip'
-    Song(one_song).run_analysis()
+    Song(one_song, '120', '40').run_analysis()
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206'
     # SongAnalysis(1, out_dir, 'tmp')
