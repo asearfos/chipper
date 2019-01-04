@@ -1,6 +1,7 @@
 import os
 from kivy.uix.screenmanager import Screen
-from chipper.popups import StartSegmentationPopup, StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
+from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, \
+    StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
 from kivy.properties import BooleanProperty
 
 class FileExplorer(Screen):
@@ -32,7 +33,9 @@ class FileExplorer(Screen):
                 no_gzips = NoGzipsFoundPopup()
                 no_gzips.open()
             elif self.radio_note:
-                pass
+                note_popup = DetermineNoteThresholdPopup()
+                note_popup.len_files = str(num_files)
+                note_popup.open()
             elif self.radio_syllsim:
                 pass
             elif self.radio_analyze:

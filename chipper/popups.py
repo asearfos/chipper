@@ -35,6 +35,10 @@ class StartSegmentationPopup(Popup):
     len_files = StringProperty()
 
 
+class DetermineNoteThresholdPopup(Popup):
+    len_files = StringProperty()
+
+
 class StartAnalysisPopup(Popup):
     len_files = StringProperty()
 
