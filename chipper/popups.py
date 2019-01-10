@@ -39,6 +39,10 @@ class DetermineNoteThresholdPopup(Popup):
     len_files = StringProperty()
 
 
+class NoteThreshInstructionsPopup(Popup):
+    pass
+
+
 class StartAnalysisPopup(Popup):
     len_files = StringProperty()
 
@@ -49,4 +53,5 @@ class NoGzipsFoundPopup(Popup):
 
 class NoWavsFoundPopup(Popup):
     pass
+
 

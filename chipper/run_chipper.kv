@@ -3,6 +3,7 @@
 #:import FileBrowser kivy.garden.filebrowser
 #:import ProgressSpinner kivy.garden.progressspinner
 #:import webbrowser webbrowser
+#:import note_instructions_text note_threshold_instructions
 
 <Manager>:
     LandingPage:
@@ -21,7 +22,9 @@
         user_min_syllable: welcome.user_min_syllable
         find_gzips: welcome.find_gzips
     NoteThresholdPage:
-        name: 'note_threshold'
+        name: 'note_threshold_page'
+    NoteSummaryPage:
+        name: 'note_summary_page'
     Analysis:
         user_note_thresh: welcome.user_note_thresh
         user_syll_sim_thresh: welcome.user_syll_sim_thresh
@@ -152,7 +155,27 @@
         Button:
             text: 'Determine\nThreshold'
             halign: 'center'
-            on_release: app.root.current = 'note_threshold'; root.dismiss()
+            on_release: app.root.current = 'note_threshold_page'; root.dismiss()
+
+<NoteThreshInstructionsPopup>
+    auto_dismiss: True
+    title: 'How to Determine Threshold for Note Size'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: note_thresh_instructions
+            multiline: True
+            text: note_instructions_text.text
+        GridLayout:
+            rows: 1
+            cols: 3
+            size_hint_y: 0.1
+            BoxLayout:
+            Button:
+                text: 'Close Instructions'
+                on_release: root.dismiss()
+                size_hint_x: 0.5
+            BoxLayout:
 
 <StartAnalysisPopup>
     size_hint: .3, .3
@@ -188,6 +211,7 @@
             on_release: root.dismiss()
 
 <LandingPage>:
+    id: welcome
     radio_chipper: chipper.active
     radio_note: determine_note_thresh.active
     radio_syllsim: determine_syllsim_thresh.active
@@ -198,6 +222,7 @@
     user_min_syllable: min_syllable_input.text
     user_note_thresh: note_thresh_input.text
     user_syll_sim_thresh: syll_sim_input.text
+
     BoxLayout:
         orientation: 'horizontal'
         padding: 10
@@ -712,23 +737,41 @@
 
     BoxLayout:
         orientation: 'vertical'
+        center: root.center
 
-        BoxLayout:
+        CustomLabel:
+            text: 'Determine Threshold for Note Size'
+            font_size: '18sp'
+            size_hint_y: 0.1
+
+        GridLayout:
+            rows: 1
+            cols: 3
+            size_hint_y: 0.075
+
+            BoxLayout:
+
+            Button:
+                id: note_thresh_instructions_button
+                text: 'Click Here for Instructions'
+                on_release: determine_note.note_thresh_instructions()
+
+            BoxLayout:
+
+        GridLayout:
+            id: note_graph
+            rows: 1
+            cols: 1
+            size_hint_x: 1
             spacing: 10
             padding: 10
-
-            GridLayout:
-                id: note_graph
-                rows: 1
-                cols: 1
-                size_hint_x: 1
 
         GridLayout:
             rows: 1
             cols: 5
             spacing: 10
             padding: 10
-            size_hint_y: 0.1
+            size_hint_y: 0.13
 
             BoxLayout:
                 orientation: 'vertical'
@@ -737,13 +780,13 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-                    on_release: user_note_size.text = str(int(user_note_size.text) + 10)
 #                    text: u'\u25b2'
+                    on_release: user_note_size.text = str(int(user_note_size.text) + 10); determine_note.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_note_size.text = str(int(user_note_size.text) - 10)
+                    on_release: user_note_size.text = str(int(user_note_size.text) - 10); determine_note.new_thresh()
 
             TextInput:
                 id: user_note_size
@@ -770,6 +813,95 @@
         BoxLayout:
             size_hint_y: 0.01
 
+<NoteSummaryPage>:
+    id: note_summary
+    on_pre_enter: note_summary.calculate_note_thresh_stats()
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        CustomLabel:
+            text: 'Note Size Threshold Summary'
+            font_size: '18sp'
+            size_hint_y: 0.1
+
+        GridLayout:
+            rows: 1
+            cols: 2
+            padding: 25
+            size_hint_y: 0.8
+
+            GridLayout:
+                id: note_hist
+                rows: 1
+                cols: 1
+                size_hint_x: 0.75
+
+            StackLayout:
+                size_hint: 0.25, 1
+
+                BoxLayout:
+                    size_hint_y: 0.25
+
+                Label:
+                    id: num_files
+                    text: 'Number of Files: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: avg_note_thresh
+                    text: 'Average: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: std_dev_note_thresh
+                    text: 'Standard Deviation: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: min_note_thresh
+                    text: 'Minimum: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: max_note_thresh
+                    text: 'Maximum: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+
+        StackLayout:
+            size_hint_y: 0.1
+            spacing: 10
+            padding: 10
+
+            Label:
+                text: 'Use '
+                size_hint_x: 0.05
+            TextInput:
+                id: submitted_note_thresh_input
+                input_filter: 'int'
+                padding: [6, ( self.height - self.line_height )/2]
+                size_hint_x: 0.25
+            Label:
+                text: ' elements of unscaled spectrogram as threshold for note size.'
+                size_hint_x: 0.6
+                text_size: self.size
+                halign: 'left'
+                valign: 'center'
+            Button:
+                text: 'SUBMIT'
+                on_release: note_summary.submit_note_thresh(); app.root.current = 'landing_page'
+                size_hint_x: 0.1
 
 <Analysis>:
     id: processing
@@ -818,7 +950,6 @@
 
             Button:
                 text: 'Cancel Analysis and Exit'
-#                on_release: root.stop.set(); app.root.current = 'landing_page' # just stops thread, does not exit
                 on_release: App.get_running_app().stop()
 
             BoxLayout:
