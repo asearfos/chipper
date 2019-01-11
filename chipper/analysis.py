@@ -108,7 +108,7 @@ class Song(object):
         return final_output
 
     def get_note_stats(self, num_syllables, note_size_thresh=60):
-        num_notes, props = get_notes(
+        num_notes, props, _ = get_notes(
             threshold_sonogram=self.threshold_sonogram,
             onsets=self.onsets, offsets=self.offsets)
         # initialize, will be altered if the "note" is too small (<60 pixels)
@@ -346,7 +346,7 @@ def get_notes(threshold_sonogram, onsets, offsets):
 
     props = regionprops(labeled_sonogram)
 
-    return num_notes, props
+    return num_notes, props, labeled_sonogram
 
 #TODO: May want to add this back so it can be run from the command line rather than only in the GUI
 # def analyze(directory, n_cores=None, out_path=None, var=None):

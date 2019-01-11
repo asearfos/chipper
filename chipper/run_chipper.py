@@ -6,10 +6,12 @@ Logger.disabled = True
 kivy.require('1.10.0')
 
 from chipper.manager import Manager
-from chipper.analysis import Analysis
 from chipper.landing_page import LandingPage
 from chipper.file_explorer import FileExplorer
 from chipper.control_panel import ControlPanel
+from chipper.note_threshold_page import NoteThresholdPage
+from chipper.note_summary_page import NoteSummaryPage
+from chipper.analysis import Analysis
 from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
     DonePopup
 from chipper.sliders import MySlider, MyRangeSlider

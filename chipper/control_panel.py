@@ -30,6 +30,7 @@ class ControlPanel(Screen):
     user_signal_thresh = StringProperty()
     user_min_silence = StringProperty()
     user_min_syllable = StringProperty()
+
     def __init__(self, **kwargs):
         self.top_image = ObjectProperty(None)
         self.mark_boolean = False
