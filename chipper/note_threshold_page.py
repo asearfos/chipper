@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from kivy.uix.screenmanager import Screen
@@ -57,10 +58,16 @@ class NoteThresholdPage(Screen):
             self.fig3.add_axes(self.ax3)
 
             # plot placeholder data
-            colors = [(0, 0, 0), (1, 1, 1), (0.196, 0.643, 0.80)]
-            my_cmap = ListedColormap(colors)
-            self.plot_notes = self.ax3.imshow(np.log(data + 3), extent=[0, self.cols, 0, self.rows], aspect='auto',
-                                              cmap=my_cmap)
+            # colors = [(0, 0, 0), (1, 1, 1), (0.196, 0.643, 0.80)]
+            # my_cmap = ListedColormap(colors)
+            # self.plot_notes = self.ax3.imshow(np.log(data + 3), extent=[0, self.cols, 0, self.rows], aspect='auto',
+            #                                   cmap=my_cmap)
+            cmap = plt.cm.prism
+            cmap.set_under(color='black')
+            cmap.set_bad(color='white')
+            self.plot_notes = self.ax3.imshow(data+3, extent=[0, self.cols, 0, self.rows],
+                                              aspect='auto', cmap=cmap, norm=matplotlib.colors.LogNorm(),
+                                              vmin=3.01)
 
             self.ids.note_graph.clear_widgets()
             self.ids.note_graph.add_widget(self.plot_notes_canvas)
@@ -73,18 +80,14 @@ class NoteThresholdPage(Screen):
         # change label of all notes with size > threshold to be the same and all < to be the same
         for region in props:
             if region.area > int(self.ids.user_note_size.text):
-                labeled_sonogram[labeled_sonogram == region.label] = 2
-                # if region.label % 2 == 0:  # even
-                #     labeled_sonogram[labeled_sonogram == region.label] = 1
-                # else:
-                #     labeled_sonogram[labeled_sonogram == region.label] = 2
+                labeled_sonogram[labeled_sonogram == region.label] = region.area
             else:
                 labeled_sonogram[labeled_sonogram == region.label] = 1
 
+        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1, labeled_sonogram)
         # update image in widget
         # plot the actual data now
-        self.plot_notes.set_data(np.log(labeled_sonogram+3))
-        self.plot_notes.autoscale()
+        self.plot_notes.set_data(labeled_sonogram+3)
         self.plot_notes_canvas.draw()
 
     def note_thresh_instructions(self):

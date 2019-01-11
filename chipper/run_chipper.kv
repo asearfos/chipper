@@ -166,6 +166,8 @@
             id: note_thresh_instructions
             multiline: True
             text: note_instructions_text.text
+            text_size: self.width/1.5, None
+            height: self.texture_size[1]
         GridLayout:
             rows: 1
             cols: 3
@@ -737,7 +739,6 @@
 
     BoxLayout:
         orientation: 'vertical'
-        center: root.center
 
         CustomLabel:
             text: 'Determine Threshold for Note Size'
