@@ -43,6 +43,14 @@ class NoteThreshInstructionsPopup(Popup):
     pass
 
 
+class DetermineSyllSimThresholdPopup(Popup):
+    len_files = StringProperty()
+
+
+class SyllSimThreshInstructionsPopup(Popup):
+    pass
+
+
 class StartAnalysisPopup(Popup):
     len_files = StringProperty()
 
