@@ -37,7 +37,7 @@ class SyllSimThresholdPage(Screen):
             self.syllsim_thresholds.append(float(self.ids.user_syllsim.text))
         # otherwise it is the first time, so reset syllable similarity threshold to the default
         else:
-            self.ids.user_syllsim.text = '40.0'
+            self.ids.user_syllsim.text = '70.0'
 
         # if it is the last song go to syllable similarity threshold summary page, otherwise process song
         if self.i == len(self.files):
@@ -59,43 +59,55 @@ class SyllSimThresholdPage(Screen):
             self.fig5.add_axes(self.ax5)
 
             # plot placeholder data
-            cmap = plt.cm.prism
+            cmap = plt.cm.rainbow
             cmap.set_under(color='black')
             self.plot_syllsim = self.ax5.imshow(data+3, extent=[0, self.cols, 0, self.rows],
-                                              aspect='auto', cmap=cmap, norm=matplotlib.colors.LogNorm(),
+                                              aspect='auto', cmap=cmap,# norm=matplotlib.colors.LogNorm(),
                                               vmin=3.01)
 
             self.ids.syllsim_graph.clear_widgets()
             self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
+
+            self.son_corr, son_corr_bin = analyze.get_sonogram_correlation(
+                sonogram=self.threshold_sonogram, onsets=self.onsets,
+                offsets=self.offsets, syll_duration=self.syll_dur,
+                corr_thresh=float(self.ids.user_syllsim.text)
+            )
+
             self.new_thresh()
             self.i += 1
 
     def new_thresh(self):
         # get syllable correlations for entire sonogram
         print(type(float(self.ids.user_syllsim.text)))
-        son_corr, son_corr_bin = analyze.get_sonogram_correlation(
-            sonogram=self.threshold_sonogram, onsets=self.onsets,
-            offsets=self.offsets, syll_duration=self.syll_dur,
-            corr_thresh=float(self.ids.user_syllsim.text)
-        )
 
-        float_formatter = lambda x: "%.2f" % x
-        np.set_printoptions(formatter={'float_kind': float_formatter})
-
-        print(son_corr)
-        print(son_corr_bin)
+        # create new binary matrix with new threshold
+        son_corr_bin = np.zeros(self.son_corr.shape)
+        son_corr_bin[self.son_corr > float(self.ids.user_syllsim.text)] = 1
 
         # get syllable pattern
         syll_pattern = analyze.find_syllable_pattern(son_corr_bin)
-        print(syll_pattern)
+        self.ids.song_syntax.text = 'Song Syntax: ' + ", ".join(str(x) for x in syll_pattern)
 
-        syll_stereotypy = analyze.calc_syllable_stereotypy(son_corr, syll_pattern)
-        print(syll_stereotypy)
+        syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = analyze.calc_syllable_stereotypy(self.son_corr,
+                                                                                                  syll_pattern)
+
+        stereotypy_text = 'Syllable: Avg, Min, Max\n'
+        for idx in range(len(syll_stereotypy)):
+            if not np.isnan(syll_stereotypy[idx]):
+                stereotypy_text += '\n' + str(idx) + ': ' + str(round(syll_stereotypy[idx], 1)) + ', ' + \
+                                   str(round(syll_stereotypy_min[idx], 1)) + ', ' + \
+                                   str(round(syll_stereotypy_max[idx], 1))
+        if stereotypy_text == 'Syllable: Avg, Min, Max\n':
+            stereotypy_text += 'No Repeated Syllables'
+        else:
+            self.ids.similarity.text = stereotypy_text
+
 
         # color syllables based on syntax
-        labeled_sonogram = self.threshold_sonogram
+        labeled_sonogram = self.threshold_sonogram.copy()
         for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
-            labeled_sonogram[:, on:off][labeled_sonogram[:, on:off] == 1] = syll_pattern[syll] + 3
+            labeled_sonogram[:, on:off][labeled_sonogram[:, on:off] == 1] = syll + 3
 
         # update image in widget
         # plot the actual data now

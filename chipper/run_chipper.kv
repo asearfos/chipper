@@ -785,7 +785,7 @@
 
         CustomLabel:
             text: 'Determine Threshold for Note Size'
-            font_size: '18sp'
+            font_size: '20sp'
             size_hint_y: 0.1
 
         GridLayout:
@@ -956,7 +956,7 @@
 
         CustomLabel:
             text: 'Determine Threshold for Syllable Similarity'
-            font_size: '18sp'
+            font_size: '20sp'
             size_hint_y: 0.1
 
         GridLayout:
@@ -973,13 +973,49 @@
 
             BoxLayout:
 
+        CustomLabel:
+            id: song_syntax
+            font_size: '18sp'
+            size_hint_y: 0.1
+            text_size: self.size
+            halign: 'center'
+
         GridLayout:
-            id: syllsim_graph
             rows: 1
-            cols: 1
+            cols: 2
             size_hint_x: 1
             spacing: 10
             padding: 10
+
+            BoxLayout:
+                size_hint_x: 0.3
+                orientation: 'vertical'
+                padding: 10
+
+                Label:
+                    multiline: True
+                    text: 'Syllable Similarity\n'
+                    font_size: '18sp'
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: 0.1
+
+                Label:
+                    id: similarity
+                    multiline: True
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'top'
+
+            GridLayout:
+                id: syllsim_graph
+                rows: 1
+                cols: 1
+                size_hint_x: 1
+                spacing: 10
+                padding: 10
+
 
         GridLayout:
             rows: 1
@@ -996,19 +1032,19 @@
                     font_size: '18sp'
                     text: '+'
 #                    text: u'\u25b2'
-                    on_release: user_syllsim.text = str(int(user_syllsim.text) + 10); determine_syllsim.new_thresh()
+                    on_release: user_syllsim.text = str(float(user_syllsim.text) + 10); determine_syllsim.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_syllsim.text = str(int(user_syllsim.text) - 10); determine_syllsim.new_thresh()
+                    on_release: user_syllsim.text = str(float(user_syllsim.text) - 10); determine_syllsim.new_thresh()
 
             NumericInput:
                 id: user_syllsim
                 input_filter: 'float'
                 min_value: 0
                 max_value: 100
-                text: '40.0'
+                text: '70.0'
                 multiline: False
                 on_text_validate: determine_syllsim.new_thresh()
                 padding: [6, ( self.height - self.line_height )/2]
