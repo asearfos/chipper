@@ -14,13 +14,13 @@ class SyllSimSummaryPage(Screen):
         super(SyllSimSummaryPage, self).__init__(*args, **kwargs)
 
     def calculate_syllsim_thresh_stats(self):
-        # note thresholds from all the songs processed
+        # syllable similarity thresholds from all the songs processed
         syllsim_thresholds = self.manager.get_screen('syllsim_threshold_page').syllsim_thresholds
 
         # clear the plot
         self.ax6.clear()
 
-        # plot histogram of the note thresholds used
+        # plot histogram of the syllable similarity thresholds used
         if len(np.unique(syllsim_thresholds)) > 20:
             self.ax6.hist(x=syllsim_thresholds, bins='auto', color=(0.196, 0.643, 0.80), alpha=0.7)
         else:
@@ -29,10 +29,8 @@ class SyllSimSummaryPage(Screen):
             # eliminate the extra bin at the end.
             if max(syllsim_thresholds) - min(syllsim_thresholds) >= 1000:
                 bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 150, 100) - 50
-                print('>= 1000', bins)
             elif max(syllsim_thresholds) - min(syllsim_thresholds) >= 250:
                 bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 15, 10) - 5
-                print('>= 500', bins)
             else:
                 bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 1.5, 1) - 0.5
             self.ax6.hist(x=syllsim_thresholds, bins=bins, color=(0.196, 0.643, 0.80), alpha=0.7)
@@ -52,8 +50,8 @@ class SyllSimSummaryPage(Screen):
         self.ids.max_syllsim_thresh.text = 'Maximum: ' + str(max(syllsim_thresholds))
 
         # set the user input to the average as a default (they can change this before submitting)
-        self.ids.submitted_syllsim_thresh_input.text = str(int(round(np.mean(syllsim_thresholds), 0)))
+        self.ids.submitted_syllsim_thresh_input.text = str(round(np.mean(syllsim_thresholds), 1))
 
     def submit_syllsim_thresh(self):
-        # update the landing page with the note size threshold the user chooses/submits
+        # update the landing page with the syllable similarity threshold the user chooses/submits
         self.manager.get_screen('landing_page').ids.syll_sim_input.text = self.ids.submitted_syllsim_thresh_input.text

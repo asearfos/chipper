@@ -34,10 +34,10 @@ class SyllSimThresholdPage(Screen):
     def next(self):
         # if not first entering the app, record the threshold
         if self.i > 0:
-            self.syllsim_thresholds.append(int(self.ids.user_syllsim.text))
+            self.syllsim_thresholds.append(float(self.ids.user_syllsim.text))
         # otherwise it is the first time, so reset syllable similarity threshold to the default
         else:
-            self.ids.user_syllsim.text = '120'
+            self.ids.user_syllsim.text = '40.0'
 
         # if it is the last song go to syllable similarity threshold summary page, otherwise process song
         if self.i == len(self.files):
@@ -47,6 +47,7 @@ class SyllSimThresholdPage(Screen):
             ons, offs, thresh, ms, htz = analyze.load_bout_data(os.path.join(self.parent.directory, self.files[self.i]))
             self.onsets = ons
             self.offsets = offs
+            self.syll_dur = self.offsets - self.onsets
             self.threshold_sonogram = thresh
             [self.rows, self.cols] = np.shape(self.threshold_sonogram)
 
@@ -60,7 +61,6 @@ class SyllSimThresholdPage(Screen):
             # plot placeholder data
             cmap = plt.cm.prism
             cmap.set_under(color='black')
-            cmap.set_bad(color='white')
             self.plot_syllsim = self.ax5.imshow(data+3, extent=[0, self.cols, 0, self.rows],
                                               aspect='auto', cmap=cmap, norm=matplotlib.colors.LogNorm(),
                                               vmin=3.01)
@@ -71,16 +71,32 @@ class SyllSimThresholdPage(Screen):
             self.i += 1
 
     def new_thresh(self):
-        # find notes and label based on connectivity
-        num_notes, props, labeled_sonogram = analyze.get_notes(self.threshold_sonogram, self.onsets, self.offsets)
-        # change label of all notes with size > threshold to be the same and all < to be the same
-        for region in props:
-            if region.area > int(self.ids.user_syllsim.text):
-                labeled_sonogram[labeled_sonogram == region.label] = region.area
-            else:
-                labeled_sonogram[labeled_sonogram == region.label] = 1
+        # get syllable correlations for entire sonogram
+        print(type(float(self.ids.user_syllsim.text)))
+        son_corr, son_corr_bin = analyze.get_sonogram_correlation(
+            sonogram=self.threshold_sonogram, onsets=self.onsets,
+            offsets=self.offsets, syll_duration=self.syll_dur,
+            corr_thresh=float(self.ids.user_syllsim.text)
+        )
 
-        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1, labeled_sonogram)
+        float_formatter = lambda x: "%.2f" % x
+        np.set_printoptions(formatter={'float_kind': float_formatter})
+
+        print(son_corr)
+        print(son_corr_bin)
+
+        # get syllable pattern
+        syll_pattern = analyze.find_syllable_pattern(son_corr_bin)
+        print(syll_pattern)
+
+        syll_stereotypy = analyze.calc_syllable_stereotypy(son_corr, syll_pattern)
+        print(syll_stereotypy)
+
+        # color syllables based on syntax
+        labeled_sonogram = self.threshold_sonogram
+        for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
+            labeled_sonogram[:, on:off][labeled_sonogram[:, on:off] == 1] = syll_pattern[syll] + 3
+
         # update image in widget
         # plot the actual data now
         self.plot_syllsim.set_data(labeled_sonogram+3)

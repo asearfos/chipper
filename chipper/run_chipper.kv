@@ -527,7 +527,7 @@
                         input_filter: 'float'
                         min_value: 0
                         max_value: 100
-                        text: '40'
+                        text: '40.0'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
@@ -575,7 +575,7 @@
     user_min_silence: '10'
     user_min_syllable: '20'
     user_note_thresh: '120'
-    user_syll_sim_thresh: '40'
+    user_syll_sim_thresh: '40.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 #    bottom_image: graph_binary
@@ -1003,17 +1003,19 @@
                     text: u'\u2014'
                     on_release: user_syllsim.text = str(int(user_syllsim.text) - 10); determine_syllsim.new_thresh()
 
-            TextInput:
+            NumericInput:
                 id: user_syllsim
                 input_filter: 'float'
-                text: '70.0'
+                min_value: 0
+                max_value: 100
+                text: '40.0'
                 multiline: False
                 on_text_validate: determine_syllsim.new_thresh()
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint: 0.5, 0.1
 
             Label:
-                text: 'Threshold for Syllable Similarity (%'
+                text: 'Threshold for Syllable Similarity (%)'
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
@@ -1102,9 +1104,11 @@
             Label:
                 text: 'Use '
                 size_hint_x: 0.05
-            TextInput:
+            NumericInput:
                 id: submitted_syllsim_thresh_input
                 input_filter: 'float'
+                min_value: 0
+                max_value: 100
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint_x: 0.25
             Label:
