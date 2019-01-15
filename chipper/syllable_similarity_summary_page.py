@@ -27,12 +27,7 @@ class SyllSimSummaryPage(Screen):
             # the trick is to set up the bins centered on the integers, i.e.
             # -0.5, 0.5, 1,5, 2.5, ... up to max(data) + 1.5. Then you substract -0.5 to
             # eliminate the extra bin at the end.
-            if max(syllsim_thresholds) - min(syllsim_thresholds) >= 1000:
-                bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 150, 100) - 50
-            elif max(syllsim_thresholds) - min(syllsim_thresholds) >= 250:
-                bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 15, 10) - 5
-            else:
-                bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 1.5, 1) - 0.5
+            bins = np.arange(min(syllsim_thresholds), max(syllsim_thresholds) + 1.5, 1) - 0.5
             self.ax6.hist(x=syllsim_thresholds, bins=bins, color=(0.196, 0.643, 0.80), alpha=0.7)
 
         self.ax6.set_xlabel('Syllable Similarity Threshold')
