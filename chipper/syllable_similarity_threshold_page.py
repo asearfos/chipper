@@ -4,7 +4,9 @@ from kivy.garden.matplotlib import FigureCanvasKivyAgg
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+import matplotlib.transforms as tx
 from kivy.uix.screenmanager import Screen
+
 
 from chipper.popups import SyllSimThreshInstructionsPopup
 
@@ -65,6 +67,12 @@ class SyllSimThresholdPage(Screen):
                                               aspect='auto', cmap=cmap,# norm=matplotlib.colors.LogNorm(),
                                               vmin=3.01)
 
+            self.trans = tx.blended_transform_factory(self.ax5.transData, self.ax5.transAxes)
+            self.lines_on, = self.ax5.plot(np.repeat(self.onsets, 3), np.tile([0, .75, np.nan], len(self.onsets)),
+                                           linewidth=0.75, color='g', transform=self.trans)
+            self.lines_off, = self.ax5.plot(np.repeat(self.offsets, 3), np.tile([0, .90, np.nan], len(self.offsets)),
+                                            linewidth=0.75, color='g', transform=self.trans)
+
             self.ids.syllsim_graph.clear_widgets()
             self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
 
@@ -73,7 +81,7 @@ class SyllSimThresholdPage(Screen):
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=float(self.ids.user_syllsim.text)
             )
-
+            print('before new_thresh')
             self.new_thresh()
             self.i += 1
 
