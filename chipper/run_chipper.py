@@ -22,6 +22,7 @@ from chipper.text_inputs import NumericInput
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.config import Config
+Config.set('kivy', 'exit_on_escape', '0')
 import os
 import sys
 
