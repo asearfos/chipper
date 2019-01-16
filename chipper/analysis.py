@@ -2,6 +2,7 @@ import os
 import threading
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from kivy.properties import StringProperty
@@ -298,22 +299,6 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     return syllable_stereotypy, syllable_stereotypy_max, syllable_stereotypy_min
 
 
-import matplotlib.pyplot as plt
-
-
-def plot_subset(image, x, y):
-    plt.figure()
-    plt.imshow(image[:, x:y])
-
-
-def get_square(image, on, off):
-    subset_1 = image[:, on:off]
-    mask = subset_1[:, :] < 1
-    non_zero = np.where(~mask.all(1))
-    min_x, min_y = np.min(non_zero), np.max(non_zero)
-    return subset_1, min_x, min_y
-
-
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
     sonogram_self_correlation = calc_max_correlation(
@@ -360,6 +345,14 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
         plt.show()
 
     return sonogram_correlation, sonogram_correlation_binary
+
+
+def get_square(image, on, off):
+    subset_1 = image[:, on:off]
+    mask = subset_1[:, :] < 1
+    non_zero = np.where(~mask.all(1))
+    min_x, min_y = np.min(non_zero), np.max(non_zero)
+    return subset_1, min_x, min_y
 
 
 def corr2(s1, s2, max_x, max_overlap):
