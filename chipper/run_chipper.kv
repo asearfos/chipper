@@ -123,12 +123,14 @@
 <DonePopup>:
     size_hint: .3, .3
     auto_dismiss: False
-#    title: 'You have completed the files in this directory.\nAll parameters, onsets, and offsets have been saved.'
     title: 'All parameters, onsets, and offsets have been saved!'
-    text_size: self.size
+    title_size: '16sp'
     Button:
-        text: 'Close'
-        on_release: root.quit_app()
+        multiline: True
+        text: 'Exit syllable segmentation.\nReturn to home page.'
+        halign: 'center'
+        valign: 'middle'
+        on_release: app.root.current = 'landing_page'; root.dismiss()
 
 <StartSegmentationPopup>
     size_hint: .5, .3
