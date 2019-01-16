@@ -187,7 +187,7 @@ class Song(object):
                               (len(syll_pattern) - 1)
 
             # determine syllable stereotypy
-            syll_stereotypy = calc_syllable_stereotypy(son_corr, syll_pattern)
+            syll_stereotypy, __, __ = calc_syllable_stereotypy(son_corr, syll_pattern)
             mean_syll_stereotypy = np.nanmean(syll_stereotypy)
             std_syll_stereotypy = np.nanstd(syll_stereotypy, ddof=1)
             syll_stereotypy_final = syll_stereotypy[~np.isnan(syll_stereotypy)]
@@ -254,11 +254,17 @@ class Song(object):
 
 def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     n_corr = len(sonogram_corr)
+    print('length of sonogram', n_corr)
     syllable_stereotypy = np.zeros(n_corr)
+    syllable_stereotypy_max = np.zeros(n_corr)
+    syllable_stereotypy_min = np.zeros(n_corr)
+    print(syllable_stereotypy)
     len_patt = len(syllable_pattern_checked)
+    print('pattern length', len_patt)
     for j in range(n_corr):
         # locations of all like syllables
         x_syllable_locations = np.where(syllable_pattern_checked == j)[0]
+        print('x_syll locations', x_syllable_locations)
         # initialize arrays
         x_syllable_correlations = np.zeros((len_patt, len_patt))
         if len(x_syllable_locations) > 1:
@@ -270,10 +276,19 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
                     if k > h:
                         x_syllable_correlations[k, h] = sonogram_corr[
                             x_syllable_locations[k], x_syllable_locations[h]]
-        syllable_stereotypy[j] = np.nanmean(
-            x_syllable_correlations[x_syllable_correlations != 0])
+            print('x_syllable_correlations', x_syllable_correlations)
+            syllable_stereotypy[j] = np.nanmean(
+                x_syllable_correlations[x_syllable_correlations != 0])
+            syllable_stereotypy_max[j] = np.nanmax(
+                x_syllable_correlations[x_syllable_correlations != 0])
+            syllable_stereotypy_min[j] = np.nanmin(
+                x_syllable_correlations[x_syllable_correlations != 0])
+        else:
+            syllable_stereotypy[j] = np.nan
+            syllable_stereotypy_max[j] = np.nan
+            syllable_stereotypy_min[j] = np.nan
 
-    return syllable_stereotypy
+    return syllable_stereotypy, syllable_stereotypy_max, syllable_stereotypy_min
 
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
@@ -487,8 +502,7 @@ def find_syllable_pattern(sonogram_correlation_binary):
     # get syllable pattern
     syllable_pattern = np.zeros(len(sonogram_correlation_binary), 'int')
     for j in range(len(sonogram_correlation_binary)):
-        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][
-            0]
+        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][0]
 
     # check syllable pattern -->
     # should be no new number that is smaller than it's index

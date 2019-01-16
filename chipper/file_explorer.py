@@ -1,6 +1,6 @@
 import os
 from kivy.uix.screenmanager import Screen
-from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, \
+from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, DetermineSyllSimThresholdPopup, \
     StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
 from kivy.properties import BooleanProperty
 
@@ -37,7 +37,9 @@ class FileExplorer(Screen):
                 note_popup.len_files = str(num_files)
                 note_popup.open()
             elif self.radio_syllsim:
-                pass
+                syllsim_popup = DetermineSyllSimThresholdPopup()
+                syllsim_popup.len_files = str(num_files)
+                syllsim_popup.open()
             elif self.radio_analyze:
                 analysis_popup = StartAnalysisPopup()
                 analysis_popup.len_files = str(num_files)

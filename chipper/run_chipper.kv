@@ -4,6 +4,7 @@
 #:import ProgressSpinner kivy.garden.progressspinner
 #:import webbrowser webbrowser
 #:import note_instructions_text note_threshold_instructions
+#:import syllsim_instructions_text syllable_similarity_threshold_instructions
 
 <Manager>:
     LandingPage:
@@ -25,6 +26,10 @@
         name: 'note_threshold_page'
     NoteSummaryPage:
         name: 'note_summary_page'
+    SyllSimThresholdPage:
+        name: 'syllsim_threshold_page'
+    SyllSimSummaryPage:
+        name: 'syllsim_summary_page'
     Analysis:
         user_note_thresh: welcome.user_note_thresh
         user_syll_sim_thresh: welcome.user_syll_sim_thresh
@@ -166,6 +171,44 @@
             id: note_thresh_instructions
             multiline: True
             text: note_instructions_text.text
+            text_size: self.width/1.5, None
+            height: self.texture_size[1]
+        GridLayout:
+            rows: 1
+            cols: 3
+            size_hint_y: 0.1
+            BoxLayout:
+            Button:
+                text: 'Close Instructions'
+                on_release: root.dismiss()
+                size_hint_x: 0.5
+            BoxLayout:
+
+<DetermineSyllSimThresholdPopup>
+    size_hint: .5, .3
+    auto_dismiss: False
+    title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for syllable similarity?'
+#    text_size: self.size
+    BoxLayout:
+        orientation: 'horizontal'
+
+        Button:
+            text: 'Back'
+            on_release: root.dismiss()
+        Button:
+            text: 'Determine\nThreshold'
+            halign: 'center'
+            on_release: app.root.current = 'syllsim_threshold_page'; root.dismiss()
+
+<SyllSimThreshInstructionsPopup>
+    auto_dismiss: True
+    title: 'How to Determine Threshold for Syllable Similarity'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: syllsim_thresh_instructions
+            multiline: True
+            text: syllsim_instructions_text.text
             text_size: self.width/1.5, None
             height: self.texture_size[1]
         GridLayout:
@@ -484,7 +527,7 @@
                         input_filter: 'float'
                         min_value: 0
                         max_value: 100
-                        text: '40'
+                        text: '40.0'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
@@ -532,7 +575,7 @@
     user_min_silence: '10'
     user_min_syllable: '20'
     user_note_thresh: '120'
-    user_syll_sim_thresh: '40'
+    user_syll_sim_thresh: '40.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 #    bottom_image: graph_binary
@@ -742,7 +785,7 @@
 
         CustomLabel:
             text: 'Determine Threshold for Note Size'
-            font_size: '18sp'
+            font_size: '20sp'
             size_hint_y: 0.1
 
         GridLayout:
@@ -902,6 +945,217 @@
             Button:
                 text: 'SUBMIT'
                 on_release: note_summary.submit_note_thresh(); app.root.current = 'landing_page'
+                size_hint_x: 0.1
+
+<SyllSimThresholdPage>:
+    id: determine_syllsim
+    on_pre_enter: determine_syllsim.setup()
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        CustomLabel:
+            text: 'Determine Threshold for Syllable Similarity'
+            font_size: '20sp'
+            size_hint_y: 0.1
+
+        GridLayout:
+            rows: 1
+            cols: 3
+            size_hint_y: 0.075
+
+            BoxLayout:
+
+            Button:
+                id: syllsim_thresh_instructions_button
+                text: 'Click Here for Instructions'
+                on_release: determine_syllsim.syllsim_thresh_instructions()
+
+            BoxLayout:
+
+        CustomLabel:
+            id: song_syntax
+            font_size: '18sp'
+            size_hint_y: 0.1
+            text_size: self.size
+            halign: 'center'
+
+        GridLayout:
+            rows: 1
+            cols: 2
+            size_hint_x: 1
+            spacing: 10
+            padding: 10
+
+            BoxLayout:
+                size_hint_x: 0.3
+                orientation: 'vertical'
+                padding: 10
+
+                Label:
+                    multiline: True
+                    text: 'Syllable Similarity\n'
+                    font_size: '18sp'
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: 0.1
+
+                Label:
+                    id: similarity
+                    multiline: True
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'top'
+
+            GridLayout:
+                id: syllsim_graph
+                rows: 1
+                cols: 1
+                size_hint_x: 1
+                spacing: 10
+                padding: 10
+
+
+        GridLayout:
+            rows: 1
+            cols: 5
+            spacing: 10
+            padding: 10
+            size_hint_y: 0.13
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: 0.1, 1
+
+                Button:
+                    font_size: '18sp'
+                    text: '+'
+#                    text: u'\u25b2'
+                    on_release: user_syllsim.text = str(float(user_syllsim.text) + 10); determine_syllsim.new_thresh()
+
+                Button:
+                    font_size: '18sp'
+                    text: u'\u2014'
+                    on_release: user_syllsim.text = str(float(user_syllsim.text) - 10); determine_syllsim.new_thresh()
+
+            NumericInput:
+                id: user_syllsim
+                input_filter: 'float'
+                min_value: 0
+                max_value: 100
+                text: '70.0'
+                multiline: False
+                on_text_validate: determine_syllsim.new_thresh()
+                padding: [6, ( self.height - self.line_height )/2]
+                size_hint: 0.5, 0.1
+
+            Label:
+                text: 'Threshold for Syllable Similarity (%)'
+                text_size: self.size
+                halign: 'left'
+                valign: 'center'
+
+            BoxLayout:
+
+            Button:
+                text: 'NEXT'
+                size_hint_x: 0.5
+                on_release: determine_syllsim.next()
+
+        BoxLayout:
+            size_hint_y: 0.01
+
+<SyllSimSummaryPage>:
+    id: syllsim_summary
+    on_pre_enter: syllsim_summary.calculate_syllsim_thresh_stats()
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        CustomLabel:
+            text: 'Syllable Similarity Threshold Summary'
+            font_size: '18sp'
+            size_hint_y: 0.1
+
+        GridLayout:
+            rows: 1
+            cols: 2
+            padding: 25
+            size_hint_y: 0.8
+
+            GridLayout:
+                id: syllsim_hist
+                rows: 1
+                cols: 1
+                size_hint_x: 0.75
+
+            StackLayout:
+                size_hint: 0.25, 1
+
+                BoxLayout:
+                    size_hint_y: 0.25
+
+                Label:
+                    id: num_files
+                    text: 'Number of Files: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: avg_syllsim_thresh
+                    text: 'Average: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: std_dev_syllsim_thresh
+                    text: 'Standard Deviation: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: min_syllsim_thresh
+                    text: 'Minimum: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+                Label:
+                    id: max_syllsim_thresh
+                    text: 'Maximum: '
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'center'
+                    size_hint: 1, 0.1
+
+        StackLayout:
+            size_hint_y: 0.1
+            spacing: 10
+            padding: 10
+
+            Label:
+                text: 'Use '
+                size_hint_x: 0.05
+            NumericInput:
+                id: submitted_syllsim_thresh_input
+                input_filter: 'float'
+                min_value: 0
+                max_value: 100
+                padding: [6, ( self.height - self.line_height )/2]
+                size_hint_x: 0.1
+            Label:
+                text: ' % as threshold for syllable similarity.'
+                size_hint_x: 0.6
+                text_size: self.size
+                halign: 'left'
+                valign: 'center'
+            Button:
+                text: 'SUBMIT'
+                on_release: syllsim_summary.submit_syllsim_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
 
 <Analysis>:
