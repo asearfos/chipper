@@ -1,7 +1,22 @@
 pandas
+scipy
 matplotlib
 soundfile
 numpy
+kivy
 kivy-garden
 scikit-image
-garden install graph, filebrowser, matplotlib
+cython
+docutils
+pygments
+
+# windows
+pypiwin32
+kivy.deps.sdl2
+kivy.deps.glew
+kivy.deps.gstreamer
+kivy.deps.glew_dev
+kivy.deps.sdl2_dev
+kivy.deps.gstreamer_dev
+
+# garden install graph, filebrowser, matplotlib
