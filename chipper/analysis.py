@@ -502,8 +502,7 @@ def find_syllable_pattern(sonogram_correlation_binary):
     # get syllable pattern
     syllable_pattern = np.zeros(len(sonogram_correlation_binary), 'int')
     for j in range(len(sonogram_correlation_binary)):
-        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][
-            0]
+        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][0]
 
     # check syllable pattern -->
     # should be no new number that is smaller than it's index

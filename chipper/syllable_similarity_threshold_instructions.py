@@ -1,7 +1,7 @@
 text = 'The colors are here to help you distinguish the syntax of the song which is also written above the ' \
        'spectrogram. ' \
-       'Two syllables are considered to be identical if they overlap with an accuracy greater than the syllable ' \
-       'similarity threshold. ' \
+       'Two syllables are considered to be identical if they overlap with an accuracy greater than or equal to the ' \
+       'syllable similarity threshold. ' \
        'The syntax is found sequentially, meaning if the second syllable is found to be the same as the first, ' \
        'and the third syllable is found to be the same as the second but not the first, the third will still be the ' \
        'same as both first and second syllables.\n\n' \

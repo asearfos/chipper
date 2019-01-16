@@ -81,7 +81,7 @@ class SyllSimThresholdPage(Screen):
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=float(self.ids.user_syllsim.text)
             )
-            print('before new_thresh')
+
             self.new_thresh()
             self.i += 1
 
@@ -91,7 +91,7 @@ class SyllSimThresholdPage(Screen):
 
         # create new binary matrix with new threshold
         son_corr_bin = np.zeros(self.son_corr.shape)
-        son_corr_bin[self.son_corr > float(self.ids.user_syllsim.text)] = 1
+        son_corr_bin[self.son_corr >= float(self.ids.user_syllsim.text)] = 1
 
         # get syllable pattern
         syll_pattern = analyze.find_syllable_pattern(son_corr_bin)
@@ -110,7 +110,6 @@ class SyllSimThresholdPage(Screen):
             stereotypy_text += 'No Repeated Syllables'
         else:
             self.ids.similarity.text = stereotypy_text
-
 
         # color syllables based on syntax
         labeled_sonogram = self.threshold_sonogram.copy()
