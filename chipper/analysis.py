@@ -27,44 +27,27 @@ class Analysis(Screen):
         th.daemon = True  # TODO: check this is safe to do; seemed to be easiest way to close program during analysis
         th.start()
 
-    def analyze(self, directory, n_cores=None, out_path=None):
+    def analyze(self, directory, out_path=None):
         if out_path is None:
             out_path = directory + "/AnalysisOutput_" + time.strftime(
                 "%Y%m%d_T%H%M%S")
 
-        files = []
-        file_names = []
-        for f in os.listdir(directory):
-            if f.endswith('gzip'):
-                files.append(os.path.join(directory, f))
-                file_names.append(f)
+        files = [i for i in os.listdir(directory) if i.endswith('.gzip')]
+        file_names = [os.path.join(directory, i) for i in files]
 
         assert len(files) != 0, "No gzipped files in {}".format(directory)
 
-        # final_output = [Song(i).run_analysis() for i in files]
         final_output = []
-        count = 0
-        self.ids.processing_count.text = str(count) + ' of ' + str(
-            len(files)) + ' complete'
-        for i in files:
-            # # way to check if analyze has been canceled without exiting (however it finishes the file it is on first)
-            # # make sure to uncomment stop above init and in the run_chipper.py file
-            # while True:
-            #     if self.stop.is_set():
-            #         print(self.stop.is_set())
-            #         # Stop running this thread so the main Python process can exit.
-            #         return
-            count += 1
-            final_output.append(Song(i, self.user_note_thresh,
+        n_files = len(files)
+
+        for i in range(n_files):
+            self.ids.processing_count.text = \
+                "{} of {} complete".format(i, n_files)
+
+            final_output.append(Song(files[i], self.user_note_thresh,
                                      self.user_syll_sim_thresh).run_analysis())
-            if count < len(files):
-                self.ids.processing_count.text = str(count) + ' of ' + str(
-                    len(files)) + ' complete'
-        # processes = mp.Pool(cores, maxtasksperchild=1000)
-        # final_output = processes.map(self.run_analysis, files)
+
         output_bout_data(out_path, file_names, final_output)
-        self.ids.processing_count.text = str(count) + ' of ' + str(
-            len(files)) + ' complete'
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
