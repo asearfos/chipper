@@ -1,27 +1,29 @@
 import os
-import time
 import threading
+import time
 
 import numpy as np
 import pandas as pd
+from kivy.properties import StringProperty
+from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
-from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty
 
 
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
+
     # stop = threading.Event()  # will need if the thread for analysis is not daemon
 
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
 
     def thread_process(self):
-        th = threading.Thread(target=self.analyze, args=(self.parent.directory, ))
-        th.daemon = True  #TODO: check this is safe to do; seemed to be easiest way to close program during analysis
+        th = threading.Thread(target=self.analyze,
+                              args=(self.parent.directory,))
+        th.daemon = True  # TODO: check this is safe to do; seemed to be easiest way to close program during analysis
         th.start()
 
     def analyze(self, directory, n_cores=None, out_path=None):
@@ -41,7 +43,8 @@ class Analysis(Screen):
         # final_output = [Song(i).run_analysis() for i in files]
         final_output = []
         count = 0
-        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        self.ids.processing_count.text = str(count) + ' of ' + str(
+            len(files)) + ' complete'
         for i in files:
             # # way to check if analyze has been canceled without exiting (however it finishes the file it is on first)
             # # make sure to uncomment stop above init and in the run_chipper.py file
@@ -50,14 +53,17 @@ class Analysis(Screen):
             #         print(self.stop.is_set())
             #         # Stop running this thread so the main Python process can exit.
             #         return
-                count += 1
-                final_output.append(Song(i, self.user_note_thresh, self.user_syll_sim_thresh).run_analysis())
-                if count < len(files):
-                    self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+            count += 1
+            final_output.append(Song(i, self.user_note_thresh,
+                                     self.user_syll_sim_thresh).run_analysis())
+            if count < len(files):
+                self.ids.processing_count.text = str(count) + ' of ' + str(
+                    len(files)) + ' complete'
         # processes = mp.Pool(cores, maxtasksperchild=1000)
         # final_output = processes.map(self.run_analysis, files)
         output_bout_data(out_path, file_names, final_output)
-        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
+        self.ids.processing_count.text = str(count) + ' of ' + str(
+            len(files)) + ' complete'
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
@@ -187,7 +193,8 @@ class Song(object):
                               (len(syll_pattern) - 1)
 
             # determine syllable stereotypy
-            syll_stereotypy, __, __ = calc_syllable_stereotypy(son_corr, syll_pattern)
+            syll_stereotypy, __, __ = calc_syllable_stereotypy(son_corr,
+                                                               syll_pattern)
             mean_syll_stereotypy = np.nanmean(syll_stereotypy)
             std_syll_stereotypy = np.nanstd(syll_stereotypy, ddof=1)
             syll_stereotypy_final = syll_stereotypy[~np.isnan(syll_stereotypy)]
@@ -291,40 +298,87 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     return syllable_stereotypy, syllable_stereotypy_max, syllable_stereotypy_min
 
 
+import matplotlib.pyplot as plt
+
+
+def plot_subset(image, x, y):
+    plt.figure()
+    plt.imshow(image[:, x:y])
+
+
+def get_square(image, on, off):
+    subset_1 = image[:, on:off]
+    mask = subset_1[:, :] < 1
+    non_zero = np.where(~mask.all(1))
+    min_x, min_y = np.min(non_zero), np.max(non_zero)
+    return subset_1, min_x, min_y
+
+
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
+
     n_offset = len(onsets)
     sonogram_correlation = np.zeros((n_offset, n_offset))
 
     for j in range(n_offset):
+        sonogram_correlation[j, j] = 100
+        subset_1, ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
         # do not want to fill the second half of the diagonal matrix
-        for k in range(j, n_offset):
+        for k in range(j + 1, n_offset):
+            subset_2, ymin_2, ymax_2 = get_square(sonogram, onsets[k],
+                                                  offsets[k])
+            y_min = min(ymin_1, ymin_2)
+            y_max = max(ymax_1, ymax_2)
 
             max_overlap = max(sonogram_self_correlation[j],
                               sonogram_self_correlation[k])
 
-            shift_factor = abs(syll_duration[j] - syll_duration[k])
-            if syll_duration[j] < syll_duration[k]:
-                min_length = syll_duration[j]
-                syll_corr = calc_corr(sonogram, onsets, j, k, shift_factor,
-                                      min_length, max_overlap)
+            max_x = max(syll_duration[j], syll_duration[k])
 
-            # will be if k is shorter than j or they are equal
-            else:
-                min_length = syll_duration[k]
-                syll_corr = calc_corr(sonogram, onsets, k, j, shift_factor,
-                                      min_length, max_overlap)
+            s1_0 = get_syl(sonogram, y_min, y_max, max_x, onsets[j],
+                           offsets[j])
+            s2_0 = get_syl(sonogram, y_min, y_max, max_x, onsets[k],
+                           offsets[k])
+
+            s_max = corr2(s1_0, s2_0, max_x, max_overlap)
 
             # fill both upper and lower diagonal of symmetric matrix
-            sonogram_correlation[j, k] = syll_corr
-            sonogram_correlation[k, j] = syll_corr
+            sonogram_correlation[j, k] = s_max
+            sonogram_correlation[k, j] = s_max
 
     sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
-    sonogram_correlation_binary[sonogram_correlation > corr_thresh] = 1
+    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
+    plot = False
+    if plot:
+        plt.figure()
+        plt.imshow(sonogram_correlation_binary, interpolation=None)
+        plt.figure()
+        plt.imshow(sonogram_correlation, interpolation=None)
+        plt.show()
+
     return sonogram_correlation, sonogram_correlation_binary
+
+
+def corr2(s1, s2, max_x, max_overlap):
+    syllable_correlation = np.zeros(max_x + 1)
+    for n in range(1, max_x):
+        syllable_correlation[n] = np.dot(s2[:, 0:n].flatten(),
+                                         s1[:, max_x - n - 1:-1].flatten()
+                                         ).sum()
+
+    s_max = max(syllable_correlation * 100. / max_overlap)
+    return s_max
+
+
+def get_syl(sonogram, y_min, y_max, max_x, on, off):
+    s2 = sonogram[y_min:y_max, on:off]
+    y_size = y_max - y_min
+    s_0 = np.zeros((y_size, max_x))
+    s_0[:, :off - on] = s2
+    return s_0
 
 
 # TODO This is the the most time consuming function.
@@ -363,7 +417,8 @@ def get_notes(threshold_sonogram, onsets, offsets):
 
     return num_notes, props, labeled_sonogram
 
-#TODO: May want to add this back so it can be run from the command line rather than only in the GUI
+
+# TODO: May want to add this back so it can be run from the command line rather than only in the GUI
 # def analyze(directory, n_cores=None, out_path=None, var=None):
 #     if out_path is None:
 #         out_path = directory + "/AnalysisOutput_" + time.strftime(
@@ -502,7 +557,8 @@ def find_syllable_pattern(sonogram_correlation_binary):
     # get syllable pattern
     syllable_pattern = np.zeros(len(sonogram_correlation_binary), 'int')
     for j in range(len(sonogram_correlation_binary)):
-        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][0]
+        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][
+            0]
 
     # check syllable pattern -->
     # should be no new number that is smaller than it's index
@@ -524,8 +580,8 @@ directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnaly
 # folders = [os.path.join(directory, f) for f in os.listdir(directory)]
 
 if __name__ == '__main__':
-    one_song = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206\SegSyllsOutput_26292371_b5of6.gzip'
-    Song(one_song, '120', '40').run_analysis()
+    one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
+    Song(one_song, 50, 40).run_analysis()
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206'
     # SongAnalysis(1, out_dir, 'tmp')

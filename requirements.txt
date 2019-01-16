@@ -19,4 +19,4 @@ kivy.deps.glew_dev
 kivy.deps.sdl2_dev
 kivy.deps.gstreamer_dev
 
-# garden install graph, filebrowser, matplotlib
+# garden install --kivy graph, filebrowser, matplotlib, progressspinner
