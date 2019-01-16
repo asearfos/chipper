@@ -559,8 +559,9 @@
     name: 'choose_file'
     FileBrowser:
         id: file_browser
+        path : browse.home
         dirselect: True
-        on_success: browse._fbrowser_success(file_browser); #app.root.current = 'control_panel'
+        on_success: browse._fbrowser_success(file_browser);
         on_canceled: app.root.current = 'landing_page' # browse._fbrowser_canceled(file_browser)
 
 <ImageSonogram>:

@@ -1,8 +1,14 @@
 import os
-from kivy.uix.screenmanager import Screen
-from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, DetermineSyllSimThresholdPopup, \
-    StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
+import sys
+from os.path import expanduser, dirname
+
 from kivy.properties import BooleanProperty
+from kivy.uix.screenmanager import Screen
+
+from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, \
+    DetermineSyllSimThresholdPopup, \
+    StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
+
 
 class FileExplorer(Screen):
     radio_chipper = BooleanProperty()
@@ -12,6 +18,11 @@ class FileExplorer(Screen):
 
     def __init__(self, **kwargs):
         super(FileExplorer, self).__init__(**kwargs)
+        if sys.platform == 'win':
+            user_path = dirname(expanduser('~'))
+        else:
+            user_path = expanduser('~')
+        self.home = user_path
 
     def _fbrowser_success(self, instance):
         [chosen_directory] = instance.selection
