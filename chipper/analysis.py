@@ -24,7 +24,7 @@ class Analysis(Screen):
     def thread_process(self):
         th = threading.Thread(target=self.analyze,
                               args=(self.parent.directory,))
-        th.daemon = True  # TODO: check this is safe to do; seemed to be easiest way to close program during analysis
+        th.daemon = True
         th.start()
 
     def analyze(self, directory, out_path=None):
@@ -301,7 +301,7 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
             subset_2, ymin_2, ymax_2 = get_square(sonogram, onsets[k],
                                                   offsets[k])
             y_min = min(ymin_1, ymin_2)
-            y_max = max(ymax_1, ymax_2)
+            y_max = max(ymax_1, ymax_2) + 1  # must add one due to python indexing
 
             max_overlap = max(sonogram_self_correlation[j],
                               sonogram_self_correlation[k])
@@ -336,8 +336,8 @@ def get_square(image, on, off):
     subset_1 = image[:, on:off]
     mask = subset_1[:, :] < 1
     non_zero = np.where(~mask.all(1))
-    min_x, min_y = np.min(non_zero), np.max(non_zero)
-    return subset_1, min_x, min_y
+    min_y, max_y = np.min(non_zero), np.max(non_zero)
+    return subset_1, min_y, max_y
 
 
 def corr2(s1, s2, max_x, max_overlap):
