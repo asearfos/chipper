@@ -32,9 +32,8 @@ class Analysis(Screen):
             out_path = directory + "/AnalysisOutput_" + time.strftime(
                 "%Y%m%d_T%H%M%S")
 
-        files = [i for i in os.listdir(directory) if i.endswith('.gzip')]
-        file_names = [os.path.join(directory, i) for i in files]
-
+        file_names = [i for i in os.listdir(directory) if i.endswith('.gzip')]
+        files = [os.path.join(directory, i) for i in file_names]
         assert len(files) != 0, "No gzipped files in {}".format(directory)
 
         final_output = []
