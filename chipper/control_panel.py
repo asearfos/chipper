@@ -313,7 +313,7 @@ class ControlPanel(Screen):
 
     def next(self):
         # get initial data
-        self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params, prev_onsets, prev_offsets = \
+        self.sound, self.sonogram, self.millisecondsPerPixel, self.hertzPerPixel, params, prev_onsets, prev_offsets = \
             seg.initial_sonogram(self.i, self.files, self.parent.directory, find_gzips=self.find_gzips)
 
         if len(self.save_parameters_all) > 0:
@@ -564,3 +564,6 @@ class ControlPanel(Screen):
     def done_window(self):
         done_popup = DonePopup()
         done_popup.open()
+
+    def play_song(self):
+        self.sound.play()

@@ -7,6 +7,7 @@ from chipper.ifdvsonogramonly import ifdvsonogramonly
 #import matplotlib.pyplot as plt
 import chipper.utils as utils
 import gzip
+from kivy.core.audio import SoundLoader
 
 
 def initialize(directory):
@@ -32,6 +33,8 @@ def load_bout_data(f_name):
 def initial_sonogram(i, files, directory, find_gzips):
     wavfile = files[i]
     song1, sample_rate = sf.read(directory + wavfile, always_2d=True)  # audio data always returned as 2d array
+    sound = SoundLoader.load(directory + wavfile)
+
     song1 = song1[:, 0]  # make files mono
 
     if find_gzips:
@@ -55,7 +58,7 @@ def initial_sonogram(i, files, directory, find_gzips):
     sonogram_padded = np.zeros((rows, cols + 300))
     sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
 
-    return sonogram_padded, millisecondsPerPixel, hertzPerPixel, params, prev_onsets, prev_offsets
+    return sound, sonogram_padded, millisecondsPerPixel, hertzPerPixel, params, prev_onsets, prev_offsets
 
 
 def frequency_filter(filter_boundary, sonogram):
