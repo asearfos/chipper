@@ -38,6 +38,25 @@
 <CustomLabel@Label>
     color: 1, 1, 1, 1
 
+<CustomButton@Button>:
+    image_source: ''
+    subtext: ''
+    BoxLayout:
+        height: self.parent.height  # match the button's height
+        width: self.parent.width                  # set to whatever you would like
+        pos: self.parent.pos        # match the button's position
+        orientation: 'horizontal'
+        BoxLayout:
+            size_hint_x: 0.25
+        Image:
+            source: root.image_source
+            size_hint_x: 0.1
+        Label:
+            text: root.subtext
+            size_hint_x: 0.2
+        BoxLayout:
+            size_hint_x: 0.3
+
 <RadioLabel@ButtonBehavior+Label>
 
 <FinishMarksPopup>
@@ -700,11 +719,15 @@
                     id: slider_min_syllable_label
 
             GridLayout:
-                rows: 1
+                rows: 2
                 cols: 1
                 spacing: 10
                 padding: 10
-                size_hint_y: 0.5
+
+                CustomButton:
+                    image_source: 'atlas://data/images/defaulttheme/media-playback-start'
+                    subtext: 'Play Song'
+                    on_release: controls.play_song()
 
                 Button:
                     text: 'Reset Parameters'
