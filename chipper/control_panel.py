@@ -4,7 +4,7 @@ from kivy.properties import ObjectProperty, BooleanProperty, StringProperty
 from kivy.uix.screenmanager import Screen
 
 import chipper.functions as seg
-from chipper.popups import FinishMarksPopup, CheckLengthPopup, \
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckForSyllablesPopup,\
     CheckBeginningEndPopup, CheckOrderPopup, \
     DonePopup
 
@@ -476,7 +476,10 @@ class ControlPanel(Screen):
             self.next()
 
     def save(self):
-        if len(self.syllable_onsets) != len(self.syllable_offsets):
+        if len(self.syllable_onsets) == 0 and len(self.syllable_offsets) == 0:
+            check_sylls = CheckForSyllablesPopup()
+            check_sylls.open()
+        elif len(self.syllable_onsets) != len(self.syllable_offsets):
             check_length = CheckLengthPopup()
             check_length.len_onsets = str(len(self.syllable_onsets))
             check_length.len_offsets = str(len(self.syllable_offsets))
