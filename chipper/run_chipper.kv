@@ -893,6 +893,7 @@
                 text: 'NEXT'
                 size_hint_x: 0.5
                 on_release: determine_note.next()
+                disabled: True if user_note_size.text == '' else False
 
         BoxLayout:
             size_hint_y: 0.01
@@ -986,6 +987,7 @@
                 text: 'SUBMIT'
                 on_release: note_summary.submit_note_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
+                disabled: True if submitted_note_thresh_input.text == '' else False
 
 <SyllSimThresholdPage>:
     id: determine_syllsim
@@ -1102,6 +1104,7 @@
                 text: 'NEXT'
                 size_hint_x: 0.5
                 on_release: determine_syllsim.next()
+                disabled: True if user_syllsim.text == '' else False
 
         BoxLayout:
             size_hint_y: 0.01
@@ -1197,6 +1200,7 @@
                 text: 'SUBMIT'
                 on_release: syllsim_summary.submit_syllsim_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
+                disabled: True if submitted_syllsim_thresh_input.text == '' else False
 
 <Analysis>:
     id: processing
