@@ -14,8 +14,8 @@ from chipper.note_summary_page import NoteSummaryPage
 from chipper.syllable_similarity_threshold_page import SyllSimThresholdPage
 from chipper.syllable_similarity_summary_page import SyllSimSummaryPage
 from chipper.analysis import Analysis
-from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckBeginningEndPopup, CheckOrderPopup, \
-    DonePopup
+from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckForSyllablesPopup, CheckBeginningEndPopup, \
+    CheckOrderPopup, DonePopup
 from chipper.sliders import MySlider, MyRangeSlider
 from chipper.image_sonogram import ImageSonogram
 from chipper.text_inputs import NumericInput

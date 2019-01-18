@@ -96,6 +96,17 @@
             text: 'Okay'
             on_release: root.dismiss()
 
+<CheckForSyllablesPopup>
+    size_hint: 0.25, 0.25
+    auto_dismiss: False
+    title: 'WARNING: You have no syllables selected. You cannot submit for processing.'
+    title_size: 16
+    BoxLayout:
+        orientation: 'vertical'
+        Button:
+            text: 'Okay'
+            on_release: root.dismiss()
+
 <CheckBeginningEndPopup>
     size_hint: .25, .25
     auto_dismiss: False

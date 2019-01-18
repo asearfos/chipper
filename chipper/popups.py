@@ -14,6 +14,9 @@ class CheckLengthPopup(Popup):
     len_offsets = StringProperty()
 
 
+class CheckForSyllablesPopup(Popup):
+    pass
+
 class CheckBeginningEndPopup(Popup):
     start_onset = BooleanProperty()
     end_offset = BooleanProperty()
