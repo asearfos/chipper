@@ -498,16 +498,16 @@
                         min_value: 0.1
                         max_value: 6
                         text: '3'
-                        hint_text: '3'
+                        hint_text: '.1-6%'
                         padding: [6, ( self.height - self.line_height )/2]
-                        size_hint: 0.15, 0.1
+                        size_hint: 0.18, 0.1
                         disabled: False if chipper.active else True
                     Label:
                         text: 'Top Percent of Signal Kept (.1-6%)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint: 0.85, 0.1
+                        size_hint: 0.82, 0.1
                         disabled: False if chipper.active else True
 
                     NumericInput:
@@ -516,16 +516,16 @@
                         min_value: 0
                         max_value: 50
                         text: '10'
-                        hint_text: '10'
+                        hint_text: '0-50ms'
                         padding: [6, ( self.height - self.line_height )/2]
-                        size_hint: 0.15, 0.1
+                        size_hint: 0.18, 0.1
                         disabled: False if chipper.active else True
                     Label:
                         text: 'Minimum Silence Duration (0-50ms)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint: 0.85, 0.1
+                        size_hint: 0.82, 0.1
                         disabled: False if chipper.active else True
 
                     NumericInput:
@@ -534,32 +534,32 @@
                         min_value: 0
                         max_value: 350
                         text: '20'
-                        hint_text: '20'
+                        hint_text: '0-350ms'
                         padding: [6, ( self.height - self.line_height )/2]
-                        size_hint: 0.15, 0.1
+                        size_hint: 0.18, 0.1
                         disabled: False if chipper.active else True
                     Label:
                         text: 'Minimum Syllable Duration (0-350 ms)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint: 0.85, 0.1
+                        size_hint: 0.82, 0.1
                         disabled: False if chipper.active else True
 
                     TextInput:
                         id: note_thresh_input
                         input_filter: 'int'
                         text: '120'
-                        hint_text: '120'
+                        hint_text: 'integer'
                         padding: [6, ( self.height - self.line_height )/2]
-                        size_hint: 0.15, 0.1
+                        size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
                         text: 'Note Size Threshold (pixels)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint: 0.85, 0.1
+                        size_hint: 0.82, 0.1
                         disabled: False if analyze.active else True
 
                     NumericInput:
@@ -568,16 +568,16 @@
                         min_value: 0
                         max_value: 100
                         text: '40.0'
-                        hint_text: '40.0'
+                        hint_text: '0-100%'
                         padding: [6, ( self.height - self.line_height )/2]
-                        size_hint: 0.15, 0.1
+                        size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
                         text: '% Syllable Similarity (> are same syllable)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
-                        size_hint: 0.85, 0.1
+                        size_hint: 0.82, 0.1
                         disabled: False if analyze.active else True
 
             GridLayout:
