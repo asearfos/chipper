@@ -38,7 +38,7 @@
 <CustomLabel@Label>
     color: 1, 1, 1, 1
 
-<CustomButton@Button>:
+<PlayButton@Button>:
     image_source: ''
     subtext: ''
     BoxLayout:
@@ -498,6 +498,7 @@
                         min_value: 0.1
                         max_value: 6
                         text: '3'
+                        hint_text: '3'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
@@ -515,6 +516,7 @@
                         min_value: 0
                         max_value: 50
                         text: '10'
+                        hint_text: '10'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
@@ -532,6 +534,7 @@
                         min_value: 0
                         max_value: 350
                         text: '20'
+                        hint_text: '20'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
@@ -547,6 +550,7 @@
                         id: note_thresh_input
                         input_filter: 'int'
                         text: '120'
+                        hint_text: '120'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
@@ -564,6 +568,7 @@
                         min_value: 0
                         max_value: 100
                         text: '40.0'
+                        hint_text: '40.0'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.15, 0.1
                         disabled: False if analyze.active else True
@@ -586,7 +591,11 @@
                 Button:
                     id: start_chipper
                     text: 'START'
-                    on_release: app.root.current = 'choose_file'
+                    on_release: app.root.current = 'choose_file' # welcome.check_input_before_start()
+                    disabled:
+                        True if (analyze.active and (not note_thresh_input.text or not syll_sim_input.text)) \
+                        or (chipper.active and (not signal_threshold_input.text or not min_silence_input.text \
+                        or not min_syllable_input.text)) else False
 
                 BoxLayout:
 
@@ -689,7 +698,7 @@
                     id: slider_threshold
                     min: 0.1
                     max: 6
-                    value: float(root.user_signal_thresh)
+                    value: root.user_signal_thresh
                     step: 0.1
                     on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
                 CustomLabel:
@@ -735,7 +744,7 @@
                 spacing: 10
                 padding: 10
 
-                CustomButton:
+                PlayButton:
                     image_source: 'atlas://data/images/defaulttheme/media-playback-start'
                     subtext: 'Play Song'
                     on_release: controls.play_song()
