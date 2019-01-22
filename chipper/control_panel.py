@@ -154,14 +154,22 @@ class ControlPanel(Screen):
 
     def add_onsets(self):
         # TODO: might be able to just use bisect.insort(list, new number) https://stackoverflow.com/questions/29408661/add-elements-into-a-sorted-array-in-ascending-order
-        self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.graph_location is None:
+            return
+        else:
+            self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.graph_location = None
 
     def add_offsets(self):
-        self.syllable_offsets = np.insert(self.syllable_offsets, np.searchsorted(self.syllable_offsets, self.graph_location), self.graph_location)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.graph_location is None:
+            return
+        else:
+            self.syllable_offsets = np.insert(self.syllable_offsets, np.searchsorted(self.syllable_offsets, self.graph_location), self.graph_location)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.graph_location = None
 
     def takeClosest(self, myList, myNumber):
         """
@@ -201,18 +209,27 @@ class ControlPanel(Screen):
         self.plot_binary_canvas.draw()
 
     def delete_onsets(self):
-        onsets_list = list(self.syllable_onsets)
-        onsets_list.remove(self.syllable_onsets[self.index])
-        self.syllable_onsets = np.array(onsets_list)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.index is None:
+            return
+        else:
+            onsets_list = list(self.syllable_onsets)
+            onsets_list.remove(self.syllable_onsets[self.index])
+            print('onset_list', onsets_list)
+            self.syllable_onsets = np.array(onsets_list)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.index = None
 
     def delete_offsets(self):
-        offsets_list = list(self.syllable_offsets)
-        offsets_list.remove(self.syllable_offsets[self.index])
-        self.syllable_offsets = np.array(offsets_list)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.index is None:
+            return
+        else:
+            offsets_list = list(self.syllable_offsets)
+            offsets_list.remove(self.syllable_offsets[self.index])
+            self.syllable_offsets = np.array(offsets_list)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.index = None
 
     def setup(self):
         self.i = 0
