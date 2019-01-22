@@ -201,18 +201,27 @@ class ControlPanel(Screen):
         self.plot_binary_canvas.draw()
 
     def delete_onsets(self):
-        onsets_list = list(self.syllable_onsets)
-        onsets_list.remove(self.syllable_onsets[self.index])
-        self.syllable_onsets = np.array(onsets_list)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.index is None:
+            return
+        else:
+            onsets_list = list(self.syllable_onsets)
+            onsets_list.remove(self.syllable_onsets[self.index])
+            print('onset_list', onsets_list)
+            self.syllable_onsets = np.array(onsets_list)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.index = None
 
     def delete_offsets(self):
-        offsets_list = list(self.syllable_offsets)
-        offsets_list.remove(self.syllable_offsets[self.index])
-        self.syllable_offsets = np.array(offsets_list)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.index is None:
+            return
+        else:
+            offsets_list = list(self.syllable_offsets)
+            offsets_list.remove(self.syllable_offsets[self.index])
+            self.syllable_offsets = np.array(offsets_list)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.index = None
 
     def setup(self):
         self.i = 0
