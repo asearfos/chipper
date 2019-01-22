@@ -154,14 +154,22 @@ class ControlPanel(Screen):
 
     def add_onsets(self):
         # TODO: might be able to just use bisect.insort(list, new number) https://stackoverflow.com/questions/29408661/add-elements-into-a-sorted-array-in-ascending-order
-        self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.graph_location is None:
+            return
+        else:
+            self.syllable_onsets = np.insert(self.syllable_onsets, np.searchsorted(self.syllable_onsets, self.graph_location), self.graph_location)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.graph_location = None
 
     def add_offsets(self):
-        self.syllable_offsets = np.insert(self.syllable_offsets, np.searchsorted(self.syllable_offsets, self.graph_location), self.graph_location)
-        self.mark.remove()
-        self.image_syllable_marks()
+        if self.graph_location is None:
+            return
+        else:
+            self.syllable_offsets = np.insert(self.syllable_offsets, np.searchsorted(self.syllable_offsets, self.graph_location), self.graph_location)
+            self.mark.remove()
+            self.image_syllable_marks()
+            self.graph_location = None
 
     def takeClosest(self, myList, myNumber):
         """
