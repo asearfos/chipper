@@ -2,7 +2,6 @@ import os
 import threading
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from kivy.properties import StringProperty
@@ -157,7 +156,21 @@ class Song(object):
             offsets=self.offsets, syll_duration=self.syll_dur,
             corr_thresh=corr_thresh
         )
-
+        print(son_corr_bin)
+        test = False
+        if test:
+            son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
+                sonogram=self.threshold_sonogram, onsets=self.onsets,
+                offsets=self.offsets, syll_duration=self.syll_dur,
+                corr_thresh=corr_thresh
+            )
+            print("Method before")
+            print(son_corr_bin_2)
+            print("New method")
+            print(son_corr_bin)
+            print("Are the same")
+            print(np.all(son_corr_bin == son_corr_bin_2))
+            quit()
         # get syllable pattern
         syll_pattern = find_syllable_pattern(son_corr_bin)
 
@@ -285,6 +298,50 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
+    n_offset = len(onsets)
+    sonogram_correlation = np.zeros((n_offset, n_offset))
+
+    mask = sonogram[:, :] < 1
+    non_zero = np.where(~mask.all(1))
+    min_y, max_y = np.min(non_zero), np.max(non_zero)
+    sonogram = sonogram[min_y:max_y + 1, :]
+
+    sonogram_self_correlation = calc_max_correlation(
+        onsets, offsets, sonogram
+    )
+    for j in range(n_offset):
+        sonogram_correlation[j, j] = 100
+        ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
+        # do not want to fill the second half of the diagonal matrix
+        for k in range(j + 1, n_offset):
+            ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+
+            if ymin_2 >= ymax_1 or ymin_1 >= ymax_2:
+                sonogram_correlation[j, k] = 0
+                sonogram_correlation[k, j] = 0
+                continue
+
+            y_min = min(ymin_1, ymin_2)
+            # must add one due to python indexing
+            y_max = max(ymax_1, ymax_2) + 1
+
+            max_overlap = max(sonogram_self_correlation[j],
+                              sonogram_self_correlation[k])
+
+            s1_0 = sonogram[y_min:y_max, onsets[j]:offsets[j]]
+            s2_0 = sonogram[y_min:y_max, onsets[k]:offsets[k]]
+            # fill both upper and lower diagonal of symmetric matrix
+            sonogram_correlation[j, k] = calc_corr(s1_0, s2_0, max_overlap)
+            sonogram_correlation[k, j] = sonogram_correlation[j, k]
+
+    sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
+    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
+
+    return sonogram_correlation, sonogram_correlation_binary
+
+
+def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
+                                 corr_thresh=50.0):
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
@@ -294,40 +351,29 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
 
     for j in range(n_offset):
         sonogram_correlation[j, j] = 100
-        subset_1, ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
         # do not want to fill the second half of the diagonal matrix
         for k in range(j + 1, n_offset):
-            subset_2, ymin_2, ymax_2 = get_square(sonogram, onsets[k],
-                                                  offsets[k])
-            y_min = min(ymin_1, ymin_2)
-            y_max = max(ymax_1, ymax_2) + 1  # must add one due to python indexing
-
             max_overlap = max(sonogram_self_correlation[j],
                               sonogram_self_correlation[k])
 
-            max_x = max(syll_duration[j], syll_duration[k])
+            shift_factor = abs(syll_duration[j] - syll_duration[k])
 
-            s1_0 = get_syl(sonogram, y_min, y_max, max_x, onsets[j],
-                           offsets[j])
-            s2_0 = get_syl(sonogram, y_min, y_max, max_x, onsets[k],
-                           offsets[k])
+            if syll_duration[j] < syll_duration[k]:
+                min_length = syll_duration[j]
+                syll_corr = calc_corr(sonogram, onsets, j, k, shift_factor,
+                                      min_length, max_overlap)
 
-            s_max = corr2(s1_0, s2_0, max_x, max_overlap)
-
+            # will be if k is shorter than j or they are equal
+            else:
+                min_length = syll_duration[k]
+                syll_corr = calc_corr(sonogram, onsets, k, j, shift_factor,
+                                      min_length, max_overlap)
             # fill both upper and lower diagonal of symmetric matrix
-            sonogram_correlation[j, k] = s_max
-            sonogram_correlation[k, j] = s_max
+            sonogram_correlation[j, k] = syll_corr
+            sonogram_correlation[k, j] = syll_corr
 
     sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
     sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
-    plot = False
-    if plot:
-        plt.figure()
-        plt.imshow(sonogram_correlation_binary, interpolation=None)
-        plt.figure()
-        plt.imshow(sonogram_correlation, interpolation=None)
-        plt.show()
-
     return sonogram_correlation, sonogram_correlation_binary
 
 
@@ -336,31 +382,25 @@ def get_square(image, on, off):
     mask = subset_1[:, :] < 1
     non_zero = np.where(~mask.all(1))
     min_y, max_y = np.min(non_zero), np.max(non_zero)
-    return subset_1, min_y, max_y
+    return min_y, max_y
 
 
-def corr2(s1, s2, max_x, max_overlap):
-    syllable_correlation = np.zeros(max_x + 1)
-    for n in range(1, max_x):
-        syllable_correlation[n] = np.dot(s2[:, 0:n].flatten(),
-                                         s1[:, max_x - n - 1:-1].flatten()
-                                         ).sum()
-
-    s_max = max(syllable_correlation * 100. / max_overlap)
-    return s_max
-
-
-def get_syl(sonogram, y_min, y_max, max_x, on, off):
-    s2 = sonogram[y_min:y_max, on:off]
-    y_size = y_max - y_min
-    s_0 = np.zeros((y_size, max_x))
-    s_0[:, :off - on] = s2
-    return s_0
+def calc_corr(s1, s2, max_overlap):
+    size_diff = s1.shape[1] - s2.shape[1]
+    min_size = min(s1.shape[1], s2.shape[1])
+    max_size = max(s1.shape[1], s2.shape[1])
+    if size_diff < 0:
+        s1, s2 = s2, s1
+        size_diff *= -1
+    syll_correlation = np.zeros(max_size + 1)
+    s2 = s2.flatten()
+    for i in range(size_diff):
+        syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2).sum()
+    return syll_correlation.max() * 100. / max_overlap
 
 
-# TODO This is the the most time consuming function.
-# Parallization should be here
-def calc_corr(sonogram, onsets, a, b, shift_factor, min_length, max_overlap):
+def calc_corr_old(sonogram, onsets, a, b, shift_factor, min_length,
+                  max_overlap):
     syllable_correlation = np.zeros(shift_factor + 1)
     scale_factor = 100. / max_overlap
     # flatten matrix to speed up computations
@@ -370,7 +410,8 @@ def calc_corr(sonogram, onsets, a, b, shift_factor, min_length, max_overlap):
         # flatten matrix to speed up computations
         syll_2 = sonogram[:, start:start + min_length].flatten()
         syllable_correlation[m] = np.dot(syll_1, syll_2).sum()
-    return max(scale_factor * syllable_correlation)
+
+    return syllable_correlation.max() * scale_factor
 
 
 def get_notes(threshold_sonogram, onsets, offsets):
@@ -557,6 +598,7 @@ directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnaly
 # folders = [os.path.join(directory, f) for f in os.listdir(directory)]
 
 if __name__ == '__main__':
+    plot = False
     one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
     Song(one_song, 50, 40).run_analysis()
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
