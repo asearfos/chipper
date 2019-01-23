@@ -156,7 +156,7 @@ class Song(object):
             offsets=self.offsets, syll_duration=self.syll_dur,
             corr_thresh=corr_thresh
         )
-        print(son_corr_bin)
+
         test = False
         if test:
             son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
