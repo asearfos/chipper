@@ -167,17 +167,17 @@ class Song(object):
             corr_thresh=corr_thresh
         )
 
-        test = False
+        test = True
         if test:
             son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
                 sonogram=self.threshold_sonogram, onsets=self.onsets,
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=corr_thresh
             )
-            self.log('analysis: Method before\n{}'.format(son_corr_bin_2))
-            self.log('analysis: Method after\n{}'.format(son_corr_bin))
+            self.log('analysis: Method before\n{}'.format(son_corr_2))
+            self.log('analysis: Method after\n{}'.format(son_corr))
             self.log('analysis: Are the same? {}'.format(
-                np.isclose(son_corr_bin, son_corr_bin_2).all())
+                np.isclose(son_corr, son_corr_2).all())
             )
             quit()
         # get syllable pattern
@@ -602,15 +602,3 @@ def find_syllable_pattern(sonogram_correlation_binary):
     return syllable_pattern_checked
 
 
-directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnalysisCode"
-
-# folders = [os.path.join(directory, f) for f in os.listdir(directory)]
-
-if __name__ == '__main__':
-    plot = False
-    Logger.setLevel(2)
-    one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
-    Song(one_song, 50, 40).run_analysis()
-    # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
-    # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206'
-    # SongAnalysis(1, out_dir, 'tmp')
