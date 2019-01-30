@@ -225,7 +225,7 @@ class Song(object):
             syll_stereotypy_final = syll_stereotypy[~np.isnan(syll_stereotypy)]
 
         syllable_stats_general = {
-            'syll_correlation_threshold': corr_thresh,
+            'syll_correlation_threshold': self.syll_sim_thresh,
             'num_unique_syllables': n_unique_syll,
             'num_syllables_per_num_unique': num_syllables_per_num_unique,
             'syllable_pattern': syll_pattern.tolist(),
