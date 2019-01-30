@@ -4,11 +4,14 @@ import time
 
 import numpy as np
 import pandas as pd
+from kivy.logger import Logger
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
+
+Logger.disabled = False
 
 
 class Analysis(Screen):
@@ -164,12 +167,11 @@ class Song(object):
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=corr_thresh
             )
-            print("Method before")
-            print(son_corr_bin_2)
-            print("New method")
-            print(son_corr_bin)
-            print("Are the same")
-            print(np.all(son_corr_bin == son_corr_bin_2))
+            Logger.info('analysis: Method before\n{}'.format(son_corr_bin_2))
+            Logger.info('analysis: Method after\n{}'.format(son_corr_bin))
+            Logger.info('analysis: Are the same? {}'.format(
+                np.isclose(son_corr_bin, son_corr_bin_2).all())
+            )
             quit()
         # get syllable pattern
         syll_pattern = find_syllable_pattern(son_corr_bin)
@@ -298,7 +300,9 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
-    n_offset = len(onsets)
+    n_offset = len(offsets)
+    assert len(onsets) == n_offset, \
+        "The number of offsets do not match the number of onsets"
     sonogram_correlation = np.zeros((n_offset, n_offset))
 
     mask = sonogram[:, :] < 1
@@ -346,7 +350,7 @@ def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
         onsets, offsets, sonogram
     )
 
-    n_offset = len(onsets)
+    n_offset = len(offsets)
     sonogram_correlation = np.zeros((n_offset, n_offset))
 
     for j in range(n_offset):
@@ -360,14 +364,14 @@ def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
 
             if syll_duration[j] < syll_duration[k]:
                 min_length = syll_duration[j]
-                syll_corr = calc_corr(sonogram, onsets, j, k, shift_factor,
-                                      min_length, max_overlap)
+                syll_corr = calc_corr_old(sonogram, onsets, j, k, shift_factor,
+                                          min_length, max_overlap)
 
             # will be if k is shorter than j or they are equal
             else:
                 min_length = syll_duration[k]
-                syll_corr = calc_corr(sonogram, onsets, k, j, shift_factor,
-                                      min_length, max_overlap)
+                syll_corr = calc_corr_old(sonogram, onsets, k, j, shift_factor,
+                                          min_length, max_overlap)
             # fill both upper and lower diagonal of symmetric matrix
             sonogram_correlation[j, k] = syll_corr
             sonogram_correlation[k, j] = syll_corr
