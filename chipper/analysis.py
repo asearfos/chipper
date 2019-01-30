@@ -14,6 +14,7 @@ import chipper.utils as utils
 Logger.disabled = False
 
 
+
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
@@ -22,6 +23,9 @@ class Analysis(Screen):
 
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
+
+    def log(self, output):
+        Logger.info("analysis : {}".format(output))
 
     def thread_process(self):
         th = threading.Thread(target=self.analyze,
@@ -68,6 +72,9 @@ class Song(object):
         self.syll_dur = None
         self.n_syll = None
         self.setup()
+
+    def log(self, output):
+        Logger.info("analysis : {}".format(output))
 
     def setup(self):
 
@@ -167,9 +174,9 @@ class Song(object):
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=corr_thresh
             )
-            Logger.info('analysis: Method before\n{}'.format(son_corr_bin_2))
-            Logger.info('analysis: Method after\n{}'.format(son_corr_bin))
-            Logger.info('analysis: Are the same? {}'.format(
+            self.log('analysis: Method before\n{}'.format(son_corr_bin_2))
+            self.log('analysis: Method after\n{}'.format(son_corr_bin))
+            self.log('analysis: Are the same? {}'.format(
                 np.isclose(son_corr_bin, son_corr_bin_2).all())
             )
             quit()
@@ -261,41 +268,40 @@ class Song(object):
 
 def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     n_corr = len(sonogram_corr)
-    print('length of sonogram', n_corr)
-    syllable_stereotypy = np.zeros(n_corr)
-    syllable_stereotypy_max = np.zeros(n_corr)
-    syllable_stereotypy_min = np.zeros(n_corr)
-    print(syllable_stereotypy)
+    Logger.debug("analysis: length of sonogram {}".format(n_corr))
+
+    syll_stereotypy = np.zeros(n_corr)
+    syll_stereotypy_max = np.zeros(n_corr)
+    syll_stereotypy_min = np.zeros(n_corr)
+    Logger.debug("analysis: {}".format(n_corr))
     len_patt = len(syllable_pattern_checked)
-    print('pattern length', len_patt)
+    Logger.debug("analysis: pattern length {}".format(len_patt))
     for j in range(n_corr):
         # locations of all like syllables
-        x_syllable_locations = np.where(syllable_pattern_checked == j)[0]
-        print('x_syll locations', x_syllable_locations)
+        x_syll_locations = np.where(syllable_pattern_checked == j)[0]
+        Logger.debug("analysis: x_syll locations\n{}".format(x_syll_locations))
         # initialize arrays
-        x_syllable_correlations = np.zeros((len_patt, len_patt))
-        if len(x_syllable_locations) > 1:
-            for k in range(len(x_syllable_locations)):
-                for h in range(len(x_syllable_locations)):
+        x_syll_corr = np.zeros((len_patt, len_patt))
+        if len(x_syll_locations) > 1:
+            for k in range(len(x_syll_locations)):
+                for h in range(len(x_syll_locations)):
                     # fill only the lower triangle (not upper or diagonal)
                     # so that similarities aren't double counted when
                     # taking the mean later
                     if k > h:
-                        x_syllable_correlations[k, h] = sonogram_corr[
-                            x_syllable_locations[k], x_syllable_locations[h]]
-            print('x_syllable_correlations', x_syllable_correlations)
-            syllable_stereotypy[j] = np.nanmean(
-                x_syllable_correlations[x_syllable_correlations != 0])
-            syllable_stereotypy_max[j] = np.nanmax(
-                x_syllable_correlations[x_syllable_correlations != 0])
-            syllable_stereotypy_min[j] = np.nanmin(
-                x_syllable_correlations[x_syllable_correlations != 0])
+                        x_syll_corr[k, h] = sonogram_corr[x_syll_locations[k],
+                                                          x_syll_locations[h]]
+            Logger.debug(
+                "analysis: x_syll_correlations\n{}".format(x_syll_corr))
+            syll_stereotypy[j] = np.nanmean(x_syll_corr[x_syll_corr != 0])
+            syll_stereotypy_max[j] = np.nanmax(x_syll_corr[x_syll_corr != 0])
+            syll_stereotypy_min[j] = np.nanmin(x_syll_corr[x_syll_corr != 0])
         else:
-            syllable_stereotypy[j] = np.nan
-            syllable_stereotypy_max[j] = np.nan
-            syllable_stereotypy_min[j] = np.nan
+            syll_stereotypy[j] = np.nan
+            syll_stereotypy_max[j] = np.nan
+            syll_stereotypy_min[j] = np.nan
 
-    return syllable_stereotypy, syllable_stereotypy_max, syllable_stereotypy_min
+    return syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min
 
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
@@ -602,6 +608,7 @@ directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnaly
 
 if __name__ == '__main__':
     plot = False
+    Logger.setLevel(2)
     one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
     Song(one_song, 50, 40).run_analysis()
     # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
