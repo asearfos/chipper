@@ -392,13 +392,12 @@ def get_square(image, on, off):
 def calc_corr(s1, s2, max_overlap):
     size_diff = s1.shape[1] - s2.shape[1]
     min_size = min(s1.shape[1], s2.shape[1])
-    max_size = max(s1.shape[1], s2.shape[1])
     if size_diff < 0:
         s1, s2 = s2, s1
         size_diff *= -1
-    syll_correlation = np.zeros(max_size + 1)
+    syll_correlation = np.zeros(size_diff + 1)
     s2 = s2.flatten()
-    for i in range(size_diff):
+    for i in range(size_diff + 1):
         syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2).sum()
     return syll_correlation.max() * 100. / max_overlap
 
