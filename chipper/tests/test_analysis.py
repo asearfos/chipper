@@ -7,8 +7,7 @@ Logger.setLevel(2)
 
 def test_song_class():
     one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
-    results = Song(one_song, 50, .40).run_analysis()
-    results = Song(one_song, 10, 99).run_analysis()
+    results = Song(one_song, 50, .40, testing=True).run_analysis()
     print(len(results))
     assert len(results) == 44
 

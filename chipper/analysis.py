@@ -60,24 +60,8 @@ class Analysis(Screen):
 
 
 class Song(object):
-    def __init__(self, file_name, note_thresh, syll_sim_thresh):
+    def __init__(self, file_name, note_thresh, syll_sim_thresh, testing=False):
         self.file_name = file_name
-        self.note_thresh = int(note_thresh)
-        self.syll_sim_thresh = float(syll_sim_thresh)
-        self.onsets = None
-        self.offsets = None
-        self.threshold_sonogram = None
-        self.ms_per_pixel = None
-        self.hertzPerPixel = None
-        self.syll_dur = None
-        self.n_syll = None
-        self.setup()
-
-    def log(self, output):
-        Logger.info("analysis : {}".format(output))
-
-    def setup(self):
-
         ons, offs, thresh, ms, htz = load_bout_data(self.file_name)
         self.onsets = ons
         self.offsets = offs
@@ -86,6 +70,12 @@ class Song(object):
         self.hertzPerPixel = htz
         self.syll_dur = self.offsets - self.onsets
         self.n_syll = len(self.syll_dur)
+        self.note_thresh = int(note_thresh)
+        self.syll_sim_thresh = float(syll_sim_thresh)
+        self._test = testing
+
+    def log(self, output):
+        Logger.info("analysis : {}".format(output))
 
     def run_analysis(self):
         """ Runs entire analysis to describe song
@@ -96,18 +86,17 @@ class Song(object):
         """
 
         # run analysis
-        bout_stats = get_bout_stats(self.syll_dur, self.n_syll, self.offsets,
-                                    self.onsets, self.ms_per_pixel)
+        bout_stats = self.get_bout_stats()
 
-        syllable_stats = self.get_syllable_stats(self.syll_sim_thresh)
+        syllable_stats = self.get_syllable_stats()
 
-        note_stats = self.get_note_stats(self.n_syll, self.note_thresh)
+        note_stats = self.get_note_stats()
 
         # write output
         final_output = update_dict([bout_stats, syllable_stats, note_stats])
         return final_output
 
-    def get_note_stats(self, num_syllables, note_size_thresh=60):
+    def get_note_stats(self):
         num_notes, props, _ = get_notes(
             threshold_sonogram=self.threshold_sonogram,
             onsets=self.onsets, offsets=self.offsets)
@@ -125,7 +114,7 @@ class Song(object):
             sonogram_one_note = props[j].filled_image
 
             # check the note is large enough to be a note and not
-            if np.size(sonogram_one_note) <= note_size_thresh:
+            if np.size(sonogram_one_note) <= self.note_thresh:
                 # just noise
                 note_length.append(0)  # place holder
                 num_notes_updated -= 1
@@ -146,9 +135,9 @@ class Song(object):
         note_length_array = np.asarray(note_length)
         note_length_array = note_length_array[note_length_array != 0]
         note_length_array_scaled = note_length_array * self.ms_per_pixel
-        note_counts = {'note_size_threshold': note_size_thresh,
+        note_counts = {'note_size_threshold': self.note_thresh,
                        'num_notes': num_notes_updated,
-                       'num_notes_per_syll': num_notes_updated / num_syllables}
+                       'num_notes_per_syll': num_notes_updated / self.n_syll}
 
         basic_note_stats = get_basic_stats(note_length_array_scaled,
                                            'note_duration', '(ms)')
@@ -158,21 +147,50 @@ class Song(object):
         note_stats = update_dict([note_counts, basic_note_stats, freq_stats])
         return note_stats
 
-    def get_syllable_stats(self, corr_thresh=50.0):
+    def get_bout_stats(self):
+        """ Analyze Bout
+
+        use onsets and offsets to get basic bout information (algebraic calcs)
+        """
+        syllable_durations_scaled = self.syll_dur * self.ms_per_pixel
+
+        silence_durations_scaled = [self.onsets[i] - self.offsets[i - 1]
+                                    for i in range(1, len(self.onsets))]
+        silence_durations_scaled *= self.ms_per_pixel
+
+        bout_duration_scaled = (self.offsets[-1] - self.onsets[0])
+        bout_duration_scaled *= self.ms_per_pixel
+
+        num_syll_per_bout_duration = self.n_syll / bout_duration_scaled
+
+        song_stats = {
+            'bout_duration(ms)': bout_duration_scaled,
+            'num_syllables': self.n_syll,
+            'num_syllable_per_bout_duration(1/ms)': num_syll_per_bout_duration
+        }
+        basic_syllable_stats = get_basic_stats(syllable_durations_scaled,
+                                               'syllable_duration', '(ms)')
+        basic_silence_stats = get_basic_stats(silence_durations_scaled,
+                                              'silence_duration', '(ms)')
+        bout_stats = update_dict(
+            [song_stats, basic_syllable_stats, basic_silence_stats])
+
+        return bout_stats
+
+    def get_syllable_stats(self):
 
         # get syllable correlations for entire sonogram
         son_corr, son_corr_bin = get_sonogram_correlation(
             sonogram=self.threshold_sonogram, onsets=self.onsets,
             offsets=self.offsets, syll_duration=self.syll_dur,
-            corr_thresh=corr_thresh
+            corr_thresh=self.syll_sim_thresh
         )
 
-        test = True
-        if test:
+        if self._test:
             son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
                 sonogram=self.threshold_sonogram, onsets=self.onsets,
                 offsets=self.offsets, syll_duration=self.syll_dur,
-                corr_thresh=corr_thresh
+                corr_thresh=self.syll_sim_thresh
             )
             self.log('analysis: Method before\n{}'.format(son_corr_2))
             self.log('analysis: Method after\n{}'.format(son_corr))
@@ -503,30 +521,6 @@ def calc_sylls_freq_ranges(offsets, onsets, sonogram):
     return sylls_freq_range_upper, sylls_freq_range_lower
 
 
-def get_bout_stats(syll_dur, n_syll, offsets, onsets, ms_per_pixel):
-    """ Analyze Bout
-
-    use onsets and offsets to get basic bout information (algebraic calcs)
-    """
-    syllable_durations_scaled = syll_dur * ms_per_pixel
-
-    silence_durations_scaled = [onsets[i] - offsets[i - 1] for i in
-                                range(1, len(onsets))] * ms_per_pixel
-    bout_duration_scaled = (offsets[-1] - onsets[0]) * ms_per_pixel
-
-    num_syllables_per_bout_duration = n_syll / bout_duration_scaled
-
-    song_stats = {'bout_duration(ms)': bout_duration_scaled,
-                  'num_syllables': n_syll,
-                  'num_syllable_per_bout_duration(1/ms)': num_syllables_per_bout_duration}
-    basic_syllable_stats = get_basic_stats(syllable_durations_scaled,
-                                           'syllable_duration', '(ms)')
-    basic_silence_stats = get_basic_stats(silence_durations_scaled,
-                                          'silence_duration', '(ms)')
-    bout_stats = update_dict(
-        [song_stats, basic_syllable_stats, basic_silence_stats])
-
-    return bout_stats
 
 
 def output_bout_data(output_path, file_name, output_dict):
