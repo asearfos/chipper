@@ -1,3 +1,5 @@
+import os
+
 from kivy.logger import Logger
 
 from chipper.analysis import Song
@@ -6,9 +8,8 @@ Logger.setLevel(2)
 
 
 def test_song_class():
-    one_song = r"C:\Users\james\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20190104_T100951\SegSyllsOutput_b1s white crowned sparrow 16652.gzip"
-    results = Song(one_song, 50, .40, testing=True).run_analysis()
-    print(len(results))
+    f_path = os.path.join(os.path.dirname(__file__), 'test_data', 'test.gzip')
+    results = Song(f_path, 50, 40, testing=True).run_analysis()
     assert len(results) == 44
 
 
