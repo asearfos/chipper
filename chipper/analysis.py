@@ -1,83 +1,67 @@
 import os
-import time
 import threading
+import time
 
 import numpy as np
 import pandas as pd
+from kivy.logger import Logger
+from kivy.properties import StringProperty
+from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
-from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty
+
+Logger.disabled = False
+
 
 
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
+
     # stop = threading.Event()  # will need if the thread for analysis is not daemon
 
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
 
+    def log(self, output):
+        Logger.info("analysis : {}".format(output))
+
     def thread_process(self):
-        th = threading.Thread(target=self.analyze, args=(self.parent.directory, ))
-        th.daemon = True  #TODO: check this is safe to do; seemed to be easiest way to close program during analysis
+        th = threading.Thread(target=self.analyze,
+                              args=(self.parent.directory,))
+        th.daemon = True
         th.start()
 
-    def analyze(self, directory, n_cores=None, out_path=None):
+    def analyze(self, directory, out_path=None):
         if out_path is None:
             out_path = directory + "/AnalysisOutput_" + time.strftime(
                 "%Y%m%d_T%H%M%S")
 
-        files = []
-        file_names = []
-        for f in os.listdir(directory):
-            if f.endswith('gzip'):
-                files.append(os.path.join(directory, f))
-                file_names.append(f)
-
+        file_names = [i for i in os.listdir(directory) if i.endswith('.gzip')]
+        files = [os.path.join(directory, i) for i in file_names]
         assert len(files) != 0, "No gzipped files in {}".format(directory)
 
-        # final_output = [Song(i).run_analysis() for i in files]
         final_output = []
-        count = 0
-        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
-        for i in files:
-            # # way to check if analyze has been canceled without exiting (however it finishes the file it is on first)
-            # # make sure to uncomment stop above init and in the run_chipper.py file
-            # while True:
-            #     if self.stop.is_set():
-            #         print(self.stop.is_set())
-            #         # Stop running this thread so the main Python process can exit.
-            #         return
-                count += 1
-                final_output.append(Song(i, self.user_note_thresh, self.user_syll_sim_thresh).run_analysis())
-                if count < len(files):
-                    self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
-        # processes = mp.Pool(cores, maxtasksperchild=1000)
-        # final_output = processes.map(self.run_analysis, files)
+        n_files = len(files)
+
+        for i in range(n_files):
+            self.ids.processing_count.text = \
+                "{} of {} complete".format(i, n_files)
+
+            final_output.append(Song(files[i], self.user_note_thresh,
+                                     self.user_syll_sim_thresh).run_analysis())
+
+        self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
+
         output_bout_data(out_path, file_names, final_output)
-        self.ids.processing_count.text = str(count) + ' of ' + str(len(files)) + ' complete'
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
 
 class Song(object):
-    def __init__(self, file_name, note_thresh, syll_sim_thresh):
+    def __init__(self, file_name, note_thresh, syll_sim_thresh, testing=False):
         self.file_name = file_name
-        self.note_thresh = int(note_thresh)
-        self.syll_sim_thresh = float(syll_sim_thresh)
-        self.onsets = None
-        self.offsets = None
-        self.threshold_sonogram = None
-        self.ms_per_pixel = None
-        self.hertzPerPixel = None
-        self.syll_dur = None
-        self.n_syll = None
-        self.setup()
-
-    def setup(self):
-
         ons, offs, thresh, ms, htz = load_bout_data(self.file_name)
         self.onsets = ons
         self.offsets = offs
@@ -86,6 +70,12 @@ class Song(object):
         self.hertzPerPixel = htz
         self.syll_dur = self.offsets - self.onsets
         self.n_syll = len(self.syll_dur)
+        self.note_thresh = int(note_thresh)
+        self.syll_sim_thresh = float(syll_sim_thresh)
+        self._test = testing
+
+    def log(self, output):
+        Logger.info("analysis : {}".format(output))
 
     def run_analysis(self):
         """ Runs entire analysis to describe song
@@ -96,18 +86,17 @@ class Song(object):
         """
 
         # run analysis
-        bout_stats = get_bout_stats(self.syll_dur, self.n_syll, self.offsets,
-                                    self.onsets, self.ms_per_pixel)
+        bout_stats = self.get_bout_stats()
 
-        syllable_stats = self.get_syllable_stats(self.syll_sim_thresh)
+        syllable_stats = self.get_syllable_stats()
 
-        note_stats = self.get_note_stats(self.n_syll, self.note_thresh)
+        note_stats = self.get_note_stats()
 
         # write output
         final_output = update_dict([bout_stats, syllable_stats, note_stats])
         return final_output
 
-    def get_note_stats(self, num_syllables, note_size_thresh=60):
+    def get_note_stats(self):
         num_notes, props, _ = get_notes(
             threshold_sonogram=self.threshold_sonogram,
             onsets=self.onsets, offsets=self.offsets)
@@ -125,7 +114,7 @@ class Song(object):
             sonogram_one_note = props[j].filled_image
 
             # check the note is large enough to be a note and not
-            if np.size(sonogram_one_note) <= note_size_thresh:
+            if np.size(sonogram_one_note) <= self.note_thresh:
                 # just noise
                 note_length.append(0)  # place holder
                 num_notes_updated -= 1
@@ -146,9 +135,9 @@ class Song(object):
         note_length_array = np.asarray(note_length)
         note_length_array = note_length_array[note_length_array != 0]
         note_length_array_scaled = note_length_array * self.ms_per_pixel
-        note_counts = {'note_size_threshold': note_size_thresh,
+        note_counts = {'note_size_threshold': self.note_thresh,
                        'num_notes': num_notes_updated,
-                       'num_notes_per_syll': num_notes_updated / num_syllables}
+                       'num_notes_per_syll': num_notes_updated / self.n_syll}
 
         basic_note_stats = get_basic_stats(note_length_array_scaled,
                                            'note_duration', '(ms)')
@@ -158,15 +147,57 @@ class Song(object):
         note_stats = update_dict([note_counts, basic_note_stats, freq_stats])
         return note_stats
 
-    def get_syllable_stats(self, corr_thresh=50.0):
+    def get_bout_stats(self):
+        """ Analyze Bout
+
+        use onsets and offsets to get basic bout information (algebraic calcs)
+        """
+        syllable_durations_scaled = self.syll_dur * self.ms_per_pixel
+
+        silence_durations_scaled = [self.onsets[i] - self.offsets[i - 1]
+                                    for i in range(1, len(self.onsets))]
+        silence_durations_scaled *= self.ms_per_pixel
+
+        bout_duration_scaled = (self.offsets[-1] - self.onsets[0])
+        bout_duration_scaled *= self.ms_per_pixel
+
+        num_syll_per_bout_duration = self.n_syll / bout_duration_scaled
+
+        song_stats = {
+            'bout_duration(ms)': bout_duration_scaled,
+            'num_syllables': self.n_syll,
+            'num_syllable_per_bout_duration(1/ms)': num_syll_per_bout_duration
+        }
+        basic_syllable_stats = get_basic_stats(syllable_durations_scaled,
+                                               'syllable_duration', '(ms)')
+        basic_silence_stats = get_basic_stats(silence_durations_scaled,
+                                              'silence_duration', '(ms)')
+        bout_stats = update_dict(
+            [song_stats, basic_syllable_stats, basic_silence_stats])
+
+        return bout_stats
+
+    def get_syllable_stats(self):
 
         # get syllable correlations for entire sonogram
         son_corr, son_corr_bin = get_sonogram_correlation(
             sonogram=self.threshold_sonogram, onsets=self.onsets,
             offsets=self.offsets, syll_duration=self.syll_dur,
-            corr_thresh=corr_thresh
+            corr_thresh=self.syll_sim_thresh
         )
 
+        if self._test:
+            son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
+                sonogram=self.threshold_sonogram, onsets=self.onsets,
+                offsets=self.offsets, syll_duration=self.syll_dur,
+                corr_thresh=self.syll_sim_thresh
+            )
+            self.log('analysis: Method before\n{}'.format(son_corr_2))
+            self.log('analysis: Method after\n{}'.format(son_corr))
+            self.log('analysis: Are the same? {}'.format(
+                np.isclose(son_corr, son_corr_2).all())
+            )
+            quit()
         # get syllable pattern
         syll_pattern = find_syllable_pattern(son_corr_bin)
 
@@ -187,13 +218,14 @@ class Song(object):
                               (len(syll_pattern) - 1)
 
             # determine syllable stereotypy
-            syll_stereotypy, __, __ = calc_syllable_stereotypy(son_corr, syll_pattern)
+            syll_stereotypy, __, __ = calc_syllable_stereotypy(son_corr,
+                                                               syll_pattern)
             mean_syll_stereotypy = np.nanmean(syll_stereotypy)
             std_syll_stereotypy = np.nanstd(syll_stereotypy, ddof=1)
             syll_stereotypy_final = syll_stereotypy[~np.isnan(syll_stereotypy)]
 
         syllable_stats_general = {
-            'syll_correlation_threshold': corr_thresh,
+            'syll_correlation_threshold': self.syll_sim_thresh,
             'num_unique_syllables': n_unique_syll,
             'num_syllables_per_num_unique': num_syllables_per_num_unique,
             'syllable_pattern': syll_pattern.tolist(),
@@ -254,82 +286,148 @@ class Song(object):
 
 def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     n_corr = len(sonogram_corr)
-    print('length of sonogram', n_corr)
-    syllable_stereotypy = np.zeros(n_corr)
-    syllable_stereotypy_max = np.zeros(n_corr)
-    syllable_stereotypy_min = np.zeros(n_corr)
-    print(syllable_stereotypy)
+    Logger.debug("analysis: length of sonogram {}".format(n_corr))
+
+    syll_stereotypy = np.zeros(n_corr)
+    syll_stereotypy_max = np.zeros(n_corr)
+    syll_stereotypy_min = np.zeros(n_corr)
+    Logger.debug("analysis: {}".format(n_corr))
     len_patt = len(syllable_pattern_checked)
-    print('pattern length', len_patt)
+    Logger.debug("analysis: pattern length {}".format(len_patt))
     for j in range(n_corr):
         # locations of all like syllables
-        x_syllable_locations = np.where(syllable_pattern_checked == j)[0]
-        print('x_syll locations', x_syllable_locations)
+        x_syll_locations = np.where(syllable_pattern_checked == j)[0]
+        Logger.debug("analysis: x_syll locations\n{}".format(x_syll_locations))
         # initialize arrays
-        x_syllable_correlations = np.zeros((len_patt, len_patt))
-        if len(x_syllable_locations) > 1:
-            for k in range(len(x_syllable_locations)):
-                for h in range(len(x_syllable_locations)):
+        x_syll_corr = np.zeros((len_patt, len_patt))
+        if len(x_syll_locations) > 1:
+            for k in range(len(x_syll_locations)):
+                for h in range(len(x_syll_locations)):
                     # fill only the lower triangle (not upper or diagonal)
                     # so that similarities aren't double counted when
                     # taking the mean later
                     if k > h:
-                        x_syllable_correlations[k, h] = sonogram_corr[
-                            x_syllable_locations[k], x_syllable_locations[h]]
-            print('x_syllable_correlations', x_syllable_correlations)
-            syllable_stereotypy[j] = np.nanmean(
-                x_syllable_correlations[x_syllable_correlations != 0])
-            syllable_stereotypy_max[j] = np.nanmax(
-                x_syllable_correlations[x_syllable_correlations != 0])
-            syllable_stereotypy_min[j] = np.nanmin(
-                x_syllable_correlations[x_syllable_correlations != 0])
+                        x_syll_corr[k, h] = sonogram_corr[x_syll_locations[k],
+                                                          x_syll_locations[h]]
+            Logger.debug(
+                "analysis: x_syll_correlations\n{}".format(x_syll_corr))
+            syll_stereotypy[j] = np.nanmean(x_syll_corr[x_syll_corr != 0])
+            syll_stereotypy_max[j] = np.nanmax(x_syll_corr[x_syll_corr != 0])
+            syll_stereotypy_min[j] = np.nanmin(x_syll_corr[x_syll_corr != 0])
         else:
-            syllable_stereotypy[j] = np.nan
-            syllable_stereotypy_max[j] = np.nan
-            syllable_stereotypy_min[j] = np.nan
+            syll_stereotypy[j] = np.nan
+            syll_stereotypy_max[j] = np.nan
+            syll_stereotypy_min[j] = np.nan
 
-    return syllable_stereotypy, syllable_stereotypy_max, syllable_stereotypy_min
+    return syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min
 
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
+    n_offset = len(offsets)
+    assert len(onsets) == n_offset, \
+        "The number of offsets do not match the number of onsets"
+    sonogram_correlation = np.zeros((n_offset, n_offset))
+
+    mask = sonogram[:, :] < 1
+    non_zero = np.where(~mask.all(1))
+    min_y, max_y = np.min(non_zero), np.max(non_zero)
+    sonogram = sonogram[min_y:max_y + 1, :]
+
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
-    n_offset = len(onsets)
-    sonogram_correlation = np.zeros((n_offset, n_offset))
-
     for j in range(n_offset):
+        sonogram_correlation[j, j] = 100
+        ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
         # do not want to fill the second half of the diagonal matrix
-        for k in range(j, n_offset):
+        for k in range(j + 1, n_offset):
+            ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+
+            if ymin_2 >= ymax_1 or ymin_1 >= ymax_2:
+                sonogram_correlation[j, k] = 0
+                sonogram_correlation[k, j] = 0
+                continue
+
+            y_min = min(ymin_1, ymin_2)
+            # must add one due to python indexing
+            y_max = max(ymax_1, ymax_2) + 1
 
             max_overlap = max(sonogram_self_correlation[j],
                               sonogram_self_correlation[k])
 
+            s1_0 = sonogram[y_min:y_max, onsets[j]:offsets[j]]
+            s2_0 = sonogram[y_min:y_max, onsets[k]:offsets[k]]
+            # fill both upper and lower diagonal of symmetric matrix
+            sonogram_correlation[j, k] = calc_corr(s1_0, s2_0, max_overlap)
+            sonogram_correlation[k, j] = sonogram_correlation[j, k]
+
+    sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
+    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
+
+    return sonogram_correlation, sonogram_correlation_binary
+
+
+def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
+                                 corr_thresh=50.0):
+    sonogram_self_correlation = calc_max_correlation(
+        onsets, offsets, sonogram
+    )
+
+    n_offset = len(offsets)
+    sonogram_correlation = np.zeros((n_offset, n_offset))
+
+    for j in range(n_offset):
+        sonogram_correlation[j, j] = 100
+        # do not want to fill the second half of the diagonal matrix
+        for k in range(j + 1, n_offset):
+            max_overlap = max(sonogram_self_correlation[j],
+                              sonogram_self_correlation[k])
+
             shift_factor = abs(syll_duration[j] - syll_duration[k])
+
             if syll_duration[j] < syll_duration[k]:
                 min_length = syll_duration[j]
-                syll_corr = calc_corr(sonogram, onsets, j, k, shift_factor,
-                                      min_length, max_overlap)
+                syll_corr = calc_corr_old(sonogram, onsets, j, k, shift_factor,
+                                          min_length, max_overlap)
 
             # will be if k is shorter than j or they are equal
             else:
                 min_length = syll_duration[k]
-                syll_corr = calc_corr(sonogram, onsets, k, j, shift_factor,
-                                      min_length, max_overlap)
-
+                syll_corr = calc_corr_old(sonogram, onsets, k, j, shift_factor,
+                                          min_length, max_overlap)
             # fill both upper and lower diagonal of symmetric matrix
             sonogram_correlation[j, k] = syll_corr
             sonogram_correlation[k, j] = syll_corr
 
     sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
-    sonogram_correlation_binary[sonogram_correlation > corr_thresh] = 1
+    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
     return sonogram_correlation, sonogram_correlation_binary
 
 
-# TODO This is the the most time consuming function.
-# Parallization should be here
-def calc_corr(sonogram, onsets, a, b, shift_factor, min_length, max_overlap):
+def get_square(image, on, off):
+    subset_1 = image[:, on:off]
+    mask = subset_1[:, :] < 1
+    non_zero = np.where(~mask.all(1))
+    min_y, max_y = np.min(non_zero), np.max(non_zero)
+    return min_y, max_y
+
+
+def calc_corr(s1, s2, max_overlap):
+    size_diff = s1.shape[1] - s2.shape[1]
+    min_size = min(s1.shape[1], s2.shape[1])
+    if size_diff < 0:
+        s1, s2 = s2, s1
+        size_diff *= -1
+    syll_correlation = np.zeros(size_diff + 1)
+    s2 = s2.flatten()
+    for i in range(size_diff + 1):
+        syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2).sum()
+    return syll_correlation.max() * 100. / max_overlap
+
+
+def calc_corr_old(sonogram, onsets, a, b, shift_factor, min_length,
+                  max_overlap):
     syllable_correlation = np.zeros(shift_factor + 1)
     scale_factor = 100. / max_overlap
     # flatten matrix to speed up computations
@@ -339,7 +437,8 @@ def calc_corr(sonogram, onsets, a, b, shift_factor, min_length, max_overlap):
         # flatten matrix to speed up computations
         syll_2 = sonogram[:, start:start + min_length].flatten()
         syllable_correlation[m] = np.dot(syll_1, syll_2).sum()
-    return max(scale_factor * syllable_correlation)
+
+    return syllable_correlation.max() * scale_factor
 
 
 def get_notes(threshold_sonogram, onsets, offsets):
@@ -363,7 +462,8 @@ def get_notes(threshold_sonogram, onsets, offsets):
 
     return num_notes, props, labeled_sonogram
 
-#TODO: May want to add this back so it can be run from the command line rather than only in the GUI
+
+# TODO: May want to add this back so it can be run from the command line rather than only in the GUI
 # def analyze(directory, n_cores=None, out_path=None, var=None):
 #     if out_path is None:
 #         out_path = directory + "/AnalysisOutput_" + time.strftime(
@@ -421,30 +521,6 @@ def calc_sylls_freq_ranges(offsets, onsets, sonogram):
     return sylls_freq_range_upper, sylls_freq_range_lower
 
 
-def get_bout_stats(syll_dur, n_syll, offsets, onsets, ms_per_pixel):
-    """ Analyze Bout
-
-    use onsets and offsets to get basic bout information (algebraic calcs)
-    """
-    syllable_durations_scaled = syll_dur * ms_per_pixel
-
-    silence_durations_scaled = [onsets[i] - offsets[i - 1] for i in
-                                range(1, len(onsets))] * ms_per_pixel
-    bout_duration_scaled = (offsets[-1] - onsets[0]) * ms_per_pixel
-
-    num_syllables_per_bout_duration = n_syll / bout_duration_scaled
-
-    song_stats = {'bout_duration(ms)': bout_duration_scaled,
-                  'num_syllables': n_syll,
-                  'num_syllable_per_bout_duration(1/ms)': num_syllables_per_bout_duration}
-    basic_syllable_stats = get_basic_stats(syllable_durations_scaled,
-                                           'syllable_duration', '(ms)')
-    basic_silence_stats = get_basic_stats(silence_durations_scaled,
-                                          'silence_duration', '(ms)')
-    bout_stats = update_dict(
-        [song_stats, basic_syllable_stats, basic_silence_stats])
-
-    return bout_stats
 
 
 def output_bout_data(output_path, file_name, output_dict):
@@ -502,7 +578,8 @@ def find_syllable_pattern(sonogram_correlation_binary):
     # get syllable pattern
     syllable_pattern = np.zeros(len(sonogram_correlation_binary), 'int')
     for j in range(len(sonogram_correlation_binary)):
-        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][0]
+        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][
+            0]
 
     # check syllable pattern -->
     # should be no new number that is smaller than it's index
@@ -519,13 +596,3 @@ def find_syllable_pattern(sonogram_correlation_binary):
     return syllable_pattern_checked
 
 
-directory = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChippiesProject\TestingAnalysisCode"
-
-# folders = [os.path.join(directory, f) for f in os.listdir(directory)]
-
-if __name__ == '__main__':
-    one_song = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206\SegSyllsOutput_26292371_b5of6.gzip'
-    Song(one_song, '120', '40').run_analysis()
-    # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180329_T155028'
-    # out_dir = r'C:\Users\James Pino\PycharmProjects\chipper\build\PracticeBouts\SegSyllsOutput_20180315_T143206'
-    # SongAnalysis(1, out_dir, 'tmp')
