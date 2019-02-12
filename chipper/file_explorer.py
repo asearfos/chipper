@@ -1,6 +1,7 @@
 import os
 import sys
 from os.path import expanduser, dirname
+from pathlib import Path
 
 from kivy.properties import BooleanProperty
 from kivy.uix.screenmanager import Screen
@@ -8,6 +9,7 @@ from kivy.uix.screenmanager import Screen
 from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, \
     DetermineSyllSimThresholdPopup, \
     StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
+from chipper.utils import get_basename, get_file_prefix
 
 
 class FileExplorer(Screen):
@@ -26,44 +28,51 @@ class FileExplorer(Screen):
 
     def _fbrowser_success(self, instance):
         [chosen_directory] = instance.selection
-        self.parent.directory = chosen_directory + '/'
+        if Path(chosen_directory).is_dir():
+            dir_name = chosen_directory
+            check_multiple_files = True
+        else:
+            dir_name = os.path.dirname(chosen_directory)
+            check_multiple_files = False
+        self.parent.directory = dir_name
 
         # check which process the user wants to do
         if self.radio_chipper:
-            num_files, found_files = self.check_for_files(directory=self.parent.directory, filetype='wav')
-            if not found_files:
+            if check_multiple_files:
+                self.parent.files = get_basename(os.listdir(dir_name), 'wav')
+                self.parent.file_names = get_file_prefix(self.parent.files)
+            else:
+                if not Path(chosen_directory).is_file():
+                    raise AssertionError("Not a file")
+                self.parent.files = get_basename([chosen_directory], 'wav')
+                self.parent.file_names = get_file_prefix(self.parent.files)
+
+            n_files = len(self.parent.files)
+            if not n_files:
                 no_wavs = NoWavsFoundPopup()
                 no_wavs.open()
             else:
-                segment_popup = StartSegmentationPopup()
-                segment_popup.len_files = str(num_files)
+                segment_popup = StartSegmentationPopup(str(n_files))
                 segment_popup.open()
         else:
-            num_files, found_files = self.check_for_files(directory=self.parent.directory, filetype='gzip')
-            if not found_files:
+            if check_multiple_files:
+                self.parent.files = get_basename(os.listdir(dir_name), 'gzip')
+                self.parent.file_names = get_file_prefix(self.parent.files)
+            else:
+                if not Path(chosen_directory).is_file():
+                    raise AssertionError("Not a file")
+                self.parent.files = get_basename([chosen_directory], 'gzip')
+                self.parent.file_names = get_file_prefix(self.parent.files)
+            n_files = len(self.parent.files)
+            if not n_files:
                 no_gzips = NoGzipsFoundPopup()
                 no_gzips.open()
             elif self.radio_note:
-                note_popup = DetermineNoteThresholdPopup()
-                note_popup.len_files = str(num_files)
+                note_popup = DetermineNoteThresholdPopup(str(n_files))
                 note_popup.open()
             elif self.radio_syllsim:
-                syllsim_popup = DetermineSyllSimThresholdPopup()
-                syllsim_popup.len_files = str(num_files)
+                syllsim_popup = DetermineSyllSimThresholdPopup(str(n_files))
                 syllsim_popup.open()
             elif self.radio_analyze:
-                analysis_popup = StartAnalysisPopup()
-                analysis_popup.len_files = str(num_files)
+                analysis_popup = StartAnalysisPopup(str(n_files))
                 analysis_popup.open()
-
-    def check_for_files(self, directory, filetype):
-        found_files = False
-        files = []
-        file_names = []
-        for f in os.listdir(directory):
-            if f.endswith(filetype):
-                files.append(os.path.join(directory, f))
-                file_names.append(f)
-        if len(files) != 0:
-            found_files = True
-        return len(files), found_files

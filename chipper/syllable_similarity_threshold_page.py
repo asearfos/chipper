@@ -1,9 +1,7 @@
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 import matplotlib.transforms as tx
 from kivy.uix.screenmanager import Screen
 
@@ -11,7 +9,6 @@ from kivy.uix.screenmanager import Screen
 from chipper.popups import SyllSimThreshInstructionsPopup
 
 import os
-import glob
 import chipper.analysis as analyze
 import numpy as np
 
@@ -30,7 +27,8 @@ class SyllSimThresholdPage(Screen):
     def setup(self):
         self.syllsim_thresholds = []
         self.i = 0
-        self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
+        # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
+        self.files = self.parent.files
         self.next()
 
     def next(self):
@@ -41,12 +39,15 @@ class SyllSimThresholdPage(Screen):
         else:
             self.ids.user_syllsim.text = '70.0'
 
-        # if it is the last song go to syllable similarity threshold summary page, otherwise process song
+        # if it is the last song go to syllable similarity threshold
+        # summary page, otherwise process song'
         if self.i == len(self.files):
             self.manager.current = 'syllsim_summary_page'
         else:
             self.ids.user_syllsim.text = self.ids.user_syllsim.text
-            ons, offs, thresh, ms, htz = analyze.load_bout_data(os.path.join(self.parent.directory, self.files[self.i]))
+            ons, offs, thresh, ms, htz = analyze.load_bout_data(
+                os.path.join(self.parent.directory, self.files[self.i])
+            )
             self.onsets = ons
             self.offsets = offs
             self.syll_dur = self.offsets - self.onsets
@@ -63,15 +64,27 @@ class SyllSimThresholdPage(Screen):
             # plot placeholder data
             cmap = plt.cm.rainbow
             cmap.set_under(color='black')
-            self.plot_syllsim = self.ax5.imshow(data+3, extent=[0, self.cols, 0, self.rows],
-                                              aspect='auto', cmap=cmap,# norm=matplotlib.colors.LogNorm(),
-                                              vmin=3.01)
+            self.plot_syllsim = self.ax5.imshow(
+                data + 3,
+                extent=[0, self.cols, 0, self.rows],
+                aspect='auto',
+                cmap=cmap,
+                # norm=matplotlib.colors.LogNorm(),
+                vmin=3.01
+            )
 
-            self.trans = tx.blended_transform_factory(self.ax5.transData, self.ax5.transAxes)
-            self.lines_on, = self.ax5.plot(np.repeat(self.onsets, 3), np.tile([0, .75, np.nan], len(self.onsets)),
-                                           linewidth=0.75, color='g', transform=self.trans)
-            self.lines_off, = self.ax5.plot(np.repeat(self.offsets, 3), np.tile([0, .90, np.nan], len(self.offsets)),
-                                            linewidth=0.75, color='g', transform=self.trans)
+            self.trans = tx.blended_transform_factory(self.ax5.transData,
+                                                      self.ax5.transAxes)
+            self.lines_on, = self.ax5.plot(np.repeat(self.onsets, 3),
+                                           np.tile([0, .75, np.nan],
+                                                   len(self.onsets)),
+                                           linewidth=0.75, color='g',
+                                           transform=self.trans)
+            self.lines_off, = self.ax5.plot(np.repeat(self.offsets, 3),
+                                            np.tile([0, .90, np.nan],
+                                                    len(self.offsets)),
+                                            linewidth=0.75, color='g',
+                                            transform=self.trans)
 
             self.ids.syllsim_graph.clear_widgets()
             self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
@@ -97,8 +110,8 @@ class SyllSimThresholdPage(Screen):
         syll_pattern = analyze.find_syllable_pattern(son_corr_bin)
         self.ids.song_syntax.text = 'Song Syntax: ' + ", ".join(str(x) for x in syll_pattern)
 
-        syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = analyze.calc_syllable_stereotypy(self.son_corr,
-                                                                                                  syll_pattern)
+        syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = \
+            analyze.calc_syllable_stereotypy(self.son_corr, syll_pattern)
 
         stereotypy_text = 'Syllable: Avg, Min, Max\n'
         for idx in range(len(syll_stereotypy)):
