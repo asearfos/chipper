@@ -1,7 +1,6 @@
 import matplotlib
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from kivy.uix.screenmanager import Screen
@@ -9,7 +8,6 @@ from kivy.uix.screenmanager import Screen
 from chipper.popups import NoteThreshInstructionsPopup
 
 import os
-import glob
 import chipper.analysis as analyze
 import numpy as np
 
@@ -28,23 +26,28 @@ class NoteThresholdPage(Screen):
     def setup(self):
         self.note_thresholds = []
         self.i = 0
-        self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
+        # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
+        self.files = self.parent.files
         self.next()
 
     def next(self):
         # if not first entering the app, record the threshold
         if self.i > 0:
             self.note_thresholds.append(int(self.ids.user_note_size.text))
-        # otherwise it is the first time, so reset note size threshold to the default
+        # otherwise it is the first time,
+        # so reset note size threshold to the default
         else:
             self.ids.user_note_size.text = '120'
 
-        # if it is the last song go to note threshold summary page, otherwise process song
+        # if it is the last song go to note threshold summary page,
+        # otherwise process song
         if self.i == len(self.files):
             self.manager.current = 'note_summary_page'
         else:
             self.ids.user_note_size.text = self.ids.user_note_size.text
-            ons, offs, thresh, ms, htz = analyze.load_bout_data(os.path.join(self.parent.directory, self.files[self.i]))
+            ons, offs, thresh, ms, htz = analyze.load_bout_data(
+                os.path.join(self.parent.directory, self.files[self.i])
+            )
             self.onsets = ons
             self.offsets = offs
             self.threshold_sonogram = thresh
@@ -60,14 +63,20 @@ class NoteThresholdPage(Screen):
             # plot placeholder data
             # colors = [(0, 0, 0), (1, 1, 1), (0.196, 0.643, 0.80)]
             # my_cmap = ListedColormap(colors)
-            # self.plot_notes = self.ax3.imshow(np.log(data + 3), extent=[0, self.cols, 0, self.rows], aspect='auto',
+            # self.plot_notes = self.ax3.imshow(np.log(data + 3),
+            # extent=[0, self.cols, 0, self.rows], aspect='auto',
             #                                   cmap=my_cmap)
             cmap = plt.cm.prism
             cmap.set_under(color='black')
             cmap.set_bad(color='white')
-            self.plot_notes = self.ax3.imshow(data+3, extent=[0, self.cols, 0, self.rows],
-                                              aspect='auto', cmap=cmap, norm=matplotlib.colors.LogNorm(),
-                                              vmin=3.01)
+            self.plot_notes = self.ax3.imshow(
+                data + 3,
+                extent=[0, self.cols, 0, self.rows],
+                aspect='auto',
+                cmap=cmap,
+                norm=matplotlib.colors.LogNorm(),
+                vmin=3.01
+            )
 
             self.ids.note_graph.clear_widgets()
             self.ids.note_graph.add_widget(self.plot_notes_canvas)
@@ -76,15 +85,19 @@ class NoteThresholdPage(Screen):
 
     def new_thresh(self):
         # find notes and label based on connectivity
-        num_notes, props, labeled_sonogram = analyze.get_notes(self.threshold_sonogram, self.onsets, self.offsets)
-        # change label of all notes with size > threshold to be the same and all < to be the same
+        num_notes, props, labeled_sonogram = analyze.get_notes(
+            self.threshold_sonogram, self.onsets, self.offsets
+        )
+        # change label of all notes with size > threshold to be the same
+        # and all < to be the same
         for region in props:
             if region.area > int(self.ids.user_note_size.text):
                 labeled_sonogram[labeled_sonogram == region.label] = region.area
             else:
                 labeled_sonogram[labeled_sonogram == region.label] = 1
 
-        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1, labeled_sonogram)
+        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1,
+                                              labeled_sonogram)
         # update image in widget
         # plot the actual data now
         self.plot_notes.set_data(labeled_sonogram+3)
