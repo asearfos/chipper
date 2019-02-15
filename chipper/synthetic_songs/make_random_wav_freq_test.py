@@ -12,8 +12,8 @@ import os
 import shutil
 
 
-def make_syllable(slope, shape, vertex=True, symmetric=False):
-    amp_scale = round(uniform(amp_min, amp_max), 2)
+def make_syllable(song_amplitude, slope, shape, vertex=True, symmetric=False):
+    amp_scale = round(uniform(song_amplitude - song_amplitude*.3, song_amplitude + song_amplitude*.3), 2)
     start_freq = randint(freq_min, freq_max)
 
     if slope == 'flat':
@@ -39,10 +39,8 @@ def make_syllable(slope, shape, vertex=True, symmetric=False):
 
 def make_silence():
     silence_len = round(uniform(sil_dur_min, sil_dur_max), 2)
-    sil = 0  # not sure what this is for
     silence_time = np.linspace(0, silence_len, sampling_rate*silence_len)
-    silence = np.sin(0.000001 * silence_time)
-    # silence = np.sin(2 * math.pi * sil * silence_time)
+    silence = np.sin(2 * math.pi * silence_time)
     return silence_len, silence
 
 
@@ -58,8 +56,8 @@ def add_noise(signal, signal_info, noise_file):
 """
 create random songs
 """
-# folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/SyntheticSongs_py_amp100"
-# baseFileName = 'SyntheticSong_py_amp100_'
+# folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/SynSongs_amp100_30p"
+# baseFileName = 'SynSongs_amp100_30p_'
 #
 # sampling_rate = 44100
 #
@@ -69,17 +67,11 @@ create random songs
 # sil_dur_min = 0.01
 # sil_dur_max = 0.5
 #
-# freq_min = 1000
+# freq_min = 2000
 # freq_max = 10000
 #
-# amp_min = 1/50*100
+# amp_min = 1*100
 # amp_max = 100*100
-#
-# all_amp_scales = []
-# all_start_freq = []
-# all_end_freq = []
-# all_syll_len = []
-# all_silence_len = []
 #
 # syllables_types = [['flat', 'linear', True, False], ['up', 'linear', True, False], ['down', 'linear', True, False],
 #                    ['up', 'quadratic', True, False], ['up', 'quadratic', False, False],
@@ -94,44 +86,57 @@ create random songs
 #
 #     total_length = 0
 #     all_signal = np.empty(0)
+#
+#     all_amp_scales = []
+#     all_start_freq = []
+#     all_end_freq = []
+#     all_syll_len = []
+#     all_silence_len = []
+#
+#     # randomly set rough amplitude for the song
+#     song_amp = round(uniform(amp_min, amp_max), 2)
+#
 #     for type in syllables_types:
 #         slope, shape, vertex, symm = type
 #
-#         silence_len, silence = make_silence()
-#         amp, start, stop, syll_len, syll = make_syllable(slope, shape, vertex, symm)
+#         if type[0] == 'flat':  # don't add a silence before the first syllable
+#             amp, start, stop, syll_len, syll = make_syllable(song_amp, slope, shape, vertex, symm)
+#             total_length += syll_len
+#             all_signal = np.concatenate((all_signal, syll))
 #
-#         total_length += (silence_len + syll_len)
-#         all_signal = np.concatenate((all_signal, silence, syll))
+#             all_amp_scales.append(amp)
+#             all_start_freq.append(start)
+#             all_end_freq.append(stop)
+#             all_syll_len.append(syll_len)
+#         else:
+#             silence_len, silence = make_silence()
+#             amp, start, stop, syll_len, syll = make_syllable(song_amp, slope, shape, vertex, symm)
 #
-#         all_amp_scales.append(amp)
-#         all_start_freq.append(start)
-#         all_end_freq.append(stop)
-#         all_syll_len.append(syll_len)
-#         all_silence_len.append(silence_len)
+#             total_length += (silence_len + syll_len)
+#             all_signal = np.concatenate((all_signal, silence, syll))
 #
-#     # add one more silence to the end
-#     silence_len, silence = make_silence()
-#     all_silence_len.append(silence_len)
-#     total_length += silence_len
-#     all_signal = np.concatenate((all_signal, silence))
+#             all_amp_scales.append(amp)
+#             all_start_freq.append(start)
+#             all_end_freq.append(stop)
+#             all_syll_len.append(syll_len)
+#             all_silence_len.append(silence_len)
 #
-#     t = np.linspace(0, total_length, sampling_rate*total_length)
+#     time = np.linspace(0, total_length, sampling_rate*total_length)
 #
-#     y = all_signal
+#     wavform = all_signal
 #
-#     if len(t) > len(y):
+#     if len(time) > len(wavform):
 #         # print('t > y')
-#         y = np.pad(y, (0, len(t)-len(y)), mode='constant', constant_values=0)
-#     elif len(t) < len(y):
+#         wavform = np.pad(wavform, (0, len(time)-len(wavform)), mode='constant', constant_values=0)
+#     elif len(time) < len(wavform):
 #         # print('t < y', len(y)-len(t))
-#         t = np.pad(t, (0, len(y)-len(t)), mode='constant', constant_values=0)
+#         time = np.pad(wavform, (0, len(wavform)-len(time)), mode='constant', constant_values=0)
 #
-#     # print(len(t))
-#     # print(len(y))
-#     # print(all_amp_scales)
+#     time = np.pad(time, (10000, 10000), mode='constant', constant_values=0)
+#     wavform = np.pad(wavform, (10000, 10000), mode='constant', constant_values=0)
 #
-#     y = np.asarray(y, dtype=np.int16)
-#     scipy.io.wavfile.write(fullFileName + '.wav', sampling_rate, y)
+#     wavform = np.asarray(wavform, dtype=np.int16)
+#     scipy.io.wavfile.write(fullFileName + '.wav', sampling_rate, wavform)
 #
 #     with open(fullFileName + '.csv', 'w', newline='') as file:
 #         filewriter = csv.writer(file, delimiter=',')
@@ -141,17 +146,18 @@ create random songs
 #         filewriter.writerow(['Syllable Durations:', all_syll_len])
 #         filewriter.writerow(['Silence Durations:', all_silence_len])
 #         file.close()
-
+#
+# quit()
 
 """
-add white noise
+add noise
 """
-song_folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/SyntheticSongs_py_amp100"
+song_folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/SynSongs_amp100_30p"
 synthetic_songs = glob.glob(song_folder + '/*.wav')
-# noiseFileName = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/WhiteNoiseTracks/WhiteNoise_1" \
-#                 ".wav"
-noiseFileName = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\SyntheticSongs/NaturalNoiseTracks" \
-                "\S4A06622_20180722_170100_clip.wav"
+noiseFileName = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/SyntheticSongs/WhiteNoiseTracks/WhiteNoise_0001" \
+                ".wav"
+# noiseFileName = "C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\SyntheticSongs/NaturalNoiseTracks" \
+#                 "\S4A06622_20180401_210837_clip.wav"
 save_folder = os.path.dirname(song_folder) + '/' + os.path.basename(song_folder) + '_' + os.path.splitext(os.path.basename(
     noiseFileName))[0]
 os.mkdir(save_folder)
@@ -163,7 +169,8 @@ for i in synthetic_songs:
     shutil.copy(srcpath, dstpath)
     song, rate = sf.read(i)
     song_with_noise = add_noise(song, dstpath, noiseFileName)
-    scipy.io.wavfile.write(save_folder + '/' + name + os.path.splitext(os.path.basename(noiseFileName))[0] + '.wav',
+    scipy.io.wavfile.write(save_folder + '/' + name + '_' + os.path.splitext(os.path.basename(noiseFileName))[0] +
+                           '.wav',
                            rate, song_with_noise)
 
 
