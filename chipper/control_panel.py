@@ -465,6 +465,7 @@ class ControlPanel(Screen):
         # run HPF, scale based on average amplitude
         # (increases low amplitude sections), and graph sonogram
         freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
+        # scaled_sonogram = freqfiltered_sonogram
         scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
         self.top_image.image_sonogram(scaled_sonogram)
 
