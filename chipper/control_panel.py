@@ -28,6 +28,7 @@ from chipper.utils import save_gzip_pickle
 # TODO improve how self variables are being used; some have the same variable
 #  but not self as function inputs....
 class ControlPanel(Screen):
+    # these connect the landing page user input to the control panel
     find_gzips = BooleanProperty()
     user_signal_thresh = StringProperty()
     user_min_silence = StringProperty()
@@ -75,7 +76,8 @@ class ControlPanel(Screen):
         if self.ids.add.state == 'down':  # adding
             if event.key in self.direction_to_int and \
                     (25 <= self.graph_location < self.cols - 25):
-                self.graph_location += self.direction_to_int[event.key]*move_interval
+                self.graph_location += self.direction_to_int[
+                                           event.key]*move_interval
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
                 if self.ids.syllable_beginning.state == 'down':
@@ -145,15 +147,18 @@ class ControlPanel(Screen):
     def add_mark(self, touchx, touchy):
         self.mark_boolean = True
         conversion = self.sonogram.shape[1]/self.ids.graph_binary.size[0]
-        self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[0])*conversion)
+        self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[
+            0])*conversion)
 
         ymax = 0.75 if self.ids.syllable_beginning.state == 'down' else 0.90
 
         # self.image_syllable_marks()
-        # self.bottom_image.image_syllable_marks(self.syllable_onsets, self.syllable_offsets)
+        # self.bottom_image.image_syllable_marks(self.syllable_onsets,
+        #                                        self.syllable_offsets)
 
         # use one of the below options to graph as another color/group of lines
-        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax, color='m', linewidth=0.75)
+        self.mark = self.ax2.axvline(self.graph_location, ymax=ymax,
+                                     color='m', linewidth=0.75)
         self.plot_binary_canvas.draw()
         # or can plot like this... not sure which is best
         # self.ax2.plot(np.repeat(graph_location, 3),
@@ -163,7 +168,8 @@ class ControlPanel(Screen):
 
     def add_onsets(self):
         # TODO: might be able to just use bisect.insort(list, new number)
-        # https://stackoverflow.com/questions/29408661/add-elements-into-a-sorted-array-in-ascending-order
+        # https://stackoverflow.com/questions/29408661/add-elements-into-a
+        # -sorted-array-in-ascending-order
         if self.graph_location is None:
             return
         else:
@@ -192,8 +198,9 @@ class ControlPanel(Screen):
     def takeClosest(self, myList, myNumber):
         """
         Assumes myList is sorted. Returns index of closest value to myNumber.
-        If two numbers are equally close, return the index of the smallest number.
-        From: https://stackoverflow.com/questions/12141150/from-list-of-integers-get-number-closest-to-a-given-value
+        If two numbers are equally close, return the index of the smallest
+        number. From: https://stackoverflow.com/questions/12141150/from-list-of
+        -integers-get-number-closest-to-a-given-value
         """
         pos = bisect_left(myList, myNumber)
         if pos == 0:
@@ -210,20 +217,24 @@ class ControlPanel(Screen):
     def delete_mark(self, touchx, touchy):
         self.mark_boolean = True
         conversion = self.sonogram.shape[1] / self.ids.graph_binary.size[0]
-        self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[0]) * conversion)
+        self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[
+            0]) * conversion)
 
         if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
             # find nearest onset
-            self.index = self.takeClosest(self.syllable_onsets, self.graph_location)
+            self.index = self.takeClosest(self.syllable_onsets,
+                                          self.graph_location)
             location = self.syllable_onsets[self.index]
         else:
             ymax = 0.90
             # find nearest offset
-            self.index = self.takeClosest(self.syllable_offsets, self.graph_location)
+            self.index = self.takeClosest(self.syllable_offsets,
+                                          self.graph_location)
             location = self.syllable_offsets[self.index]
 
-        self.mark = self.ax2.axvline(location, ymax=ymax, color='m', linewidth=0.75)
+        self.mark = self.ax2.axvline(location, ymax=ymax, color='m',
+                                     linewidth=0.75)
         self.plot_binary_canvas.draw()
 
     def delete_onsets(self):
@@ -249,17 +260,20 @@ class ControlPanel(Screen):
             self.image_syllable_marks()
             self.index = None
 
+    # called in kv just before entering control panel screen (on_pre_enter)
     def setup(self):
         self.i = 0
         self.files = self.parent.files
         self.file_names = self.parent.file_names
+        # these are the dictionaries that are added to with each song
         self.save_parameters_all = {}
         self.save_syllables_all = {}
         self.save_tossed = {}
         self.save_conversions_all = {}
         self.next()
-        #ToDo: add "_reChipper" to end of output_path if previous .gzips were used.
-        # self.output_path = self.parent.directory + "SegSyllsOutput_" + time.strftime("%Y%m%d_T%H%M%S")  # + "_reChipper"
+        #ToDo: add "_reChipper" to end of output_path if previous .gzips used.
+        # self.output_path = self.parent.directory + "SegSyllsOutput_" + \
+        #                    time.strftime("%Y%m%d_T%H%M%S")  # + "_reChipper"
         self.output_path = os.path.join(
             self.parent.directory,
             "SegSyllsOutput_{}".format(time.strftime("%Y%m%d_T%H%M%S"))
@@ -271,15 +285,19 @@ class ControlPanel(Screen):
     def set_song_params(self, filter_boundary=None, bout_range=None,
                         percent_keep=None, min_silence=None,
                         min_syllable=None):
+
         if filter_boundary is None:
             self.filter_boundary = []
         else:
             self.filter_boundary = filter_boundary
+
         if bout_range is None:
             self.bout_range = []
         else:
             self.bout_range = bout_range
 
+        # next three parameters are set to the default defined by user in
+        # landing page if there is no previous value (from chippering before)
         if percent_keep is None:
             self.percent_keep = float(self.user_signal_thresh)
             # self.percent_keep = self.ids.slider_threshold.value
@@ -287,21 +305,26 @@ class ControlPanel(Screen):
             self.percent_keep = percent_keep
 
         if min_silence is None:
-            self.min_silence = float(self.user_min_silence)/self.millisecondsPerPixel
-            # self.min_silence = self.ids.slider_min_silence.value/self.millisecondsPerPixel
+            self.min_silence = float(
+                self.user_min_silence)/self.millisecondsPerPixel
+            # self.min_silence = \
+            #     self.ids.slider_min_silence.value/self.millisecondsPerPixel
             if self.min_silence == 0:
                 self.min_silence = self.ids.slider_min_silence.min
         else:
             self.min_silence = min_silence
 
         if min_syllable is None:
-            self.min_syllable = float(self.user_min_syllable)/self.millisecondsPerPixel
-            # self.min_syllable = self.ids.slider_min_syllable.value/self.millisecondsPerPixel
+            self.min_syllable = float(
+                self.user_min_syllable)/self.millisecondsPerPixel
+            # self.min_syllable = \
+            #     self.ids.slider_min_syllable.value/self.millisecondsPerPixel
             if self.min_syllable == 0:
                 self.min_syllable = self.ids.slider_min_syllable.min
         else:
             self.min_syllable = min_syllable
 
+        # this updates the text or slider limits on the control panel screen
         self.ids.slider_threshold_label.text = str(self.percent_keep) + "%"
         # have to round these because of the conversion
         self.ids.slider_min_silence_label.text = \
@@ -326,6 +349,8 @@ class ControlPanel(Screen):
         self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
+        # following lines were moved to set_song_params
+        # this updates the text or slider limits on the control panel screen
         # self.ids.slider_threshold_label.text = \
         # str(round(self.percent_keep, 1)) + "%"
         # self.ids.slider_min_silence_label.text = \
@@ -340,6 +365,7 @@ class ControlPanel(Screen):
     def connect_song_shape_to_kv(self):
         # connect size of sonogram to maximum of sliders for HPF and crop
         [self.rows, self.cols] = np.shape(self.sonogram)
+
         if not self.filter_boundary:
             self.filter_boundary = [0, self.rows]
         self.ids.slider_frequency_filter.value1 = self.filter_boundary[0]
@@ -376,11 +402,16 @@ class ControlPanel(Screen):
             seg.initial_sonogram(self.i, self.files, self.parent.directory,
                                  find_gzips=self.find_gzips)
 
+        #  if the user goes back to previous song and then goes forward again,
+        #  it will pull what they had already submitted (so the user does not
+        #  lose progress)
         if len(self.save_parameters_all) > 0:
             if self.files[self.i] in self.save_parameters_all:
                 params = self.save_parameters_all[self.files[self.i]]
-                prev_onsets = np.asarray(self.save_syllables_all[self.files[self.i]]['Onsets'])
-                prev_offsets = np.asarray(self.save_syllables_all[self.files[self.i]]['Offsets'])
+                prev_onsets = np.asarray(self.save_syllables_all[self.files[
+                    self.i]]['Onsets'])
+                prev_offsets = np.asarray(self.save_syllables_all[self.files[
+                    self.i]]['Offsets'])
 
         # reset default parameters for new song
         # (will be used by update to graph the first attempt)
@@ -389,7 +420,9 @@ class ControlPanel(Screen):
         self.connect_song_shape_to_kv()
 
         # set parameters if already run through chipper before
-        # (params from gzip)
+        # this can be either during this particular run in chipper (user went
+        # back and then forward again to a song already processed) or from
+        # previous run in which the params were read in from gzip
         if params:
             if 'HighPassFilter' in params:
                 # this is added because we used to only have a high pass filter
@@ -413,8 +446,9 @@ class ControlPanel(Screen):
         )
 
         # initialize the matplotlib figures/axes (no data yet)
-        # TODO: decide if rows and cols should be self variables instead of
-        #  passing into functions
+        # TODO: decide if rows and cols should be self variables instead of passing into functions
+        # ImageSonogram is its own class and top_image is an instance of it
+        # (defined in kv) - had trouble doing this for the bottom image
         self.top_image.image_sonogram_initial(self.rows, self.cols)
         self.image_binary_initial()
 
@@ -431,15 +465,21 @@ class ControlPanel(Screen):
         # increment i so next file will be opened on submit/toss
         self.i += 1
 
+    # called first time a song is loaded (only time prev parameters would be
+    # included in the arguments) or when reset parameters button is clicked
+    # otherwise called every time any slider is moved
     def update(self, filter_boundary, bout_range, percent_keep, min_silence,
                min_syllable, prev_run_onsets=None, prev_run_offsets=None):
+
+        # check if the song has been run before (if gzip data was loaded)
         if prev_run_onsets is None:
             prev_run_onsets = np.empty([0])
             prev_run_offsets = np.empty([0])
 
         # TODO: this is current fix for range slider,
-        #  could fix in range_slider_from_google.py instead of here
-        # have to check list from range sliders to make sure the first one is less than the second
+        # could fix in range_slider_from_google.py instead of here
+        # have to check list from range sliders to make sure the first one is
+        # less than the second
         # if they are not in ascending order, must reverse the list
         if filter_boundary[1] < filter_boundary[0]:
             filter_boundary.reverse()
@@ -457,37 +497,50 @@ class ControlPanel(Screen):
         elif filter_boundary[0] == filter_boundary[1]:
             filter_boundary[1] = filter_boundary[0] + 1
 
-        self.set_song_params(filter_boundary=filter_boundary, bout_range=bout_range, percent_keep=percent_keep,
-                             min_silence=min_silence, min_syllable=min_syllable)
+        self.set_song_params(filter_boundary=filter_boundary,
+                             bout_range=bout_range,
+                             percent_keep=percent_keep,
+                             min_silence=min_silence,
+                             min_syllable=min_syllable)
+
         # must do this for image to update for some reason
         sonogram = self.sonogram.copy()
 
         # run HPF, scale based on average amplitude
         # (increases low amplitude sections), and graph sonogram
         freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
+        # switch next two lines if you don't want amplitude scaled
         # scaled_sonogram = freqfiltered_sonogram
         scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
+
+        # plot resultant sonogram in the top graph in control panel
         self.top_image.image_sonogram(scaled_sonogram)
 
-        # apply threshold to signal, calculate onsets and offsets,
-        # plot resultant binary sonogram
+        # apply threshold to signal
         self.thresh_sonogram = seg.threshold_image(percent_keep,
                                                    scaled_sonogram)
+        # calculate onsets and offsets using binary (thresholded) image
         onsets, offsets, silence_durations, sum_sonogram_scaled = \
             seg.initialize_onsets_offsets(self.thresh_sonogram)
+        # update the automatic onsets and offsets based on the slider values
+        # for min silence and min syllable durations
         syllable_onsets, syllable_offsets = seg.set_min_silence(
             min_silence, onsets, offsets, silence_durations
         )
         syllable_onsets, syllable_offsets = seg.set_min_syllable(
             min_syllable, syllable_onsets, syllable_offsets
         )
+        # lastly, remove onsets and offsets that are outside of the crop
+        # values (on the time axis)
         self.syllable_onsets, self.syllable_offsets = \
             seg.crop(bout_range, syllable_onsets, syllable_offsets)
 
+        # change the onsets and offsets to those in gzip if gzip was loaded
         if prev_run_onsets.size:
             self.syllable_onsets = prev_run_onsets
             self.syllable_offsets = prev_run_offsets
 
+        # plot resultant binary sonogram along with onset and offset lines
         self.image_binary()
         self.image_syllable_marks()
         # self.bottom_image.image_syllable_marks(self.syllable_onsets,
@@ -580,21 +633,29 @@ class ControlPanel(Screen):
             self.i -= 2
             self.next()
 
+    # called when the user hits submit
+    # before saving it checks for errors with onsets and offsets
     def save(self):
+        # check if there are no syllable lines at all
         if len(self.syllable_onsets) == 0 and len(self.syllable_offsets) == 0:
             check_sylls = CheckForSyllablesPopup()
             check_sylls.open()
+        # if there are lines, check that there are equal number of ons and offs
         elif len(self.syllable_onsets) != len(self.syllable_offsets):
             check_length = CheckLengthPopup()
             check_length.len_onsets = str(len(self.syllable_onsets))
             check_length.len_offsets = str(len(self.syllable_offsets))
             check_length.open()
+        # check that you start with onset and end with offset
         elif self.syllable_onsets[0] > self.syllable_offsets[0] or \
                 self.syllable_onsets[-1] > self.syllable_offsets[-1]:
             check_beginning_end = CheckBeginningEndPopup()
-            check_beginning_end.start_onset = not self.syllable_onsets[0] > self.syllable_offsets[0]
-            check_beginning_end.end_offset = not self.syllable_onsets[-1] > self.syllable_offsets[-1]
+            check_beginning_end.start_onset = not self.syllable_onsets[0] > \
+                                                  self.syllable_offsets[0]
+            check_beginning_end.end_offset = not self.syllable_onsets[-1] > \
+                                                 self.syllable_offsets[-1]
             check_beginning_end.open()
+        # check that onsets and offsets alternate
         else:
             combined_onsets_offsets = list(self.syllable_onsets)
             binary_list = [0] * len(self.syllable_onsets)
@@ -603,10 +664,12 @@ class ControlPanel(Screen):
                                             self.syllable_offsets[i])
                 binary_list.insert(insertion_pt, 1)
                 insort(combined_onsets_offsets, self.syllable_offsets[i])
-            if sum(binary_list[::2]) != 0 or sum(binary_list[1::2]) != len(binary_list)/2:  # using python slices
+            if sum(binary_list[::2]) != 0 or sum(binary_list[1::2]) != len(
+                    binary_list)/2:  # using python slices
                 check_order = CheckOrderPopup()
                 check_order.order = binary_list
                 check_order.open()
+            # passed all checks, now info can be stored/written for the song
             else:
                 # save parameters to dictionary; note we use self.i-1
                 # since i is incremented at the end of next()
@@ -658,7 +721,8 @@ class ControlPanel(Screen):
             del self.save_parameters_all[self.files[self.i - 1]]
             del self.save_syllables_all[self.files[self.i - 1]]
             del self.save_conversions_all[self.files[self.i - 1]]
-            os.remove(self.output_path + '/SegSyllsOutput_' + self.file_names[self.i - 1] + '.gzip')
+            os.remove(self.output_path + '/SegSyllsOutput_' +
+                      self.file_names[self.i - 1] + '.gzip')
 
         # write if last file otherwise go to next file
         if self.i == len(self.files):
@@ -668,16 +732,24 @@ class ControlPanel(Screen):
 
     def write(self):
 
-        df_parameters = pd.DataFrame.from_dict(self.save_parameters_all, orient='index')
+        df_parameters = pd.DataFrame.from_dict(self.save_parameters_all,
+                                               orient='index')
         df_parameters.index.name = 'FileName'
-        df_parameters.to_csv((self.output_path + '/segmentedSyllables_parameters_all.txt'), sep="\t")
+        df_parameters.to_csv((self.output_path +
+                              '/segmentedSyllables_parameters_all.txt'),
+                             sep="\t")
 
-        df_syllables = pd.DataFrame.from_dict(self.save_syllables_all, orient='index')
+        df_syllables = pd.DataFrame.from_dict(self.save_syllables_all,
+                                              orient='index')
         df_syllables.index.name = 'FileName'
-        df_syllables.to_csv((self.output_path + '/segmentedSyllables_syllables_all.txt'), sep="\t")
+        df_syllables.to_csv((self.output_path +
+                             '/segmentedSyllables_syllables_all.txt'),
+                            sep="\t")
 
         df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
-        df_tossed.to_csv((self.output_path + '/segmentedSyllables_tossed.txt'), sep="\t", index=False)
+        df_tossed.to_csv((self.output_path +
+                          '/segmentedSyllables_tossed.txt'), sep="\t",
+                         index=False)
 
         self.done_window()
 

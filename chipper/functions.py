@@ -34,8 +34,9 @@ def initial_sonogram(i, files, directory, find_gzips):
 
     if find_gzips:
         # check if there is a corresponding gzip from a previous run
-        zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] + '/**/' + 'SegSyllsOutput_' +
-                             wavfile.replace('.wav', '') + '.gzip', recursive=True)
+        zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] +
+                             '/**/' + 'SegSyllsOutput_' + wavfile.replace(
+            '.wav', '') + '.gzip', recursive=True)
     else:
         zip_file = []
 
@@ -48,13 +49,18 @@ def initial_sonogram(i, files, directory, find_gzips):
         prev_offsets = np.empty([0])
 
     # make spectrogram binary, divide by max value to get 0-1 range
-    sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 1024, 1010, 2)
+    sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1,
+                                                                     44100,
+                                                                     1024,
+                                                                     1010,
+                                                                     2)
     [rows, cols] = sonogram.shape
     sonogram_padded = np.zeros((rows, cols + 300))
     # padding for window to start
     sonogram_padded[:, 150:cols + 150] = sonogram
 
-    return sound, sonogram_padded, millisecondsPerPixel, hertzPerPixel, params, prev_onsets, prev_offsets
+    return sound, sonogram_padded, millisecondsPerPixel, hertzPerPixel, \
+           params, prev_onsets, prev_offsets
 
 
 def frequency_filter(filter_boundary, sonogram):
@@ -80,12 +86,15 @@ def normalize_amplitude(sonogram):
         # (not really sure if I need this since an index outside automatically
         # just goes to end and does not throw errow in Python)
         # else have to add one in python since it is not inclusive
-        vecend = len(amplitude_vector) if f + 500 > len(amplitude_vector) else f + 501
+        vecend = len(amplitude_vector) if f + 500 > len(amplitude_vector) \
+            else f + 501
         amplitude_average_vector[f] = np.mean(amplitude_vector[vecstart:vecend])
 
     # use average amplitude to rescale and increase low amplitude sections
-    amplitude_average_vector_scaled = amplitude_average_vector / max(amplitude_average_vector)
-    divide_matrix = np.tile(np.transpose(amplitude_average_vector_scaled), (rows, 1))
+    amplitude_average_vector_scaled = amplitude_average_vector / max(
+        amplitude_average_vector)
+    divide_matrix = np.tile(np.transpose(amplitude_average_vector_scaled),
+                            (rows, 1))
 
     scaled_sonogram = sonogram / divide_matrix
     return scaled_sonogram
@@ -167,8 +176,14 @@ def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets):
 
 def crop(bout_range, syllable_onsets, syllable_offsets):
     [beginning, ending] = bout_range
-    syllable_onsets = syllable_onsets[np.logical_and(syllable_onsets >= beginning, syllable_onsets <= ending)]
-    syllable_offsets = syllable_offsets[np.logical_and(syllable_offsets >= beginning, syllable_offsets <= ending)]
+    syllable_onsets = syllable_onsets[np.logical_and(syllable_onsets >=
+                                                     beginning,
+                                                     syllable_onsets <=
+                                                     ending)]
+    syllable_offsets = syllable_offsets[np.logical_and(syllable_offsets >=
+                                                       beginning,
+                                                       syllable_offsets <=
+                                                       ending)]
 
     return syllable_onsets, syllable_offsets
 
