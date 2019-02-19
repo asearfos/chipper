@@ -1,5 +1,6 @@
 import gzip
 import json
+import os
 
 try:
     import cPickle as pickle
@@ -28,3 +29,11 @@ def load_old(f_name):
             json_line = json.loads(line, encoding='utf-8')
             song_data.append(json_line)
     return song_data
+
+
+def get_basename(files, suffix):
+    return [os.path.basename(i) for i in files if i.endswith(suffix)]
+
+
+def get_file_prefix(files):
+    return [os.path.splitext(i)[0] for i in files]

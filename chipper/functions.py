@@ -1,19 +1,12 @@
-import numpy as np
-# import bottleneck as bn
 import glob
 import os
+
+import numpy as np
 import soundfile as sf
-from chipper.ifdvsonogramonly import ifdvsonogramonly
-#import matplotlib.pyplot as plt
-import chipper.utils as utils
-import gzip
 from kivy.core.audio import SoundLoader
 
-
-def initialize(directory):
-    files = [os.path.basename(i) for i in glob.glob(directory+'*.wav')]
-    # look for a gzip from a previous run
-    return files
+import chipper.utils as utils
+from chipper.ifdvsonogramonly import ifdvsonogramonly
 
 
 def load_bout_data(f_name):
@@ -32,8 +25,10 @@ def load_bout_data(f_name):
 
 def initial_sonogram(i, files, directory, find_gzips):
     wavfile = files[i]
-    song1, sample_rate = sf.read(directory + wavfile, always_2d=True)  # audio data always returned as 2d array
-    sound = SoundLoader.load(directory + wavfile)
+    # audio data always returned as 2d array
+    song1, sample_rate = sf.read(os.path.join(directory, wavfile),
+                                 always_2d=True)
+    sound = SoundLoader.load(os.path.join(directory, wavfile))
 
     song1 = song1[:, 0]  # make files mono
 
@@ -56,7 +51,8 @@ def initial_sonogram(i, files, directory, find_gzips):
     sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1, 44100, 1024, 1010, 2)
     [rows, cols] = sonogram.shape
     sonogram_padded = np.zeros((rows, cols + 300))
-    sonogram_padded[:, 150:cols + 150] = sonogram  # padding for window to start
+    # padding for window to start
+    sonogram_padded[:, 150:cols + 150] = sonogram
 
     return sound, sonogram_padded, millisecondsPerPixel, hertzPerPixel, params, prev_onsets, prev_offsets
 
@@ -69,16 +65,20 @@ def frequency_filter(filter_boundary, sonogram):
 
 
 def normalize_amplitude(sonogram):
-    [rows, cols] = sonogram.shape
+    rows = sonogram.shape[0]
 
     # sliding window average of amplitude
     amplitude_vector = np.squeeze(np.sum(sonogram, axis=0))
     amplitude_average_vector = np.zeros((len(amplitude_vector), 1))
 
     for f in range(0, np.size(amplitude_vector)):
-        vecstart = max(0, f-500)  # index to start window -> first one of array, check if the index is outside the bounds of the data (negative index)
+        # index to start window -> first one of array, check if the index is
+        # outside the bounds of the data (negative index)
+        vecstart = max(0, f - 500)
         # index to end window -> the last one of the array
-        # if the index is outside the bounds of the data (too large of index) (not really sure if I need this since an index outside automatically just goes to end and does not throw errow in Python)
+        # if the index is outside the bounds of the data (too large of index)
+        # (not really sure if I need this since an index outside automatically
+        # just goes to end and does not throw errow in Python)
         # else have to add one in python since it is not inclusive
         vecend = len(amplitude_vector) if f + 500 > len(amplitude_vector) else f + 501
         amplitude_average_vector[f] = np.mean(amplitude_vector[vecstart:vecend])
@@ -100,24 +100,30 @@ def threshold_image(top_threshold, scaled_sonogram):
 
 
 def initialize_onsets_offsets(sonogram_thresh):
-    [rows, cols] = sonogram_thresh.shape
+    rows = sonogram_thresh.shape[0]
 
-    # sonogram summed
-    sum_sonogram = sum(sonogram_thresh)  # collapse matrix to one row by summing columns (gives total signal over time)
+    # collapse matrix to one row by summing columns
+    # (gives total signal over time)
+    sum_sonogram = sum(sonogram_thresh)
     sum_sonogram_scaled = (sum_sonogram / max(sum_sonogram) * rows)
 
-    # create a vector that equals 1 when amplitude exceeds threshold and 0 when it is below
-    high_amp = sum_sonogram_scaled > 4  # threshold: must have more than 4 voxels of signal at a particular time to keep
+    # create a vector that equals 1 when amplitude exceeds threshold
+    # and 0 when it is below
+    # threshold: must have more than 4 voxels of signal at a particular time
+    high_amp = sum_sonogram_scaled > 4
     high_amp = [int(x) for x in high_amp]
     high_amp[0] = 0
     high_amp[-1] = 0
 
-    # add one so that the onsets are the first column with signal and offsets are the first column after signal
-    # (for analysis: this will keep the durations correct when subtracting and python indexing correct for syll-images)
+    # add one so that the onsets are the first column with signal and offsets
+    # are the first column after signal. (for analysis: this will keep the
+    # durations correct when subtracting and python indexing correct for
+    # syll-images)
     onsets = np.where(np.diff(high_amp) == 1)[0] + 1
     offsets = np.where(np.diff(high_amp) == - 1)[0] + 1
 
-    silence_durations = [onsets[i] - offsets[i-1] for i in range(1, len(onsets))]
+    silence_durations = [onsets[i] - offsets[i - 1]
+                         for i in range(1, len(onsets))]
 
     return onsets, offsets, silence_durations, sum_sonogram_scaled
 
@@ -129,7 +135,8 @@ def set_min_silence(min_silence, onsets, offsets, silence_durations):
     # keep first onsets
     syllable_onsets.append(onsets[0])
 
-    # check if you keep onsets and offsets around the silences based on silence threshold
+    # check if you keep onsets and offsets around the silences based on
+    # silence threshold
     for j in range(len(silence_durations)):
         if silence_durations[j] > min_silence:
             syllable_onsets.append(onsets[j+1])
@@ -146,7 +153,8 @@ def set_min_syllable(min_syllable, syllable_onsets, syllable_offsets):
     syllable_offsets = np.asarray(syllable_offsets)
 
     for j in range(len(syllable_offsets)):
-        if syllable_offsets[j] - syllable_onsets[j] < min_syllable:  # sets minimum syllable size
+        # sets minimum syllable size
+        if syllable_offsets[j] - syllable_onsets[j] < min_syllable:
             syllable_offsets[j] = 0
             syllable_onsets[j] = 0
 

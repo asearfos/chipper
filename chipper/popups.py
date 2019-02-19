@@ -1,9 +1,10 @@
-from kivy.uix.popup import Popup
 from kivy.properties import StringProperty, BooleanProperty, ListProperty
+from kivy.uix.popup import Popup
 
 
 class FinishMarksPopup(Popup):
-    def __init__(self, controls, **kwargs):  # controls is now the object where popup was called from.
+    def __init__(self, controls,
+                 **kwargs):  # controls is now the object where popup was called from.
         # self.register_event_type('on_connect')
         super(FinishMarksPopup, self).__init__(**kwargs)
         self.controls = controls
@@ -16,6 +17,7 @@ class CheckLengthPopup(Popup):
 
 class CheckForSyllablesPopup(Popup):
     pass
+
 
 class CheckBeginningEndPopup(Popup):
     start_onset = BooleanProperty()
@@ -37,9 +39,17 @@ class DonePopup(Popup):
 class StartSegmentationPopup(Popup):
     len_files = StringProperty()
 
+    def __init__(self, n_files, **kwargs):
+        super(StartSegmentationPopup, self).__init__(**kwargs)
+        self.len_files = n_files
+
 
 class DetermineNoteThresholdPopup(Popup):
     len_files = StringProperty()
+
+    def __init__(self, n_files, **kwargs):
+        super(DetermineNoteThresholdPopup, self).__init__(**kwargs)
+        self.len_files = n_files
 
 
 class NoteThreshInstructionsPopup(Popup):
@@ -49,6 +59,10 @@ class NoteThreshInstructionsPopup(Popup):
 class DetermineSyllSimThresholdPopup(Popup):
     len_files = StringProperty()
 
+    def __init__(self, n_files, **kwargs):
+        super(DetermineSyllSimThresholdPopup, self).__init__(**kwargs)
+        self.len_files = n_files
+
 
 class SyllSimThreshInstructionsPopup(Popup):
     pass
@@ -57,6 +71,10 @@ class SyllSimThreshInstructionsPopup(Popup):
 class StartAnalysisPopup(Popup):
     len_files = StringProperty()
 
+    def __init__(self, n_files, **kwargs):
+        super(StartAnalysisPopup, self).__init__(**kwargs)
+        self.len_files = n_files
+
 
 class NoGzipsFoundPopup(Popup):
     pass
@@ -64,5 +82,3 @@ class NoGzipsFoundPopup(Popup):
 
 class NoWavsFoundPopup(Popup):
     pass
-
-

@@ -14,7 +14,6 @@ import chipper.utils as utils
 Logger.disabled = False
 
 
-
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
@@ -29,17 +28,20 @@ class Analysis(Screen):
 
     def thread_process(self):
         th = threading.Thread(target=self.analyze,
-                              args=(self.parent.directory,))
+                              args=(self.parent.directory,
+                                    self.parent.files,
+                                    ))
         th.daemon = True
         th.start()
 
-    def analyze(self, directory, out_path=None):
+    def analyze(self, directory, files, out_path=None):
         if out_path is None:
             out_path = directory + "/AnalysisOutput_" + time.strftime(
                 "%Y%m%d_T%H%M%S")
-
-        file_names = [i for i in os.listdir(directory) if i.endswith('.gzip')]
-        files = [os.path.join(directory, i) for i in file_names]
+        file_names = [os.path.join(directory, i) for i in files]
+        # file_names = [i for i in os.listdir(directory) if i.endswith('.gzip')]
+        # file_names =
+        # files = [os.path.join(directory, i) for i in file_names]
         assert len(files) != 0, "No gzipped files in {}".format(directory)
 
         final_output = []
@@ -49,12 +51,12 @@ class Analysis(Screen):
             self.ids.processing_count.text = \
                 "{} of {} complete".format(i, n_files)
 
-            final_output.append(Song(files[i], self.user_note_thresh,
+            final_output.append(Song(file_names[i], self.user_note_thresh,
                                      self.user_syll_sim_thresh).run_analysis())
 
         self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
 
-        output_bout_data(out_path, file_names, final_output)
+        output_bout_data(out_path, files, final_output)
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
@@ -463,35 +465,6 @@ def get_notes(threshold_sonogram, onsets, offsets):
     return num_notes, props, labeled_sonogram
 
 
-# TODO: May want to add this back so it can be run from the command line rather than only in the GUI
-# def analyze(directory, n_cores=None, out_path=None, var=None):
-#     if out_path is None:
-#         out_path = directory + "/AnalysisOutput_" + time.strftime(
-#             "%Y%m%d_T%H%M%S")
-#
-#     files = []
-#     file_names = []
-#     for f in os.listdir(directory):
-#         if f.endswith('gzip'):
-#             files.append(os.path.join(directory, f))
-#             file_names.append(f)
-#
-#     assert len(files) != 0, "No gzipped files in {}".format(directory)
-#
-#     # final_output = [Song(i).run_analysis() for i in files]
-#     final_output = []
-#     count = 0
-#     for i in files:
-#         count += 1
-#         final_output.append(Song(i).run_analysis())
-#         if var.on_file is not None:
-#             # var.on_file = str(count)
-#             var.processing_count.text = str(count)
-#     # processes = mp.Pool(cores, maxtasksperchild=1000)
-#     # final_output = processes.map(self.run_analysis, files)
-#     output_bout_data(out_path, file_names, final_output)
-
-
 def calc_max_correlation(onsets, offsets, sonogram):
     sonogram_self_correlation = np.zeros(len(onsets))
 
@@ -519,8 +492,6 @@ def calc_sylls_freq_ranges(offsets, onsets, sonogram):
         sylls_freq_range_lower.append(rows_with_signal[-1] + 1)
 
     return sylls_freq_range_upper, sylls_freq_range_lower
-
-
 
 
 def output_bout_data(output_path, file_name, output_dict):
