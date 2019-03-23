@@ -510,8 +510,11 @@ class ControlPanel(Screen):
         # (increases low amplitude sections), and graph sonogram
         freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
         # switch next two lines if you don't want amplitude scaled
-        # scaled_sonogram = freqfiltered_sonogram
-        scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
+        if self.ids.normalize_amp.state == 'down':
+            print('normalized')
+            scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
+        else:
+            scaled_sonogram = freqfiltered_sonogram
 
         # plot resultant sonogram in the top graph in control panel
         self.top_image.image_sonogram(scaled_sonogram)

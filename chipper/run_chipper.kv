@@ -681,69 +681,80 @@
                 on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
         GridLayout:
-            rows: 7
+            rows: 5
             cols: 1
-            spacing: 20
+            spacing: 5
             padding: 10
             size_hint_x: .375
 
             GridLayout:
                 rows: 3
                 cols: 1
-                spacing: 10
+                spacing: 40
                 padding: 10
+                size_hint_y: 2.5
 
-                CustomLabel:
-                    text: 'Threshold: Top Percent of Signal'
-                MySlider:
-                    id: slider_threshold
-                    min: 0.1
-                    max: 6
-                    value: root.user_signal_thresh
-                    step: 0.1
-                    on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-                CustomLabel:
-                    id: slider_threshold_label
+                GridLayout:
+                    rows: 3
+                    cols: 1
+                    spacing: 20
+
+                    CustomLabel:
+                        text: 'Threshold: Top Percent of Signal'
+                    MySlider:
+                        id: slider_threshold
+                        min: 0.1
+                        max: 6
+                        value: root.user_signal_thresh
+                        step: 0.1
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    CustomLabel:
+                        id: slider_threshold_label
+
+                GridLayout:
+                    rows: 3
+                    cols: 1
+                    spacing: 20
+
+                    CustomLabel:
+                        text: 'Minimum Silence Duration'
+                    MySlider:
+                        id: slider_min_silence
+                        min: 1
+                        value: root.user_min_silence
+                        step: 1
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    CustomLabel:
+                        id: slider_min_silence_label
+
+                GridLayout:
+                    rows: 3
+                    cols: 1
+                    spacing: 20
+
+                    CustomLabel:
+                        text: 'Minimum Syllable Duration'
+                    MySlider:
+                        id: slider_min_syllable
+                        min: 1
+                        value: root.user_min_syllable
+                        step: 1
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    CustomLabel:
+                        id: slider_min_syllable_label
 
             GridLayout:
                 rows: 3
                 cols: 1
-                spacing: 10
+                spacing: 5
                 padding: 10
+                size_hint_y: 1.5
 
-                CustomLabel:
-                    text: 'Minimum Silence Duration'
-                MySlider:
-                    id: slider_min_silence
-                    min: 1
-                    value: root.user_min_silence
-                    step: 1
-                    on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-                CustomLabel:
-                    id: slider_min_silence_label
-
-            GridLayout:
-                rows: 3
-                cols: 1
-                spacing: 10
-                padding: 10
-
-                CustomLabel:
-                    text: 'Minimum Syllable Duration'
-                MySlider:
-                    id: slider_min_syllable
-                    min: 1
-                    value: root.user_min_syllable
-                    step: 1
-                    on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
-                CustomLabel:
-                    id: slider_min_syllable_label
-
-            GridLayout:
-                rows: 2
-                cols: 1
-                spacing: 10
-                padding: 10
+                ToggleButton:
+                    id: normalize_amp
+                    text: 'Normalize Amplitude'
+                    halign: 'center'
+                    on_press: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
 
                 PlayButton:
                     image_source: 'atlas://data/images/defaulttheme/media-playback-start'
@@ -758,12 +769,13 @@
             GridLayout:
                 rows: 1
                 cols: 2
-                spacing: 10
+                spacing: 5
                 padding: 10
 
                 GridLayout:
                     rows: 2
                     cols: 1
+                    spacing: 1
 
                     ToggleButton:
                         id: syllable_beginning
@@ -782,6 +794,7 @@
                 GridLayout:
                     rows: 2
                     cols: 1
+                    spacing: 1
 
                     ToggleButton:
                         id: add
@@ -799,7 +812,7 @@
             GridLayout:
                 rows: 2
                 cols: 1
-                spacing: 10
+                spacing: 5
                 padding: 10
 
                 Button:
