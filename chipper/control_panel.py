@@ -586,14 +586,14 @@ class ControlPanel(Screen):
             np.repeat(0, 3),
             np.tile([0, .75, np.nan], 1),
             linewidth=0.75,
-            color='g',
+            color='#2BB34B',
             transform=self.trans
         )
         self.lines_off, = self.ax2.plot(
             np.repeat(0, 3),
             np.tile([0, .90, np.nan], 1),
             linewidth=0.75,
-            color='g',
+            color='#2BB34B',
             transform=self.trans
         )
 
