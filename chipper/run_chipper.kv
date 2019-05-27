@@ -643,7 +643,7 @@
 #                value_track: True
 #                value_track_color: [.2, .7, 0.9, 1]
                 step: 1
-                on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
 
             GridLayout:
 
@@ -678,7 +678,7 @@
                 size_hint: 1, 0.05
                 padding: 0
                 step: 1
-                on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
 
         GridLayout:
             rows: 5
@@ -707,7 +707,7 @@
                         max: 6
                         value: root.user_signal_thresh
                         step: 0.1
-                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
                     CustomLabel:
                         id: slider_threshold_label
 
@@ -723,7 +723,7 @@
                         min: 1
                         value: root.user_min_silence
                         step: 1
-                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
                     CustomLabel:
                         id: slider_min_silence_label
 
@@ -739,7 +739,7 @@
                         min: 1
                         value: root.user_min_syllable
                         step: 1
-                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                        on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
                     CustomLabel:
                         id: slider_min_syllable_label
 
@@ -754,7 +754,7 @@
                     id: normalize_amp
                     text: 'Normalize Amplitude'
                     halign: 'center'
-                    on_press: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value)
+                    on_press: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
 
                 PlayButton:
                     image_source: 'atlas://data/images/defaulttheme/media-playback-start'
