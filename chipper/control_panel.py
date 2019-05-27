@@ -243,7 +243,6 @@ class ControlPanel(Screen):
         else:
             onsets_list = list(self.syllable_onsets)
             onsets_list.remove(self.syllable_onsets[self.index])
-            print('onset_list', onsets_list)
             self.syllable_onsets = np.array(onsets_list)
             self.mark.remove()
             self.image_syllable_marks()
@@ -284,7 +283,7 @@ class ControlPanel(Screen):
 
     def set_song_params(self, filter_boundary=None, bout_range=None,
                         percent_keep=None, min_silence=None,
-                        min_syllable=None):
+                        min_syllable=None, normalized=None):
 
         if filter_boundary is None:
             self.filter_boundary = []
@@ -336,6 +335,13 @@ class ControlPanel(Screen):
         self.ids.slider_min_silence.max = 50 / self.millisecondsPerPixel
         # want max to be 350ms
         self.ids.slider_min_syllable.max = 350 / self.millisecondsPerPixel
+
+        if normalized is None:
+            self.normalized = 'normal'
+            self.ids.normalize_amp.state = self.normalized
+        else:
+            self.normalized = normalized
+            self.ids.normalize_amp.state = self.normalized
 
     def set_params_in_kv(self):
         # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
@@ -392,7 +398,8 @@ class ControlPanel(Screen):
             self.bout_range,
             self.percent_keep,
             self.min_silence,
-            self.min_syllable
+            self.min_syllable,
+            self.normalized
         )
 
     def next(self):
@@ -435,6 +442,13 @@ class ControlPanel(Screen):
             self.percent_keep = params['PercentSignalKept']
             self.min_silence = params['MinSilenceDuration']
             self.min_syllable = params['MinSyllableDuration']
+            if 'Normalized' in params:
+                if params['Normalized'] == 'yes':
+                    self.normalized = 'down'
+                else:
+                    self.normalized = 'normal'
+            else:
+                self.normalized = 'normal'
 
         self.set_params_in_kv()
         self.connect_song_shape_to_kv()
@@ -456,11 +470,11 @@ class ControlPanel(Screen):
         if prev_onsets.size:
             self.update(self.filter_boundary, self.bout_range,
                         self.percent_keep, self.min_silence,
-                        self.min_syllable, prev_run_onsets=prev_onsets,
+                        self.min_syllable, self.normalized, prev_run_onsets=prev_onsets,
                         prev_run_offsets=prev_offsets)
         else:
             self.update(self.filter_boundary, self.bout_range,
-                        self.percent_keep, self.min_silence, self.min_syllable)
+                        self.percent_keep, self.min_silence, self.min_syllable, self.normalized)
 
         # increment i so next file will be opened on submit/toss
         self.i += 1
@@ -469,7 +483,7 @@ class ControlPanel(Screen):
     # included in the arguments) or when reset parameters button is clicked
     # otherwise called every time any slider is moved
     def update(self, filter_boundary, bout_range, percent_keep, min_silence,
-               min_syllable, prev_run_onsets=None, prev_run_offsets=None):
+               min_syllable, normalized, prev_run_onsets=None, prev_run_offsets=None):
 
         # check if the song has been run before (if gzip data was loaded)
         if prev_run_onsets is None:
@@ -501,7 +515,8 @@ class ControlPanel(Screen):
                              bout_range=bout_range,
                              percent_keep=percent_keep,
                              min_silence=min_silence,
-                             min_syllable=min_syllable)
+                             min_syllable=min_syllable,
+                             normalized=normalized)
 
         # must do this for image to update for some reason
         sonogram = self.sonogram.copy()
@@ -511,7 +526,6 @@ class ControlPanel(Screen):
         freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
         # switch next two lines if you don't want amplitude scaled
         if self.ids.normalize_amp.state == 'down':
-            print('normalized')
             scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
         else:
             scaled_sonogram = freqfiltered_sonogram
@@ -681,7 +695,8 @@ class ControlPanel(Screen):
                     'BoutRange': self.bout_range,
                     'PercentSignalKept': self.percent_keep,
                     'MinSilenceDuration': self.min_silence,
-                    'MinSyllableDuration': self.min_syllable
+                    'MinSyllableDuration': self.min_syllable,
+                    'Normalized': 'yes' if self.normalized == 'down' else 'no'
                 }
                 self.save_syllables_all[self.files[self.i - 1]] = {
                     'Onsets': self.syllable_onsets.tolist(),
