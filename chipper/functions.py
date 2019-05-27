@@ -50,7 +50,7 @@ def initial_sonogram(i, files, directory, find_gzips):
 
     # make spectrogram binary, divide by max value to get 0-1 range
     sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1,
-                                                                     44100,
+                                                                     sample_rate,
                                                                      1024,
                                                                      1010,
                                                                      2)
