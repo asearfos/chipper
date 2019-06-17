@@ -1,30 +1,16 @@
-# import sys
+import os
+
 import kivy
 from kivy.logger import Logger
-Logger.disabled = True
+
+Logger.disabled = False
 # sys.path.insert(0, 'bin')
 kivy.require('1.10.0')
 
 from chipper.manager import Manager
-from chipper.landing_page import LandingPage
-from chipper.file_explorer import FileExplorer
-from chipper.control_panel import ControlPanel
-from chipper.note_threshold_page import NoteThresholdPage
-from chipper.note_summary_page import NoteSummaryPage
-from chipper.syllable_similarity_threshold_page import SyllSimThresholdPage
-from chipper.syllable_similarity_summary_page import SyllSimSummaryPage
-from chipper.analysis import Analysis
-from chipper.popups import FinishMarksPopup, CheckLengthPopup, CheckForSyllablesPopup, CheckBeginningEndPopup, \
-    CheckOrderPopup, DonePopup
-from chipper.sliders import MySlider, MyRangeSlider
-from chipper.image_sonogram import ImageSonogram
-from chipper.text_inputs import NumericInput
 from kivy.app import App
-from kivy.core.window import Window
 from kivy.config import Config
 Config.set('kivy', 'exit_on_escape', '0')
-import os
-import sys
 
 
 class run_chipperApp(App):

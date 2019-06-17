@@ -3,8 +3,9 @@ from kivy.uix.popup import Popup
 
 
 class FinishMarksPopup(Popup):
-    def __init__(self, controls,
-                 **kwargs):  # controls is now the object where popup was called from.
+
+    def __init__(self, controls, **kwargs):
+        # controls is now the object where popup was called from.
         # self.register_event_type('on_connect')
         super(FinishMarksPopup, self).__init__(**kwargs)
         self.controls = controls
@@ -34,6 +35,15 @@ class DonePopup(Popup):
     def quit_app(self):
         print('song segmentation complete, Close chipper.')
         quit()
+
+
+class LargeFilePopup(Popup):
+    message = StringProperty()
+
+    def __init__(self, controls, file_name, **kwargs):
+        super(LargeFilePopup, self).__init__(**kwargs)
+        self.controls = controls
+        self.message = file_name
 
 
 class StartSegmentationPopup(Popup):
