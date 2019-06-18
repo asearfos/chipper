@@ -5,6 +5,11 @@ Logger.disabled = False
 # sys.path.insert(0, 'bin')
 kivy.require('1.10.0')
 
+from kivy.app import App
+from kivy.config import Config
+Config.set('kivy', 'exit_on_escape', '0')
+Config.set('graphics', 'fullscreen', 0)
+Config.set('graphics', 'window_state', 'maximized')
 
 from chipper.landing_page import LandingPage
 from chipper.file_explorer import FileExplorer
@@ -21,12 +26,7 @@ from chipper.sliders import MySlider, MyRangeSlider
 from chipper.image_sonogram import ImageSonogram
 from chipper.text_inputs import NumericInput
 
-from kivy.core.window import Window
 from chipper.manager import Manager
-from kivy.app import App
-from kivy.config import Config
-Config.set('kivy', 'exit_on_escape', '0')
-
 
 
 class run_chipperApp(App):
@@ -55,7 +55,6 @@ try:  # needed for PyInstaller to work with --windowed option and not throw fata
     if __name__ == "__main__":
         # kivy.resources.resource_add_path(resourcePath())  # add this line if using --onefile in PyInstaller
         Config.set('input', 'mouse', 'mouse,disable_multitouch')
-        # Window.fullscreen = 'auto'
         run_chipperApp().run()
 except:
     pass
