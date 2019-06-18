@@ -49,8 +49,8 @@ class Analysis(Screen):
         errors = ''
         for i in range(n_files):
             f_name = file_names[i]
-            self.ids.processing_count.text = \
-                "{}\n{} of {} complete".format(errors, i, n_files)
+            self.ids.analysis_warnings.text = errors
+            self.ids.processing_count.text = "{} of {} complete".format(i, n_files)
             try:
                 log.info("{} of {} complete".format(i, n_files))
                 output = Song(f_name, self.user_note_thresh,
@@ -58,8 +58,8 @@ class Analysis(Screen):
                 output['f_name'] = f_name
                 final_output.append(output)
             except Exception as e:
-                errors += "Error on file {0}\n{1}\n ".format(f_name, e)
-                self.ids.processing_count.text = errors
+                errors += "WARNING skipped file {0}\n{1}\n ".format(f_name, e)
+                self.ids.analysis_warnings.text = errors
                 log.info(errors)
         self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
 

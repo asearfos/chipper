@@ -1231,12 +1231,23 @@
 
     GridLayout:
         id: analysis_layout
-        rows: 6
+        rows: 7
         cols: 1
+        spacing: 10
+        padding: 10
 
         CustomLabel:
             text: 'Your files are being processed:'
             font_size: '18sp'
+
+        CustomLabel:
+            id: analysis_warnings
+            text_size: self.width/1.1, None
+            text: ''
+            font_size: '16sp'
+            halign: 'left'
+            valign: 'middle'
+
         CustomLabel:
             id: processing_count
             text: ''
