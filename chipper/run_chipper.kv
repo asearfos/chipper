@@ -68,12 +68,10 @@
         orientation: 'vertical'
         Button:
             text: 'Accept'
-            on_press: root.controls.enter_mark()
-            on_release: root.dismiss()
+            on_release: root.controls.enter_mark(); root.dismiss()
         Button:
             text: 'Cancel'
-            on_press: root.controls.cancel_mark()
-            on_release: root.dismiss()
+            on_release: root.controls.cancel_mark(); root.dismiss()
         Label:
             text: 'ProTip: You can press ENTER to accept or X to cancel to avoid this popup.'
             text_size: self.size
@@ -286,12 +284,10 @@
         orientation: 'horizontal'
         Button:
             text: 'Toss'
-            on_press: root.controls.toss();
-            on_release:  root.dismiss();
+            on_release: root.controls.toss(); root.dismiss();
         Button:
             text: 'Process'
-            on_press: root.controls.process();
-            on_release: root.dismiss();
+            on_release: root.controls.process(); root.dismiss();
 
 <NoWavsFoundPopup>
     size_hint: 0.3, 0.3

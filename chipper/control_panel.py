@@ -405,7 +405,7 @@ class ControlPanel(Screen):
         # update the label stating the current file and the file number out
         # of total number of files
         # use self.i since you have not yet incremented
-        self.ids.current_file.text = "{}\nFile{} out of {}".format(
+        self.ids.current_file.text = "{}\nFile {} out of {}".format(
             self.current_file, self.i, len(self.files)
         )
 

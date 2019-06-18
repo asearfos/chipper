@@ -141,6 +141,7 @@ class Sonogram(object):
                 self.min_syllable = id_min_syl
         else:
             self.min_syllable = min_syllable
+
         if normalized is None:
             self.normalized = 'normal'
         else:
