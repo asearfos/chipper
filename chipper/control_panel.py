@@ -441,6 +441,7 @@ class ControlPanel(Screen):
             id_min_sil=self.ids.slider_min_silence.min,
             id_min_syl=self.ids.slider_min_syllable.min
         )
+        self.update_panel_text()
         self._update()
 
     def _update(self, prev_run_onsets=None, prev_run_offsets=None):
