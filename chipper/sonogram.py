@@ -48,7 +48,6 @@ class Sonogram(object):
             latest_file = max(zip_file, key=os.path.getctime)
             self.params, self.prev_onsets, self.prev_offsets = \
                 load_bout_data(latest_file)
-            self.update_by_params(self.params)
         else:
             self.params = dict()
             self.prev_onsets = np.empty([0])
@@ -67,10 +66,12 @@ class Sonogram(object):
                                     self.rows]
         else:
             self.filter_boundary = params['FrequencyFilter']
+
         self.bout_range = params['BoutRange']
         self.percent_keep = params['PercentSignalKept']
         self.min_silence = params['MinSilenceDuration']
         self.min_syllable = params['MinSyllableDuration']
+
         if 'Normalized' in params:
             if params['Normalized'] == 'yes':
                 self.normalized = 'down'
@@ -78,6 +79,15 @@ class Sonogram(object):
                 self.normalized = 'normal'
         else:
             self.normalized = 'normal'
+
+        self.set_song_params(
+            filter_boundary=self.filter_boundary,
+            bout_range=self.bout_range,
+            percent_keep=self.percent_keep,
+            min_silence=self.min_silence,
+            min_syllable=self.min_syllable,
+            normalized=self.normalized,
+        )
 
     def reset_params(self, user_signal_thresh, user_min_silence,
                      user_min_syllable, id_min_sil, id_min_syl):

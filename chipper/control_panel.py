@@ -400,6 +400,10 @@ class ControlPanel(Screen):
                 Logger.info("Updating params based on previous run")
                 self.song.update_by_params(params)
         Logger.info("Updating panel text")
+
+        if self.song.params:
+            self.song.update_by_params(self.song.params)
+
         self.update_panel_text()
 
         # update the label stating the current file and the file number out
