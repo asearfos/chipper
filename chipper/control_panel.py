@@ -406,7 +406,7 @@ class ControlPanel(Screen):
         # of total number of files
         # use self.i since you have not yet incremented
         self.ids.current_file.text = "{}\nFile {} out of {}".format(
-            self.current_file, self.i, len(self.files)
+            self.file_names[self.i - 1], self.i, len(self.files)
         )
 
         # initialize the matplotlib figures/axes (no data yet)
@@ -634,7 +634,7 @@ class ControlPanel(Screen):
                 }
 
                 filename_gzip = "{}/SegSyllsOutput_{}.gzip".format(
-                    self.output_path, self.current_file
+                    self.output_path, self.file_names[self.i - 1]
                 )
 
                 dictionaries = [

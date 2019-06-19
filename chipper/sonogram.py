@@ -38,17 +38,16 @@ class Sonogram(object):
         # override with previous
         if find_gzips:
             # check if there is a corresponding gzip from a previous run
-            _path = '{}/**/SegSyllsOutput_{}.gzip'.format(
-                os.path.split(os.path.split(directory)[0])[0], wavfile[:4]
-            )
+            _path = '{}/**/SegSyllsOutput_{}.gzip'.format(directory, wavfile[:-4])
             zip_file = glob.glob(_path, recursive=True)
         else:
             zip_file = []
 
         if zip_file:
             # if prev zip file, open and use the saved parameters
+            latest_file = max(zip_file, key=os.path.getctime)
             self.params, self.prev_onsets, self.prev_offsets = \
-                load_bout_data(zip_file[0])
+                load_bout_data(latest_file)
             self.update_by_params(self.params)
         else:
             self.params = dict()
