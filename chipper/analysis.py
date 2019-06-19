@@ -69,7 +69,7 @@ class Analysis(Screen):
 
 
 class Song(object):
-    def __init__(self, file_name, note_thresh, syll_sim_thresh, testing=False):
+    def __init__(self, file_name, note_thresh, syll_sim_thresh):
         self.file_name = file_name
         ons, offs, thresh, ms, htz = load_bout_data(self.file_name)
         self.onsets = ons
@@ -81,7 +81,6 @@ class Song(object):
         self.n_syll = len(self.syll_dur)
         self.note_thresh = int(note_thresh)
         self.syll_sim_thresh = float(syll_sim_thresh)
-        self._test = testing
 
     def log(self, output):
         log.info(output)
@@ -194,18 +193,6 @@ class Song(object):
             offsets=self.offsets, syll_duration=self.syll_dur,
             corr_thresh=self.syll_sim_thresh
         )
-
-        if self._test:
-            son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
-                sonogram=self.threshold_sonogram, onsets=self.onsets,
-                offsets=self.offsets, syll_duration=self.syll_dur,
-                corr_thresh=self.syll_sim_thresh
-            )
-            self.log('Method before\n{}'.format(son_corr_2))
-            self.log('Method after\n{}'.format(son_corr))
-            self.log('Are the same? {}'.format(
-                np.isclose(son_corr, son_corr_2).all())
-            )
 
         # get syllable pattern
         syll_pattern = find_syllable_pattern(son_corr_bin)
@@ -375,43 +362,6 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
     return sonogram_correlation, sonogram_correlation_binary
 
 
-def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
-                                 corr_thresh=50.0):
-    sonogram_self_correlation = calc_max_correlation(
-        onsets, offsets, sonogram
-    )
-
-    n_offset = len(offsets)
-    sonogram_correlation = np.zeros((n_offset, n_offset))
-
-    for j in range(n_offset):
-        sonogram_correlation[j, j] = 100
-        # do not want to fill the second half of the diagonal matrix
-        for k in range(j + 1, n_offset):
-            max_overlap = max(sonogram_self_correlation[j],
-                              sonogram_self_correlation[k])
-
-            shift_factor = abs(syll_duration[j] - syll_duration[k])
-
-            if syll_duration[j] < syll_duration[k]:
-                min_length = syll_duration[j]
-                syll_corr = calc_corr_old(sonogram, onsets, j, k, shift_factor,
-                                          min_length, max_overlap)
-
-            # will be if k is shorter than j or they are equal
-            else:
-                min_length = syll_duration[k]
-                syll_corr = calc_corr_old(sonogram, onsets, k, j, shift_factor,
-                                          min_length, max_overlap)
-            # fill both upper and lower diagonal of symmetric matrix
-            sonogram_correlation[j, k] = syll_corr
-            sonogram_correlation[k, j] = syll_corr
-
-    sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
-    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
-    return sonogram_correlation, sonogram_correlation_binary
-
-
 def get_square(image, on, off):
     subset_1 = image[:, on:off]
     mask = subset_1[:, :] < 1
@@ -427,11 +377,11 @@ def calc_corr(s1, s2, max_overlap):
         s1, s2 = s2, s1
         size_diff *= -1
     syll_correlation = np.zeros(size_diff + 1)
-    s2_flatt = s2.flatten()
+    s2_flat = s2.flatten()
     for i in range(size_diff + 1):
         flat = s1[:, i:i + min_size]
         flat = flat.flatten()
-        syll_correlation[i] = np.dot(flat, s2_flatt).sum()
+        syll_correlation[i] = np.dot(flat, s2_flat).sum()
     return syll_correlation.max() * 100. / max_overlap
 
 
