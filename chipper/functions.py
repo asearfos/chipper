@@ -23,46 +23,6 @@ def load_bout_data(f_name):
     return params, onsets, offsets
 
 
-def initial_sonogram(i, files, directory, find_gzips):
-    wavfile = files[i]
-    # audio data always returned as 2d array
-    song1, sample_rate = sf.read(os.path.join(directory, wavfile),
-                                 always_2d=True)
-    sound = SoundLoader.load(os.path.join(directory, wavfile))
-
-    song1 = song1[:, 0]  # make files mono
-
-    if find_gzips:
-        # check if there is a corresponding gzip from a previous run
-        zip_file = glob.glob(os.path.split(os.path.split(directory)[0])[0] +
-                             '/**/' + 'SegSyllsOutput_' + wavfile.replace(
-            '.wav', '') + '.gzip', recursive=True)
-    else:
-        zip_file = []
-
-    if zip_file:
-        # if there is corresponding zip file, open and use the saved parameters
-        params, prev_onsets, prev_offsets = load_bout_data(zip_file[0])
-    else:
-        params = []
-        prev_onsets = np.empty([0])
-        prev_offsets = np.empty([0])
-
-    # make spectrogram binary, divide by max value to get 0-1 range
-    sonogram, millisecondsPerPixel, hertzPerPixel = ifdvsonogramonly(song1,
-                                                                     sample_rate,
-                                                                     1024,
-                                                                     1010,
-                                                                     2)
-    [rows, cols] = sonogram.shape
-    sonogram_padded = np.zeros((rows, cols + 300))
-    # padding for window to start
-    sonogram_padded[:, 150:cols + 150] = sonogram
-
-    return sound, sonogram_padded, millisecondsPerPixel, hertzPerPixel, \
-           params, prev_onsets, prev_offsets
-
-
 def frequency_filter(filter_boundary, sonogram):
     rows = sonogram.shape[0]
     sonogram[(rows - int(filter_boundary[0])):rows, :] = 0  # high pass filter
