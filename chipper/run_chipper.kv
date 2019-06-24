@@ -68,12 +68,10 @@
         orientation: 'vertical'
         Button:
             text: 'Accept'
-            on_press: root.controls.enter_mark()
-            on_release: root.dismiss()
+            on_release: root.controls.enter_mark(); root.dismiss()
         Button:
             text: 'Cancel'
-            on_press: root.controls.cancel_mark()
-            on_release: root.dismiss()
+            on_release: root.controls.cancel_mark(); root.dismiss()
         Label:
             text: 'ProTip: You can press ENTER to accept or X to cancel to avoid this popup.'
             text_size: self.size
@@ -277,6 +275,19 @@
         Button:
             text: 'Back'
             on_release: root.dismiss()
+
+<LargeFilePopup>
+    size_hint: 0.5, 0.3
+    auto_dismiss: False
+    title:  'File ' + root.message + ' maybe too large'
+    BoxLayout:
+        orientation: 'horizontal'
+        Button:
+            text: 'Toss'
+            on_release: root.controls.toss(); root.dismiss();
+        Button:
+            text: 'Process'
+            on_release: root.controls.process(); root.dismiss();
 
 <NoWavsFoundPopup>
     size_hint: 0.3, 0.3
@@ -484,7 +495,7 @@
                         size_hint: 0.15, 0.1
                         disabled: False if chipper.active else True
                     RadioLabel:
-                        text: 'Search for previously used parameters\n(note: slower loading time, will override defaults)'
+                        text: 'Search for previously used parameters (most recent gzip in output folder).\n(note: slower loading time, will override defaults)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -762,7 +773,7 @@
                     on_release: controls.play_song()
 
                 Button:
-                    text: 'Reset Parameters'
+                    text: 'Default Parameters'
                     halign: 'center'
                     on_release: controls.reset_parameters()
 

@@ -4,16 +4,15 @@ from kivy.properties import ObjectProperty, BooleanProperty, StringProperty
 from kivy.uix.screenmanager import Screen
 
 import chipper.functions as seg
-from chipper.popups import FinishMarksPopup, CheckLengthPopup, \
-    CheckForSyllablesPopup, \
-    CheckBeginningEndPopup, CheckOrderPopup, \
-    DonePopup
+import chipper.popups as popups
+from chipper.sonogram import Sonogram
 
 matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import matplotlib.transforms as tx
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+
 plt.style.use('dark_background')
 
 from bisect import bisect_left, bisect_right, insort
@@ -23,6 +22,9 @@ import os
 import math
 import time
 from chipper.utils import save_gzip_pickle
+from kivy.logger import Logger
+
+Logger.disabled = False
 
 
 # TODO improve how self variables are being used; some have the same variable
@@ -50,13 +52,37 @@ class ControlPanel(Screen):
         self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
         self.fig2.add_axes(self.ax2)
+        # all songs and files
         self.file_names = None
         self.files = None
+        self.output_path = None
+
+        # storage for parameters
+        self.save_parameters_all = {}
+        self.save_syllables_all = {}
+        self.save_tossed = {}
+        self.save_conversions_all = {}
+        # attributes for song that is being worked on
+        self.i = None
+        self.song = None
+        self.current_file = None
+        self.syllable_onsets = None
+        self.syllable_offsets = None
+
+        # place holders for plots
+        self.plot_binary = None
+        self.trans = None
+        self.lines_on = None
+        self.lines_off = None
+        # for plotting
+        self.index = None
+        self.mark = None
+        self.graph_location = None
         super(ControlPanel, self).__init__(**kwargs)
 
     def on_check_boolean(self):
         if self.click >= 2:
-            marks_popup = FinishMarksPopup(self)
+            marks_popup = popups.FinishMarksPopup(self)
             marks_popup.open()
 
     def on_touch_down(self, touch):
@@ -77,7 +103,7 @@ class ControlPanel(Screen):
             if event.key in self.direction_to_int and \
                     (25 <= self.graph_location < self.cols - 25):
                 self.graph_location += self.direction_to_int[
-                                           event.key]*move_interval
+                                           event.key] * move_interval
                 self.update_mark(self.graph_location)
             elif event.key == 'enter':
                 if self.ids.syllable_beginning.state == 'down':
@@ -146,9 +172,10 @@ class ControlPanel(Screen):
 
     def add_mark(self, touchx, touchy):
         self.mark_boolean = True
-        conversion = self.sonogram.shape[1]/self.ids.graph_binary.size[0]
-        self.graph_location = math.floor((touchx-self.ids.graph_binary.pos[
-            0])*conversion)
+        conversion = self.song.sonogram.shape[1] / self.ids.graph_binary.size[
+            0]
+        self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[
+            0]) * conversion)
 
         ymax = 0.75 if self.ids.syllable_beginning.state == 'down' else 0.90
 
@@ -195,42 +222,26 @@ class ControlPanel(Screen):
             self.image_syllable_marks()
             self.graph_location = None
 
-    def takeClosest(self, myList, myNumber):
-        """
-        Assumes myList is sorted. Returns index of closest value to myNumber.
-        If two numbers are equally close, return the index of the smallest
-        number. From: https://stackoverflow.com/questions/12141150/from-list-of
-        -integers-get-number-closest-to-a-given-value
-        """
-        pos = bisect_left(myList, myNumber)
-        if pos == 0:
-            return pos
-        if pos == len(myList):
-            return -1
-        before = myList[pos - 1]
-        after = myList[pos]
-        if after - myNumber < myNumber - before:
-            return pos
-        else:
-            return pos-1
-
     def delete_mark(self, touchx, touchy):
         self.mark_boolean = True
-        conversion = self.sonogram.shape[1] / self.ids.graph_binary.size[0]
-        self.graph_location = math.floor((touchx - self.ids.graph_binary.pos[
-            0]) * conversion)
+        conversion = self.song.sonogram.shape[1] / \
+                     self.ids.graph_binary.size[0]
+
+        self.graph_location = math.floor(
+            (touchx - self.ids.graph_binary.pos[0]) * conversion
+        )
 
         if self.ids.syllable_beginning.state == 'down':
             ymax = 0.75
             # find nearest onset
-            self.index = self.takeClosest(self.syllable_onsets,
-                                          self.graph_location)
+            self.index = self.take_closest(self.syllable_onsets,
+                                           self.graph_location)
             location = self.syllable_onsets[self.index]
         else:
             ymax = 0.90
             # find nearest offset
-            self.index = self.takeClosest(self.syllable_offsets,
-                                          self.graph_location)
+            self.index = self.take_closest(self.syllable_offsets,
+                                           self.graph_location)
             location = self.syllable_offsets[self.index]
 
         self.mark = self.ax2.axvline(location, ymax=ymax, color='m',
@@ -261,18 +272,16 @@ class ControlPanel(Screen):
 
     # called in kv just before entering control panel screen (on_pre_enter)
     def setup(self):
+        Logger.info("Setting up")
         self.i = 0
         self.files = self.parent.files
         self.file_names = self.parent.file_names
         # these are the dictionaries that are added to with each song
-        self.save_parameters_all = {}
-        self.save_syllables_all = {}
-        self.save_tossed = {}
-        self.save_conversions_all = {}
-        self.next()
-        #ToDo: add "_reChipper" to end of output_path if previous .gzips used.
+
+        # ToDo: add "_reChipper" to end of output_path if previous .gzips used.
         # self.output_path = self.parent.directory + "SegSyllsOutput_" + \
         #                    time.strftime("%Y%m%d_T%H%M%S")  # + "_reChipper"
+
         self.output_path = os.path.join(
             self.parent.directory,
             "SegSyllsOutput_{}".format(time.strftime("%Y%m%d_T%H%M%S"))
@@ -280,250 +289,173 @@ class ControlPanel(Screen):
 
         if not os.path.isdir(self.output_path):
             os.makedirs(self.output_path)
+        self.next()
 
-    def set_song_params(self, filter_boundary=None, bout_range=None,
-                        percent_keep=None, min_silence=None,
-                        min_syllable=None, normalized=None):
-
-        if filter_boundary is None:
-            self.filter_boundary = []
-        else:
-            self.filter_boundary = filter_boundary
-
-        if bout_range is None:
-            self.bout_range = []
-        else:
-            self.bout_range = bout_range
-
-        # next three parameters are set to the default defined by user in
-        # landing page if there is no previous value (from chippering before)
-        if percent_keep is None:
-            self.percent_keep = float(self.user_signal_thresh)
-            # self.percent_keep = self.ids.slider_threshold.value
-        else:
-            self.percent_keep = percent_keep
-
-        if min_silence is None:
-            self.min_silence = float(
-                self.user_min_silence)/self.millisecondsPerPixel
-            # self.min_silence = \
-            #     self.ids.slider_min_silence.value/self.millisecondsPerPixel
-            if self.min_silence == 0:
-                self.min_silence = self.ids.slider_min_silence.min
-        else:
-            self.min_silence = min_silence
-
-        if min_syllable is None:
-            self.min_syllable = float(
-                self.user_min_syllable)/self.millisecondsPerPixel
-            # self.min_syllable = \
-            #     self.ids.slider_min_syllable.value/self.millisecondsPerPixel
-            if self.min_syllable == 0:
-                self.min_syllable = self.ids.slider_min_syllable.min
-        else:
-            self.min_syllable = min_syllable
-
+    def update_panel_text(self):
         # this updates the text or slider limits on the control panel screen
-        self.ids.slider_threshold_label.text = str(self.percent_keep) + "%"
+        self.ids.slider_threshold_label.text = '{}%'.format(
+            self.song.percent_keep)
         # have to round these because of the conversion
-        self.ids.slider_min_silence_label.text = \
-            str(round(self.min_silence * self.millisecondsPerPixel, 1)) + " ms"
-        self.ids.slider_min_syllable_label.text = \
-            str(round(self.min_syllable * self.millisecondsPerPixel,
-                      1)) + " ms"
+        self.ids.slider_min_silence_label.text = "{} ms".format(
+            round(self.song.min_silence * self.song.ms_pix, 1)
+        )
+        self.ids.slider_min_syllable_label.text = '{} ms'.format(
+            round(self.song.min_syllable * self.song.ms_pix, 1)
+        )
         # want max to be 50ms
-        self.ids.slider_min_silence.max = 50 / self.millisecondsPerPixel
+        self.ids.slider_min_silence.max = 50 / self.song.ms_pix
         # want max to be 350ms
-        self.ids.slider_min_syllable.max = 350 / self.millisecondsPerPixel
-
-        if normalized is None:
-            self.normalized = 'normal'
-            self.ids.normalize_amp.state = self.normalized
-        else:
-            self.normalized = normalized
-            self.ids.normalize_amp.state = self.normalized
-
-    def set_params_in_kv(self):
-        # !!!SHOULDN'T NEED THE VALUES SET IN .KV NOW!!!
-        # TODO: connect defaults to .kv
-        #  (would like to do this the other way around)
-        #  or remove values from .kv
-        self.ids.slider_threshold.value = self.percent_keep
-        self.ids.slider_min_silence.value = self.min_silence
-        self.ids.slider_min_syllable.value = self.min_syllable
+        self.ids.slider_min_syllable.max = 350 / self.song.ms_pix
+        self.ids.normalize_amp.state = self.song.normalized
+        self.ids.slider_threshold.value = self.song.percent_keep
+        self.ids.slider_min_silence.value = self.song.min_silence
+        self.ids.slider_min_syllable.value = self.song.min_syllable
         self.ids.syllable_beginning.state = 'down'
         self.ids.syllable_ending.state = 'normal'
         self.ids.add.state = 'normal'
         self.ids.delete.state = 'normal'
-        # following lines were moved to set_song_params
-        # this updates the text or slider limits on the control panel screen
-        # self.ids.slider_threshold_label.text = \
-        # str(round(self.percent_keep, 1)) + "%"
-        # self.ids.slider_min_silence_label.text = \
-        # str(round(self.min_silence*self.ms_per_pixel, 1)) + " ms"
-        # self.ids.slider_min_syllable_label.text = \
-        # str(round(self.min_syllable*self.ms_per_pixel, 1)) + " ms"
-        # want max to be 50ms
-        # self.ids.slider_min_silence.max = 50/self.ms_per_pixel
-        # want max to be 350ms
-        # self.ids.slider_min_syllable.max = 350/self.ms_per_pixel
 
-    def connect_song_shape_to_kv(self):
-        # connect size of sonogram to maximum of sliders for HPF and crop
-        [self.rows, self.cols] = np.shape(self.sonogram)
-
-        if not self.filter_boundary:
-            self.filter_boundary = [0, self.rows]
-        self.ids.slider_frequency_filter.value1 = self.filter_boundary[0]
-        self.ids.slider_frequency_filter.value2 = self.filter_boundary[1]
+        self.ids.slider_frequency_filter.value1 = self.song.filter_boundary[0]
+        self.ids.slider_frequency_filter.value2 = self.song.filter_boundary[1]
         self.ids.slider_frequency_filter.min = 0
-        self.ids.slider_frequency_filter.max = self.rows
-
-        if not self.bout_range:
-            # TODO: make self.cols instead so you don't create arrays
-            #  in multiple places
-            self.bout_range = [0, self.cols]
-        self.ids.range_slider_crop.value1 = self.bout_range[0]
-        self.ids.range_slider_crop.value2 = self.bout_range[1]
+        self.ids.slider_frequency_filter.max = self.song.rows
+        self.ids.range_slider_crop.value1 = self.song.bout_range[0]
+        self.ids.range_slider_crop.value2 = self.song.bout_range[1]
         self.ids.range_slider_crop.min = 0
-        self.ids.range_slider_crop.max = self.cols
+        self.ids.range_slider_crop.max = self.song.cols
 
     def reset_parameters(self):
-        self.set_song_params()
-        self.set_params_in_kv()
-        self.connect_song_shape_to_kv()
-
-        self.update(
-            self.filter_boundary,
-            self.bout_range,
-            self.percent_keep,
-            self.min_silence,
-            self.min_syllable,
-            self.normalized
+        self.song.reset_params(
+            user_signal_thresh=self.user_signal_thresh,
+            user_min_silence=self.user_min_silence,
+            user_min_syllable=self.user_min_syllable,
+            id_min_sil=self.ids.slider_min_silence.min,
+            id_min_syl=self.ids.slider_min_syllable.min
         )
+        self.ids.normalize_amp.state = self.song.normalized
+        self.update_panel_text()
+        self._update()
 
     def next(self):
-        # get initial data
-        self.sound, self.sonogram, self.millisecondsPerPixel, \
-        self.hertzPerPixel, params, prev_onsets, prev_offsets = \
-            seg.initial_sonogram(self.i, self.files, self.parent.directory,
-                                 find_gzips=self.find_gzips)
 
+        self.current_file = self.files[self.i]
+        # increment i so next file will be opened on submit/toss
+        self.i += 1
+        # get initial data
+        Logger.info("Loading file {}".format(self.current_file))
+        self.song = Sonogram(wavfile=self.current_file,
+                             directory=self.parent.directory,
+                             find_gzips=self.find_gzips)
+
+        if self.song.sonogram.shape[1] > 20000:
+            Logger.info("Song too big")
+            # window = popups.SaveDialog()
+            popups.LargeFilePopup(self, self.current_file).open()
+        else:
+            self.process()
+
+    def toss(self):
+        Logger.info("Tossing {}".format(self.current_file))
+        # save file name to dictionary
+        self.save_tossed[self.i - 1] = {'FileName': self.current_file}
+
+        # remove from saved parameters and associated gzip if
+        # file ends up being tossed
+        if self.current_file in self.save_parameters_all:
+            del self.save_parameters_all[self.current_file]
+            del self.save_syllables_all[self.current_file]
+            del self.save_conversions_all[self.current_file]
+            os.remove(self.output_path + '/SegSyllsOutput_' +
+                      self.file_names[self.i - 1] + '.gzip')
+
+        # write if last file otherwise go to next file
+        if self.i == len(self.files):
+            self.save_all_parameters()
+        else:
+            self.next()
+
+    def process(self):
+        # reset default parameters for new song
+        # (will be used by update to graph the first attempt)
+        Logger.info("Setting default params")
+        self.song.set_song_params(
+            user_signal_thresh=self.user_signal_thresh,
+            user_min_silence=self.user_min_silence,
+            user_min_syllable=self.user_min_syllable,
+            id_min_sil=self.ids.slider_min_silence.min,
+            id_min_syl=self.ids.slider_min_syllable.min
+        )
+        prev_onsets = self.song.prev_onsets
+        prev_offsets = self.song.prev_offsets
         #  if the user goes back to previous song and then goes forward again,
         #  it will pull what they had already submitted (so the user does not
         #  lose progress)
         if len(self.save_parameters_all) > 0:
-            if self.files[self.i] in self.save_parameters_all:
-                params = self.save_parameters_all[self.files[self.i]]
-                prev_onsets = np.asarray(self.save_syllables_all[self.files[
-                    self.i]]['Onsets'])
-                prev_offsets = np.asarray(self.save_syllables_all[self.files[
-                    self.i]]['Offsets'])
+            if self.current_file in self.save_parameters_all:
+                params = self.save_parameters_all[self.current_file]
+                prev_onsets = np.asarray(
+                    self.save_syllables_all[self.current_file]['Onsets'])
+                prev_offsets = np.asarray(
+                    self.save_syllables_all[self.current_file]['Offsets'])
+                Logger.info("Updating params based on previous run")
+                self.song.update_by_params(params)
+        Logger.info("Updating panel text")
 
-        # reset default parameters for new song
-        # (will be used by update to graph the first attempt)
-        self.set_song_params()
-        self.set_params_in_kv()
-        self.connect_song_shape_to_kv()
+        if self.song.params:
+            self.song.update_by_params(self.song.params)
 
-        # set parameters if already run through chipper before
-        # this can be either during this particular run in chipper (user went
-        # back and then forward again to a song already processed) or from
-        # previous run in which the params were read in from gzip
-        if params:
-            if 'HighPassFilter' in params:
-                # this is added because we used to only have a high pass filter
-                # (single slider versus range slider)
-                self.filter_boundary = [self.rows - params['HighPassFilter'],
-                                        self.rows]
-            else:
-                self.filter_boundary = params['FrequencyFilter']
-            self.bout_range = params['BoutRange']
-            self.percent_keep = params['PercentSignalKept']
-            self.min_silence = params['MinSilenceDuration']
-            self.min_syllable = params['MinSyllableDuration']
-            if 'Normalized' in params:
-                if params['Normalized'] == 'yes':
-                    self.normalized = 'down'
-                else:
-                    self.normalized = 'normal'
-            else:
-                self.normalized = 'normal'
+        self.update_panel_text()
 
-        self.set_params_in_kv()
-        self.connect_song_shape_to_kv()
         # update the label stating the current file and the file number out
         # of total number of files
         # use self.i since you have not yet incremented
-        self.ids.current_file.text = "{}\nFile{} out of {}".format(
-            self.file_names[self.i], self.i + 1, len(self.files)
+        self.ids.current_file.text = "{}\nFile {} out of {}".format(
+            self.file_names[self.i - 1], self.i, len(self.files)
         )
 
         # initialize the matplotlib figures/axes (no data yet)
-        # TODO: decide if rows and cols should be self variables instead of passing into functions
+        # TODO: decide if rows and cols should be self variables instead
+        #  of passing into functions
         # ImageSonogram is its own class and top_image is an instance of it
         # (defined in kv) - had trouble doing this for the bottom image
-        self.top_image.image_sonogram_initial(self.rows, self.cols)
+        Logger.info("Creating initial sonogram")
+        self.top_image.image_sonogram_initial(self.song.rows, self.song.cols)
+        Logger.info("Creating initial binary")
         self.image_binary_initial()
 
+        Logger.info("Updating")
         # run update to load images for the first time for this file
-        if prev_onsets.size:
-            self.update(self.filter_boundary, self.bout_range,
-                        self.percent_keep, self.min_silence,
-                        self.min_syllable, self.normalized, prev_run_onsets=prev_onsets,
-                        prev_run_offsets=prev_offsets)
-        else:
-            self.update(self.filter_boundary, self.bout_range,
-                        self.percent_keep, self.min_silence, self.min_syllable, self.normalized)
+        self._update(prev_run_onsets=prev_onsets,
+                     prev_run_offsets=prev_offsets)
+        Logger.info("Done with automation portion")
 
-        # increment i so next file will be opened on submit/toss
-        self.i += 1
+    def update(self, filter_boundary, bout_range, percent_keep,
+               min_silence, min_syllable, normalized):
 
-    # called first time a song is loaded (only time prev parameters would be
-    # included in the arguments) or when reset parameters button is clicked
-    # otherwise called every time any slider is moved
-    def update(self, filter_boundary, bout_range, percent_keep, min_silence,
-               min_syllable, normalized, prev_run_onsets=None, prev_run_offsets=None):
+        self.song.set_song_params(
+            filter_boundary=filter_boundary,
+            bout_range=bout_range,
+            percent_keep=percent_keep,
+            min_silence=min_silence,
+            min_syllable=min_syllable,
+            normalized=normalized,
+            user_signal_thresh=self.user_signal_thresh,
+            user_min_silence=self.user_min_silence,
+            user_min_syllable=self.user_min_syllable,
+            id_min_sil=self.ids.slider_min_silence.min,
+            id_min_syl=self.ids.slider_min_syllable.min
+        )
+        self.update_panel_text()
+        self._update()
 
-        # check if the song has been run before (if gzip data was loaded)
-        if prev_run_onsets is None:
-            prev_run_onsets = np.empty([0])
-            prev_run_offsets = np.empty([0])
-
-        # TODO: this is current fix for range slider,
-        # could fix in range_slider_from_google.py instead of here
-        # have to check list from range sliders to make sure the first one is
-        # less than the second
-        # if they are not in ascending order, must reverse the list
-        if filter_boundary[1] < filter_boundary[0]:
-            filter_boundary.reverse()
-        if bout_range[1] < bout_range[0]:
-            bout_range.reverse()
-
-        # update variables based on input to function
-        # frequency_filter throws index error if both slider values are equal
-        # (you are selecting no rows of the
-        # sonogram), so make sure they are never equal
-        if filter_boundary[0] == self.rows:
-            filter_boundary[0] = self.rows-1
-        elif filter_boundary[1] == 0:
-            filter_boundary[1] = 1
-        elif filter_boundary[0] == filter_boundary[1]:
-            filter_boundary[1] = filter_boundary[0] + 1
-
-        self.set_song_params(filter_boundary=filter_boundary,
-                             bout_range=bout_range,
-                             percent_keep=percent_keep,
-                             min_silence=min_silence,
-                             min_syllable=min_syllable,
-                             normalized=normalized)
-
+    def _update(self, prev_run_onsets=None, prev_run_offsets=None):
         # must do this for image to update for some reason
-        sonogram = self.sonogram.copy()
+        sonogram = self.song.sonogram.copy()
 
         # run HPF, scale based on average amplitude
         # (increases low amplitude sections), and graph sonogram
-        freqfiltered_sonogram = seg.frequency_filter(filter_boundary, sonogram)
+        freqfiltered_sonogram = seg.frequency_filter(self.song.filter_boundary,
+                                                     sonogram)
         # switch next two lines if you don't want amplitude scaled
         if self.ids.normalize_amp.state == 'down':
             scaled_sonogram = seg.normalize_amplitude(freqfiltered_sonogram)
@@ -534,7 +466,7 @@ class ControlPanel(Screen):
         self.top_image.image_sonogram(scaled_sonogram)
 
         # apply threshold to signal
-        self.thresh_sonogram = seg.threshold_image(percent_keep,
+        self.thresh_sonogram = seg.threshold_image(self.song.percent_keep,
                                                    scaled_sonogram)
         # calculate onsets and offsets using binary (thresholded) image
         onsets, offsets, silence_durations, sum_sonogram_scaled = \
@@ -542,21 +474,24 @@ class ControlPanel(Screen):
         # update the automatic onsets and offsets based on the slider values
         # for min silence and min syllable durations
         syllable_onsets, syllable_offsets = seg.set_min_silence(
-            min_silence, onsets, offsets, silence_durations
+            self.song.min_silence, onsets, offsets, silence_durations
         )
         syllable_onsets, syllable_offsets = seg.set_min_syllable(
-            min_syllable, syllable_onsets, syllable_offsets
+            self.song.min_syllable, syllable_onsets, syllable_offsets
         )
         # lastly, remove onsets and offsets that are outside of the crop
         # values (on the time axis)
         self.syllable_onsets, self.syllable_offsets = \
-            seg.crop(bout_range, syllable_onsets, syllable_offsets)
+            seg.crop(self.song.bout_range, syllable_onsets, syllable_offsets)
 
+        # check if the song has been run before (if gzip data was loaded)
+        if prev_run_onsets is None:
+            prev_run_onsets = np.empty([0])
+            prev_run_offsets = np.empty([0])
         # change the onsets and offsets to those in gzip if gzip was loaded
         if prev_run_onsets.size:
             self.syllable_onsets = prev_run_onsets
             self.syllable_offsets = prev_run_offsets
-
         # plot resultant binary sonogram along with onset and offset lines
         self.image_binary()
         self.image_syllable_marks()
@@ -564,7 +499,6 @@ class ControlPanel(Screen):
         # self.syllable_offsets)
 
     def image_binary_initial(self):
-        data = np.zeros((self.rows, self.cols))
 
         # make plot take up the entire space
         self.ax2.clear()
@@ -572,11 +506,12 @@ class ControlPanel(Screen):
         self.ax2.set_axis_off()
         self.fig2.add_axes(self.ax2)
 
+        data = np.zeros((self.song.rows, self.song.cols))
         # plot data
         self.plot_binary = self.ax2.imshow(
             np.log(data + 3),
             cmap='hot',
-            extent=[0, self.cols, 0, self.rows],
+            extent=[0, self.song.cols, 0, self.song.rows],
             aspect='auto'
         )
 
@@ -597,13 +532,11 @@ class ControlPanel(Screen):
             transform=self.trans
         )
 
-        hundredMillisecondsInPixels = 100/self.millisecondsPerPixel
+        hundred_ms_in_pix = 100 / self.song.ms_pix
 
         scalebar = AnchoredSizeBar(self.ax2.transData,
-                                   hundredMillisecondsInPixels, '100 ms', 1,
-                                   pad=0.1,
-                                   color='white',
-                                   frameon=False,
+                                   hundred_ms_in_pix, '100 ms', 1, pad=0.1,
+                                   color='white', frameon=False,
                                    size_vertical=2)
         self.ax2.add_artist(scalebar)
 
@@ -611,7 +544,7 @@ class ControlPanel(Screen):
         self.ids.graph_binary.add_widget(self.plot_binary_canvas)
 
     def image_binary(self):
-        self.plot_binary.set_data(np.log(self.thresh_sonogram+3))
+        self.plot_binary.set_data(np.log(self.thresh_sonogram + 3))
         self.plot_binary.autoscale()
 
     def image_syllable_marks(self):
@@ -653,20 +586,21 @@ class ControlPanel(Screen):
     # called when the user hits submit
     # before saving it checks for errors with onsets and offsets
     def save(self):
+        Logger.info("Adding {} to save dictionaries".format(self.current_file))
         # check if there are no syllable lines at all
         if len(self.syllable_onsets) == 0 and len(self.syllable_offsets) == 0:
-            check_sylls = CheckForSyllablesPopup()
+            check_sylls = popups.CheckForSyllablesPopup()
             check_sylls.open()
         # if there are lines, check that there are equal number of ons and offs
         elif len(self.syllable_onsets) != len(self.syllable_offsets):
-            check_length = CheckLengthPopup()
+            check_length = popups.CheckLengthPopup()
             check_length.len_onsets = str(len(self.syllable_onsets))
             check_length.len_offsets = str(len(self.syllable_offsets))
             check_length.open()
         # check that you start with onset and end with offset
         elif self.syllable_onsets[0] > self.syllable_offsets[0] or \
                 self.syllable_onsets[-1] > self.syllable_offsets[-1]:
-            check_beginning_end = CheckBeginningEndPopup()
+            check_beginning_end = popups.CheckBeginningEndPopup()
             check_beginning_end.start_onset = not self.syllable_onsets[0] > \
                                                   self.syllable_offsets[0]
             check_beginning_end.end_offset = not self.syllable_onsets[-1] > \
@@ -681,30 +615,26 @@ class ControlPanel(Screen):
                                             self.syllable_offsets[i])
                 binary_list.insert(insertion_pt, 1)
                 insort(combined_onsets_offsets, self.syllable_offsets[i])
-            if sum(binary_list[::2]) != 0 or sum(binary_list[1::2]) != len(
-                    binary_list)/2:  # using python slices
-                check_order = CheckOrderPopup()
+            if sum(binary_list[::2]) != 0 \
+                    or sum(binary_list[1::2]) \
+                    != len(binary_list) / 2:  # using python slices
+                check_order = popups.CheckOrderPopup()
                 check_order.order = binary_list
                 check_order.open()
             # passed all checks, now info can be stored/written for the song
             else:
-                # save parameters to dictionary; note we use self.i-1
-                # since i is incremented at the end of next()
-                self.save_parameters_all[self.files[self.i - 1]] = {
-                    'FrequencyFilter': self.filter_boundary,
-                    'BoutRange': self.bout_range,
-                    'PercentSignalKept': self.percent_keep,
-                    'MinSilenceDuration': self.min_silence,
-                    'MinSyllableDuration': self.min_syllable,
-                    'Normalized': 'yes' if self.normalized == 'down' else 'no'
+                Logger.info("Saving {}".format(self.current_file))
+                self.save_parameters_all[
+                    self.current_file] = self.song.save_dict()
+
+                self.save_conversions_all[self.current_file] = {
+                    'timeAxisConversion': self.song.ms_pix,
+                    'freqAxisConversion': self.song.hertzPerPixel
                 }
-                self.save_syllables_all[self.files[self.i - 1]] = {
+
+                self.save_syllables_all[self.current_file] = {
                     'Onsets': self.syllable_onsets.tolist(),
                     'Offsets': self.syllable_offsets.tolist()
-                }
-                self.save_conversions_all[self.files[self.i - 1]] = {
-                    'timeAxisConversion': self.millisecondsPerPixel,
-                    'freqAxisConversion': self.hertzPerPixel
                 }
 
                 filename_gzip = "{}/SegSyllsOutput_{}.gzip".format(
@@ -712,10 +642,10 @@ class ControlPanel(Screen):
                 )
 
                 dictionaries = [
-                    self.save_parameters_all[self.files[self.i - 1]],
-                    self.save_syllables_all[self.files[self.i - 1]],
+                    self.save_parameters_all[self.current_file],
+                    self.save_syllables_all[self.current_file],
                     {'Sonogram': self.thresh_sonogram.tolist()},
-                    self.save_conversions_all[self.files[self.i - 1]]
+                    self.save_conversions_all[self.current_file]
                 ]
                 save_gzip_pickle(filename_gzip, dictionaries)
 
@@ -725,55 +655,59 @@ class ControlPanel(Screen):
 
                 # write if last file otherwise go to next file
                 if self.i == len(self.files):
-                    self.write()
+                    self.save_all_parameters()
                 else:
                     self.next()
 
-    def toss(self):
-        # save file name to dictionary
-        self.save_tossed[self.i-1] = {'FileName': self.files[self.i-1]}
-
-        # remove from saved parameters and associated gzip if
-        # file ends up being tossed
-        if self.files[self.i - 1] in self.save_parameters_all:
-            del self.save_parameters_all[self.files[self.i - 1]]
-            del self.save_syllables_all[self.files[self.i - 1]]
-            del self.save_conversions_all[self.files[self.i - 1]]
-            os.remove(self.output_path + '/SegSyllsOutput_' +
-                      self.file_names[self.i - 1] + '.gzip')
-
-        # write if last file otherwise go to next file
-        if self.i == len(self.files):
-            self.write()
-        else:
-            self.next()
-
-    def write(self):
-
+    def save_all_parameters(self):
+        Logger.info("Saving parameters")
         df_parameters = pd.DataFrame.from_dict(self.save_parameters_all,
                                                orient='index')
         df_parameters.index.name = 'FileName'
-        df_parameters.to_csv((self.output_path +
-                              '/segmentedSyllables_parameters_all.txt'),
-                             sep="\t")
+        df_parameters.to_csv(
+            os.path.join(self.output_path,
+                         'segmentedSyllables_parameters_all.txt'),
+            sep="\t"
+        )
 
         df_syllables = pd.DataFrame.from_dict(self.save_syllables_all,
                                               orient='index')
         df_syllables.index.name = 'FileName'
-        df_syllables.to_csv((self.output_path +
-                             '/segmentedSyllables_syllables_all.txt'),
+        df_syllables.to_csv(os.path.join(self.output_path,
+                                         'segmentedSyllables_syllables_all.txt'),
                             sep="\t")
 
         df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
-        df_tossed.to_csv((self.output_path +
-                          '/segmentedSyllables_tossed.txt'), sep="\t",
-                         index=False)
+
+        df_tossed.to_csv(os.path.join(self.output_path,
+                                      'segmentedSyllables_tossed.txt'),
+                         sep="\t", index=False)
 
         self.done_window()
 
-    def done_window(self):
-        done_popup = DonePopup()
-        done_popup.open()
-
     def play_song(self):
-        self.sound.play()
+        self.song.sound.play()
+
+    @staticmethod
+    def done_window():
+        popups.DonePopup().open()
+
+    @staticmethod
+    def take_closest(myList, myNumber):
+        """
+        Assumes myList is sorted. Returns index of closest value to myNumber.
+        If two numbers are equally close, return the index of the smallest
+        number. From: https://stackoverflow.com/questions/12141150/from-list-of
+        -integers-get-number-closest-to-a-given-value
+        """
+        pos = bisect_left(myList, myNumber)
+        if pos == 0:
+            return pos
+        if pos == len(myList):
+            return -1
+        before = myList[pos - 1]
+        after = myList[pos]
+        if after - myNumber < myNumber - before:
+            return pos
+        else:
+            return pos - 1
