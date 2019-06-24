@@ -385,8 +385,8 @@ class ControlPanel(Screen):
             id_min_sil=self.ids.slider_min_silence.min,
             id_min_syl=self.ids.slider_min_syllable.min
         )
-        prev_onsets = None
-        prev_offsets = None
+        prev_onsets = self.song.prev_onsets
+        prev_offsets = self.song.prev_offsets
         #  if the user goes back to previous song and then goes forward again,
         #  it will pull what they had already submitted (so the user does not
         #  lose progress)
