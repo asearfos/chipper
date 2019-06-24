@@ -346,6 +346,7 @@ class ControlPanel(Screen):
         self.song = Sonogram(wavfile=self.current_file,
                              directory=self.parent.directory,
                              find_gzips=self.find_gzips)
+        self.ids.freq_axis_middle.text = str(round(self.song.rows*self.song.hertzPerPixel/2/1000)) + " kHz"
 
         if self.song.sonogram.shape[1] > 20000:
             Logger.info("Song too big")

@@ -657,6 +657,24 @@
                 on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
 
             GridLayout:
+                id: freq_axis
+                rows: 2
+                cols: 1
+                size_hint_x: 1
+                padding: 0
+
+                CustomLabel:
+                    id: freq_axis_middle
+                    text_size: None, self.height
+                    width: self.texture_size[0]
+                    halign: 'right'
+                    valign: 'bottom'
+
+                CustomLabel:
+                    text: '0 kHz'
+                    text_size: self.size
+                    halign: 'right'
+                    valign: 'bottom'
 
             GridLayout:
                 size_hint: 1, 0.05
