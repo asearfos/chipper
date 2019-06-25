@@ -29,19 +29,18 @@ class Analysis(Screen):
 
     def thread_process(self):
         th = threading.Thread(target=self.analyze,
-                              args=(self.parent.directory,
-                                    self.parent.files,
-                                    ))
+                              args=(self.parent.directory, self.parent.files,))
         th.daemon = True
         th.start()
 
     def analyze(self, directory, files, out_path=None):
+
+        if not len(files):
+            log.debug("No gzipped files in {}".format(directory))
+            raise Exception("No gzipped files in {}".format(directory))
         if out_path is None:
             out_path = directory + "/AnalysisOutput_" + time.strftime(
                 "%Y%m%d_T%H%M%S")
-
-        if not len(files):
-            raise ("No gzipped files in {}".format(directory))
         file_names = [os.path.join(directory, i) for i in files]
 
         final_output = []
@@ -49,7 +48,6 @@ class Analysis(Screen):
         errors = ''
         for i in range(n_files):
             f_name = file_names[i]
-            self.ids.analysis_warnings.text = errors
             self.ids.processing_count.text = "{} of {} complete".format(i, n_files)
             try:
                 log.info("{} of {} complete".format(i, n_files))
@@ -58,9 +56,18 @@ class Analysis(Screen):
                 output['f_name'] = f_name
                 final_output.append(output)
             except Exception as e:
-                errors += "WARNING skipped file {0}\n{1}\n ".format(f_name, e)
+                errors += "WARNING : Skipped file {0}\n{1}\n ".format(f_name,
+                                                                      e)
                 self.ids.analysis_warnings.text = errors
-                log.info(errors)
+                log.debug(errors)
+        # write errors to log file
+        error_file = os.path.join(directory, 'error_log')
+        if os.path.exists(error_file):
+            action = 'a'
+        else:
+            action = 'w'
+        with open(error_file, action) as f:
+            f.write(errors)
         self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
 
         output_bout_data(out_path, final_output)
@@ -94,10 +101,11 @@ class Song(object):
         """
 
         # run analysis
+        log.debug("Getting bout")
         bout_stats = self.get_bout_stats()
-
+        log.debug("Getting stats")
         syllable_stats = self.get_syllable_stats()
-
+        log.debug("Getting note")
         note_stats = self.get_note_stats()
 
         # write output
@@ -379,25 +387,9 @@ def calc_corr(s1, s2, max_overlap):
     syll_correlation = np.zeros(size_diff + 1)
     s2_flat = s2.flatten()
     for i in range(size_diff + 1):
-        flat = s1[:, i:i + min_size]
-        flat = flat.flatten()
-        syll_correlation[i] = np.dot(flat, s2_flat).sum()
+        syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2_flat
+                                     ).sum()
     return syll_correlation.max() * 100. / max_overlap
-
-
-def calc_corr_old(sonogram, onsets, a, b, shift_factor, min_length,
-                  max_overlap):
-    syllable_correlation = np.zeros(shift_factor + 1)
-    scale_factor = 100. / max_overlap
-    # flatten matrix to speed up computations
-    syll_1 = sonogram[:, onsets[a]:(onsets[a] + min_length)].flatten()
-    for m in range(shift_factor + 1):
-        start = onsets[b] + m
-        # flatten matrix to speed up computations
-        syll_2 = sonogram[:, start:start + min_length].flatten()
-        syllable_correlation[m] = np.dot(syll_1, syll_2).sum()
-
-    return syllable_correlation.max() * scale_factor
 
 
 def get_notes(threshold_sonogram, onsets, offsets):
