@@ -343,15 +343,17 @@ class ControlPanel(Screen):
         self.i += 1
         # get initial data
         Logger.info("Loading file {}".format(self.current_file))
-        self.song = Sonogram(wavfile=self.current_file,
-                             directory=self.parent.directory,
-                             find_gzips=self.find_gzips)
-
-        if self.song.sonogram.shape[1] > 20000:
-            Logger.info("Song too big")
-            # window = popups.SaveDialog()
+        f_path = os.path.join(self.parent.directory, self.current_file)
+        f_size = os.path.getsize(f_path)
+        # TODO MAGIC NUMBER
+        # 1 000 000 bytes is 1 megabyte, it seems like that is a decent
+        # threshold ?
+        max_file_size = 1000000
+        if f_size > max_file_size:
+            Logger.info("Large song")
             popups.LargeFilePopup(self, self.current_file).open()
         else:
+
             self.process()
 
     def toss(self):
@@ -375,6 +377,10 @@ class ControlPanel(Screen):
             self.next()
 
     def process(self):
+        self.song = Sonogram(wavfile=self.current_file,
+                             directory=self.parent.directory,
+                             find_gzips=self.find_gzips)
+
         # reset default parameters for new song
         # (will be used by update to graph the first attempt)
         Logger.info("Setting default params")
