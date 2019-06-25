@@ -57,8 +57,7 @@ class Analysis(Screen):
                 output['f_name'] = f_name
                 final_output.append(output)
             except Exception as e:
-                errors += "WARNING : Skipped file {0}\n{1}\n ".format(f_name,
-                                                                      e)
+                errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
                 self.ids.analysis_warnings.text = errors
                 log.debug(errors)
         # write errors to log file

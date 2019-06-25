@@ -44,7 +44,7 @@ def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
             output['f_name'] = f_name
             final_output.append(output)
         except Exception as e:
-            errors += "WARNING : Skipped file {0}\n{1}\n ".format(f_name,
+            errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name,
                                                                   e)
             log.info(errors)
     # write errors to log file
