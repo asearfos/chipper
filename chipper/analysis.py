@@ -1,17 +1,18 @@
+import logging
 import os
 import threading
 import time
 
 import numpy as np
 import pandas as pd
-from kivy.logger import Logger
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
+from chipper.logging import setup_logger
 
-Logger.disabled = False
+log = setup_logger(logging.INFO)
 
 
 class Analysis(Screen):
@@ -24,45 +25,58 @@ class Analysis(Screen):
         super(Analysis, self).__init__(*args, **kwargs)
 
     def log(self, output):
-        Logger.info("analysis : {}".format(output))
+        log.info(output)
 
     def thread_process(self):
         th = threading.Thread(target=self.analyze,
-                              args=(self.parent.directory,
-                                    self.parent.files,
-                                    ))
+                              args=(self.parent.directory, self.parent.files,))
         th.daemon = True
         th.start()
 
     def analyze(self, directory, files, out_path=None):
+
+        if not len(files):
+            log.debug("No gzipped files in {}".format(directory))
+            raise Exception("No gzipped files in {}".format(directory))
         if out_path is None:
-            out_path = directory + "/AnalysisOutput_" + time.strftime(
-                "%Y%m%d_T%H%M%S")
+            out_path = "AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+            out_path = os.path.join(directory, out_path)
+
         file_names = [os.path.join(directory, i) for i in files]
-        # file_names = [i for i in os.listdir(directory) if i.endswith('.gzip')]
-        # file_names =
-        # files = [os.path.join(directory, i) for i in file_names]
-        assert len(files) != 0, "No gzipped files in {}".format(directory)
 
         final_output = []
         n_files = len(files)
-
+        errors = ''
         for i in range(n_files):
-            self.ids.processing_count.text = \
-                "{} of {} complete".format(i, n_files)
-
-            final_output.append(Song(file_names[i], self.user_note_thresh,
-                                     self.user_syll_sim_thresh).run_analysis())
-
+            f_name = file_names[i]
+            self.ids.processing_count.text = "{} of {} complete".format(i, n_files)
+            try:
+                log.info("{} of {} complete".format(i, n_files))
+                output = Song(f_name, self.user_note_thresh,
+                              self.user_syll_sim_thresh).run_analysis()
+                output['f_name'] = f_name
+                final_output.append(output)
+            except Exception as e:
+                errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
+                self.ids.analysis_warnings.text = errors
+                log.debug(errors)
+        # write errors to log file
+        error_file = "{}_{}".format(out_path, "error_log")
+        if os.path.exists(error_file):
+            action = 'a'
+        else:
+            action = 'w'
+        with open(error_file, action) as f:
+            f.write(errors)
         self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
 
-        output_bout_data(out_path, files, final_output)
+        output_bout_data(out_path, final_output)
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
 
 class Song(object):
-    def __init__(self, file_name, note_thresh, syll_sim_thresh, testing=False):
+    def __init__(self, file_name, note_thresh, syll_sim_thresh):
         self.file_name = file_name
         ons, offs, thresh, ms, htz = load_bout_data(self.file_name)
         self.onsets = ons
@@ -74,10 +88,9 @@ class Song(object):
         self.n_syll = len(self.syll_dur)
         self.note_thresh = int(note_thresh)
         self.syll_sim_thresh = float(syll_sim_thresh)
-        self._test = testing
 
     def log(self, output):
-        Logger.info("analysis : {}".format(output))
+        log.info(output)
 
     def run_analysis(self):
         """ Runs entire analysis to describe song
@@ -88,10 +101,11 @@ class Song(object):
         """
 
         # run analysis
+        log.debug("Getting bout")
         bout_stats = self.get_bout_stats()
-
+        log.debug("Getting stats")
         syllable_stats = self.get_syllable_stats()
-
+        log.debug("Getting note")
         note_stats = self.get_note_stats()
 
         # write output
@@ -188,18 +202,6 @@ class Song(object):
             corr_thresh=self.syll_sim_thresh
         )
 
-        if self._test:
-            son_corr_2, son_corr_bin_2 = get_sonogram_correlation_old(
-                sonogram=self.threshold_sonogram, onsets=self.onsets,
-                offsets=self.offsets, syll_duration=self.syll_dur,
-                corr_thresh=self.syll_sim_thresh
-            )
-            self.log('analysis: Method before\n{}'.format(son_corr_2))
-            self.log('analysis: Method after\n{}'.format(son_corr))
-            self.log('analysis: Are the same? {}'.format(
-                np.isclose(son_corr, son_corr_2).all())
-            )
-            quit()
         # get syllable pattern
         syll_pattern = find_syllable_pattern(son_corr_bin)
 
@@ -288,18 +290,18 @@ class Song(object):
 
 def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
     n_corr = len(sonogram_corr)
-    Logger.debug("analysis: length of sonogram {}".format(n_corr))
+    log.debug("length of sonogram {}".format(n_corr))
 
     syll_stereotypy = np.zeros(n_corr)
     syll_stereotypy_max = np.zeros(n_corr)
     syll_stereotypy_min = np.zeros(n_corr)
-    Logger.debug("analysis: {}".format(n_corr))
+    log.debug("n_corr: {}".format(n_corr))
     len_patt = len(syllable_pattern_checked)
-    Logger.debug("analysis: pattern length {}".format(len_patt))
+    log.debug("pattern length {}".format(len_patt))
     for j in range(n_corr):
         # locations of all like syllables
         x_syll_locations = np.where(syllable_pattern_checked == j)[0]
-        Logger.debug("analysis: x_syll locations\n{}".format(x_syll_locations))
+        log.debug("x_syll locations {}".format(x_syll_locations))
         # initialize arrays
         x_syll_corr = np.zeros((len_patt, len_patt))
         if len(x_syll_locations) > 1:
@@ -311,8 +313,6 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
                     if k > h:
                         x_syll_corr[k, h] = sonogram_corr[x_syll_locations[k],
                                                           x_syll_locations[h]]
-            Logger.debug(
-                "analysis: x_syll_correlations\n{}".format(x_syll_corr))
             syll_stereotypy[j] = np.nanmean(x_syll_corr[x_syll_corr != 0])
             syll_stereotypy_max[j] = np.nanmax(x_syll_corr[x_syll_corr != 0])
             syll_stereotypy_min[j] = np.nanmin(x_syll_corr[x_syll_corr != 0])
@@ -370,43 +370,6 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
     return sonogram_correlation, sonogram_correlation_binary
 
 
-def get_sonogram_correlation_old(sonogram, onsets, offsets, syll_duration,
-                                 corr_thresh=50.0):
-    sonogram_self_correlation = calc_max_correlation(
-        onsets, offsets, sonogram
-    )
-
-    n_offset = len(offsets)
-    sonogram_correlation = np.zeros((n_offset, n_offset))
-
-    for j in range(n_offset):
-        sonogram_correlation[j, j] = 100
-        # do not want to fill the second half of the diagonal matrix
-        for k in range(j + 1, n_offset):
-            max_overlap = max(sonogram_self_correlation[j],
-                              sonogram_self_correlation[k])
-
-            shift_factor = abs(syll_duration[j] - syll_duration[k])
-
-            if syll_duration[j] < syll_duration[k]:
-                min_length = syll_duration[j]
-                syll_corr = calc_corr_old(sonogram, onsets, j, k, shift_factor,
-                                          min_length, max_overlap)
-
-            # will be if k is shorter than j or they are equal
-            else:
-                min_length = syll_duration[k]
-                syll_corr = calc_corr_old(sonogram, onsets, k, j, shift_factor,
-                                          min_length, max_overlap)
-            # fill both upper and lower diagonal of symmetric matrix
-            sonogram_correlation[j, k] = syll_corr
-            sonogram_correlation[k, j] = syll_corr
-
-    sonogram_correlation_binary = np.zeros(sonogram_correlation.shape)
-    sonogram_correlation_binary[sonogram_correlation >= corr_thresh] = 1
-    return sonogram_correlation, sonogram_correlation_binary
-
-
 def get_square(image, on, off):
     subset_1 = image[:, on:off]
     mask = subset_1[:, :] < 1
@@ -422,25 +385,11 @@ def calc_corr(s1, s2, max_overlap):
         s1, s2 = s2, s1
         size_diff *= -1
     syll_correlation = np.zeros(size_diff + 1)
-    s2 = s2.flatten()
+    s2_flat = s2.flatten()
     for i in range(size_diff + 1):
-        syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2).sum()
+        syll_correlation[i] = np.dot(s1[:, i:i + min_size].flatten(), s2_flat
+                                     ).sum()
     return syll_correlation.max() * 100. / max_overlap
-
-
-def calc_corr_old(sonogram, onsets, a, b, shift_factor, min_length,
-                  max_overlap):
-    syllable_correlation = np.zeros(shift_factor + 1)
-    scale_factor = 100. / max_overlap
-    # flatten matrix to speed up computations
-    syll_1 = sonogram[:, onsets[a]:(onsets[a] + min_length)].flatten()
-    for m in range(shift_factor + 1):
-        start = onsets[b] + m
-        # flatten matrix to speed up computations
-        syll_2 = sonogram[:, start:start + min_length].flatten()
-        syllable_correlation[m] = np.dot(syll_1, syll_2).sum()
-
-    return syllable_correlation.max() * scale_factor
 
 
 def get_notes(threshold_sonogram, onsets, offsets):
@@ -494,9 +443,10 @@ def calc_sylls_freq_ranges(offsets, onsets, sonogram):
     return sylls_freq_range_upper, sylls_freq_range_lower
 
 
-def output_bout_data(output_path, file_name, output_dict):
+def output_bout_data(output_path, output_dict):
+
     df_output = pd.DataFrame.from_dict(output_dict)
-    df_output.index = [file_name]
+    df_output.set_index('f_name', inplace=True)
     if not output_path.endswith('txt'):
         save_name = output_path + '.txt'
     else:
