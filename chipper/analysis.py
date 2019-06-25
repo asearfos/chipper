@@ -39,8 +39,9 @@ class Analysis(Screen):
             log.debug("No gzipped files in {}".format(directory))
             raise Exception("No gzipped files in {}".format(directory))
         if out_path is None:
-            out_path = directory + "/AnalysisOutput_" + time.strftime(
-                "%Y%m%d_T%H%M%S")
+            out_path = "AnalysisOutput_" + time.strftime("%Y%m%d_T%H%M%S")
+            out_path = os.path.join(directory, out_path)
+
         file_names = [os.path.join(directory, i) for i in files]
 
         final_output = []
@@ -61,7 +62,7 @@ class Analysis(Screen):
                 self.ids.analysis_warnings.text = errors
                 log.debug(errors)
         # write errors to log file
-        error_file = os.path.join(directory, 'error_log')
+        error_file = "{}_{}".format(out_path, "error_log")
         if os.path.exists(error_file):
             action = 'a'
         else:
