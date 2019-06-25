@@ -353,7 +353,6 @@ class ControlPanel(Screen):
             Logger.info("Large song")
             popups.LargeFilePopup(self, self.current_file).open()
         else:
-
             self.process()
 
     def toss(self):
@@ -380,7 +379,8 @@ class ControlPanel(Screen):
         self.song = Sonogram(wavfile=self.current_file,
                              directory=self.parent.directory,
                              find_gzips=self.find_gzips)
-
+        self.ids.freq_axis_middle.text = str(round(
+            self.song.rows * self.song.hertzPerPixel / 2 / 1000)) + " kHz"
         # reset default parameters for new song
         # (will be used by update to graph the first attempt)
         Logger.info("Setting default params")
