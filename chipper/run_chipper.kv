@@ -16,7 +16,6 @@
         radio_syllsim: welcome.radio_syllsim
         radio_analyze: welcome.radio_analyze
     ControlPanel:
-#        id: controls
         name: 'control_panel'
         user_signal_thresh: welcome.user_signal_thresh
         user_min_silence: welcome.user_min_silence
@@ -121,17 +120,6 @@
             text: 'Okay'
             on_release: root.dismiss()
 
-#<ZoomPopup>
-##    top_image: test
-#    size_hint: .5, .5
-#    auto_dismiss: True
-#
-##    ImageSonogram
-##        id: test
-##        rows:1
-##        cols:1
-##        size_hint_x: 1
-
 <CheckOrderPopup>
     size_hint: .5, .25
     auto_dismiss: False
@@ -164,7 +152,6 @@
     size_hint: .5, .3
     auto_dismiss: False
     title: 'Do you want to segment ' + root.len_files + ' WAV files?'
-#    text_size: self.size
     BoxLayout:
         orientation: 'horizontal'
 
@@ -180,7 +167,6 @@
     size_hint: .5, .3
     auto_dismiss: False
     title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for note size?'
-#    text_size: self.size
     BoxLayout:
         orientation: 'horizontal'
 
@@ -218,7 +204,6 @@
     size_hint: .5, .3
     auto_dismiss: False
     title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for syllable similarity?'
-#    text_size: self.size
     BoxLayout:
         orientation: 'horizontal'
 
@@ -256,7 +241,6 @@
     size_hint: .3, .3
     auto_dismiss: False
     title: 'Do you want to analyze ' + root.len_files + ' gzips?'
-#    text_size: self.size
     BoxLayout:
         orientation: 'horizontal'
 
@@ -329,54 +313,41 @@
             Label:
                 id: version_label
                 markup: True
-                text: '[b]Version:[/b] alpha'
+                text: 'Version 1.0'
                 size_hint_y: 0.1
 
             GridLayout:
                 rows: 9
                 cols: 1
-                size_hint_y: 0.3
+                size_hint_y: 0.2
 
                 Label:
-                    id: general_info
-                    markup: True
-                    text: '[b]General Information:[/b]'
-                Label:
                     id: created_by
                     markup: True
-                    text: 'Created by Abigail Searfoss'
-                Label:
-                    id: created_by
-                    markup: True
-                    text: 'From Creanza Laboratory'
+                    text: 'Created by Creanza Laboratory'
                 Label:
                     id: publication
                     markup: True
-                    text: 'Publication in Press'
+                    text: 'Searfoss, Pino, Creanza 2019 [i](Under Review)[/i]'
+                Label:
+                    id: art_by
+                    markup: True
+                    text: 'Bird Art by Cristina Robinson'
                 Label:
                     id: blank
                     markup: True
                     text: '\n'
 
-
-                Label:
-                    id: links_header
-                    markup: True
-                    text: '[b]Useful Links:[/b]'
                 Label:
                     id: hyperlink1
                     markup: True
-                    text: '[ref=https://github.com/asearfos/chipper][color=2BB34B][u][b]Chipper GitHub[/u][/b][/color][/ref]'
+                    text: '[ref=https://github.com/asearfos/chipper][color=2BB34B][u]Chipper GitHub[/u][/color][/ref]'
                     on_ref_press: webbrowser.open('https://github.com/asearfos/chipper')
                 Label:
                     id: hyperlink2
                     markup: True
-                    text: '[ref=https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing][color=2BB34B][u][b]Chipper Instructions[/u][/b][/color][/ref]'
+                    text: '[ref=https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing][color=2BB34B][u]Chipper Manual[/u][/color][/ref]'
                     on_ref_press: webbrowser.open('https://docs.google.com/document/d/1UmqRCkZb6sFSoRxWMaCfUfqSTlaHpNIxzqUjcGagYeA/edit?usp=sharing')
-                Label:
-                    id: analysis_outputs
-                    markup: True
-                    text: '[color=2BB34B][u][b]Analysis Outputs Defined[/u][/b][/color]'
 
         Widget:
             id: separator
@@ -483,10 +454,6 @@
 
                 StackLayout: # <--- to show/hide this menu see comments
                     id: chipper_menu
-#                    width: 120 if chipper_and_analyze.active else 0
-#                    height: 120
-#                    size_hint: (1, 1) if chipper_and_analyze.active else (0, 0)
-#                    opacity: 1 if chipper_and_analyze.active else 0
                     padding: 10
                     spacing: 8
 
@@ -626,7 +593,6 @@
 
 <ControlPanel>:
     id: controls
-#    name: 'control_panel'
     find_gzips: False
     user_signal_thresh: '3'
     user_min_silence: '10'
@@ -635,7 +601,6 @@
     user_syll_sim_thresh: '40.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
-#    bottom_image: graph_binary
 
     BoxLayout:
         orientation: 'horizontal'
@@ -651,8 +616,6 @@
                 id: slider_frequency_filter
                 orientation: 'vertical'
                 padding: 0
-#                value_track: True
-#                value_track_color: [.2, .7, 0.9, 1]
                 step: 1
                 on_release: controls.update(slider_frequency_filter.value, range_slider_crop.value, round(slider_threshold.value,1), slider_min_silence.value, slider_min_syllable.value, normalize_amp.state)
 
@@ -695,12 +658,6 @@
                 rows: 1
                 cols: 1
                 size_hint_x: 1
-
-#            ImageBinary:
-#                id: graph_binary
-#                rows: 1
-#                cols: 1
-#                size_hint_x: 1
 
             MyRangeSlider:
                 id: range_slider_crop
@@ -829,7 +786,6 @@
                         id: add
                         group: 'user_defined_syllables'
                         text: 'Add'
-#                        on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.zoom(*args[1].pos)
                         on_touch_down: graph_binary.collide_point(*args[1].pos) and self.state == 'down' and controls.add_mark(*args[1].pos)
 
                     ToggleButton:
@@ -916,7 +872,6 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-#                    text: u'\u25b2'
                     on_release: user_note_size.text = str(int(user_note_size.text) + 10); determine_note.new_thresh()
 
                 Button:
@@ -1125,7 +1080,6 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-#                    text: u'\u25b2'
                     on_release: user_syllsim.text = str(float(user_syllsim.text) + 10); determine_syllsim.new_thresh()
 
                 Button:

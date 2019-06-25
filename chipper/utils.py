@@ -32,7 +32,7 @@ def load_old(f_name):
 
 
 def get_basename(files, suffix):
-    return [os.path.basename(i) for i in files if i.endswith(suffix)]
+    return [os.path.basename(i) for i in files if i.lower().endswith(suffix)]
 
 
 def get_file_prefix(files):
