@@ -39,11 +39,13 @@ class DonePopup(Popup):
 
 class LargeFilePopup(Popup):
     message = StringProperty()
+    file_size = StringProperty()
 
-    def __init__(self, controls, file_name, **kwargs):
+    def __init__(self, controls, file_name, f_size, **kwargs):
         super(LargeFilePopup, self).__init__(**kwargs)
         self.controls = controls
         self.message = file_name
+        self.file_size = f_size
 
 
 class StartSegmentationPopup(Popup):

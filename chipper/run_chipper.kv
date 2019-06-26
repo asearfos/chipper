@@ -279,7 +279,7 @@
 <LargeFilePopup>
     size_hint: 0.5, 0.3
     auto_dismiss: False
-    title:  'File ' + root.message + ' maybe too large'
+    title:  'File ' + root.message + ' is ' + root.file_size + ' MB.' '\nYou may experience lag if your file is greater than 2 MB.'
     BoxLayout:
         orientation: 'horizontal'
         Button:
