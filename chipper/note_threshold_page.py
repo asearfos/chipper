@@ -4,6 +4,7 @@ from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from kivy.uix.screenmanager import Screen
+from skimage.measure import label, regionprops
 
 from chipper.popups import NoteThreshInstructionsPopup
 
@@ -60,12 +61,6 @@ class NoteThresholdPage(Screen):
             self.ax3.set_axis_off()
             self.fig3.add_axes(self.ax3)
 
-            # plot placeholder data
-            # colors = [(0, 0, 0), (1, 1, 1), (0.196, 0.643, 0.80)]
-            # my_cmap = ListedColormap(colors)
-            # self.plot_notes = self.ax3.imshow(np.log(data + 3),
-            # extent=[0, self.cols, 0, self.rows], aspect='auto',
-            #                                   cmap=my_cmap)
             cmap = plt.cm.prism
             cmap.set_under(color='black')
             cmap.set_bad(color='white')
@@ -85,9 +80,7 @@ class NoteThresholdPage(Screen):
 
     def new_thresh(self):
         # find notes and label based on connectivity
-        num_notes, props, labeled_sonogram = analyze.get_notes(
-            self.threshold_sonogram, self.onsets, self.offsets
-        )
+        num_notes, props, labeled_sonogram = self.get_notes()
         # change label of all notes with size > threshold to be the same
         # and all < to be the same
         for region in props:
@@ -106,3 +99,26 @@ class NoteThresholdPage(Screen):
     def note_thresh_instructions(self):
         note_popup = NoteThreshInstructionsPopup()
         note_popup.open()
+
+    def get_notes(self):
+        """
+        num of notes and categorization; also outputs freq ranges of each note
+        """
+        # zero anything before first onset or after last offset
+        # (not offset row is already zeros, so okay to include)
+        # this will take care of any noise before or after the song
+        # before labeling the notes
+        threshold_sonogram_crop = self.threshold_sonogram.copy()
+        threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
+        threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+
+        # ^connectivity 1=4 or 2=8(include diagonals)
+        labeled_sonogram, num_notes = label(threshold_sonogram_crop,
+                                            return_num=True,
+                                            connectivity=1)
+
+        props = regionprops(labeled_sonogram)
+
+        return num_notes, props, labeled_sonogram
+
+

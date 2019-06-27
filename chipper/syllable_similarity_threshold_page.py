@@ -130,7 +130,6 @@ class SyllSimThresholdPage(Screen):
 
         syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = \
             analyze.calc_syllable_stereotypy(self.son_corr, syll_pattern)
-        print(syll_stereotypy)
 
         stereotypy_text = 'Syllable: Avg, Min, Max\n'
         for idx in range(len(syll_stereotypy)):
