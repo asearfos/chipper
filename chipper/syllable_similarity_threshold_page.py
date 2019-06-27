@@ -66,10 +66,10 @@ class SyllSimThresholdPage(Screen):
             threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
 
             # ^connectivity 1=4 or 2=8(include diagonals)
-            labeled_sonogram = label(threshold_sonogram_crop,
-                                     connectivity=1)
+            self.labeled_sonogram = label(threshold_sonogram_crop,
+                                          connectivity=1)
 
-            corrected_sonogram = remove_small_objects(labeled_sonogram,
+            corrected_sonogram = remove_small_objects(self.labeled_sonogram,
                                                       min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
                                                       connectivity=1)
 
@@ -119,7 +119,6 @@ class SyllSimThresholdPage(Screen):
 
     def new_thresh(self):
         # get syllable correlations for entire sonogram
-        print(type(float(self.ids.user_syllsim.text)))
 
         # create new binary matrix with new threshold
         son_corr_bin = np.zeros(self.son_corr.shape)
@@ -131,6 +130,7 @@ class SyllSimThresholdPage(Screen):
 
         syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = \
             analyze.calc_syllable_stereotypy(self.son_corr, syll_pattern)
+        print(syll_stereotypy)
 
         stereotypy_text = 'Syllable: Avg, Min, Max\n'
         for idx in range(len(syll_stereotypy)):
@@ -144,14 +144,20 @@ class SyllSimThresholdPage(Screen):
             self.ids.similarity.text = stereotypy_text
 
         # color syllables based on syntax
-        labeled_sonogram = self.threshold_sonogram.copy()
+        props = regionprops(self.labeled_sonogram)
+
         # labeled_sonogram[labeled_sonogram > 0] = 1
+        syll_labeled_sonogram = self.threshold_sonogram.copy()
         for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
-            labeled_sonogram[:, on:off][labeled_sonogram[:, on:off] == 1] = syll + 3
+            syll_labeled_sonogram[:, on:off][syll_labeled_sonogram[:, on:off] == 1] = syll + 3
+
+        for region in props:
+            if region.area <= int(self.user_note_thresh):
+                syll_labeled_sonogram[self.labeled_sonogram == region.label] = 1
 
         # update image in widget
         # plot the actual data now
-        self.plot_syllsim.set_data(labeled_sonogram+3)
+        self.plot_syllsim.set_data(syll_labeled_sonogram+3)
         self.plot_syllsim_canvas.draw()
 
     def syllsim_thresh_instructions(self):
