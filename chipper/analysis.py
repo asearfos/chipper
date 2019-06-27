@@ -8,6 +8,7 @@ import pandas as pd
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
+from skimage.morphology import remove_small_objects
 
 import chipper.utils as utils
 from chipper.logging import setup_logger
@@ -101,6 +102,8 @@ class Song(object):
         """
 
         # run analysis
+        log.debug("Cleaning spectrogram")
+        self.threshold_sonogram = self.clean_sonogram()
         log.debug("Getting bout")
         bout_stats = self.get_bout_stats()
         log.debug("Getting stats")
@@ -112,12 +115,27 @@ class Song(object):
         final_output = update_dict([bout_stats, syllable_stats, note_stats])
         return final_output
 
+    def clean_sonogram(self):
+        # zero anything before first onset or after last offset
+        # (not offset row is already zeros, so okay to include)
+        # this will take care of any noise before or after the song
+        threshold_sonogram_crop = self.threshold_sonogram.copy()
+        threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
+        threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+
+        # ^connectivity 1=4 or 2=8(include diagonals)
+        labeled_sonogram = label(threshold_sonogram_crop,
+                                 connectivity=1)
+
+        corrected_sonogram = remove_small_objects(labeled_sonogram,
+                                                  min_size=self.note_thresh+1,  # add one to make =< threshold
+                                                  connectivity=1)
+
+        return corrected_sonogram
+
     def get_note_stats(self):
-        num_notes, props, _ = get_notes(
-            threshold_sonogram=self.threshold_sonogram,
-            onsets=self.onsets, offsets=self.offsets)
-        # initialize, will be altered if the "note" is too small (<60 pixels)
-        num_notes_updated = num_notes
+        props = regionprops(self.threshold_sonogram)
+        num_notes = len(props)
 
         # stats per note
         notes_freq_range_upper = []
@@ -125,35 +143,24 @@ class Song(object):
         note_length = []
 
         for j in range(num_notes):
+            # use bounding box of the note
+            # (note, indexing is altered since python starts with 0 and
+            # we want to convert rows to actual frequency)
+            min_row, min_col, max_row, max_col = props[j].bbox
 
-            # use only the part of the matrix with the note
-            sonogram_one_note = props[j].filled_image
-
-            # check the note is large enough to be a note and not
-            if np.size(sonogram_one_note) <= self.note_thresh:
-                # just noise
-                note_length.append(0)  # place holder
-                num_notes_updated -= 1
-                # print('not a note')
-            else:
-                # use bounding box of the note
-                # (note, indexing is altered since python starts with 0 and
-                # we want to convert rows to actual frequency)
-                min_row, min_col, max_row, max_col = props[j].bbox
-                # min row is inclusive (first row with labeled section)
-                notes_freq_range_upper.append(min_row)
-                # max row is not inclusive
-                # (first zero row after the labeled section)
-                notes_freq_range_lower.append(max_row)
-                note_length.append(np.shape(sonogram_one_note)[1])
+            # min row is inclusive (first row with labeled section)
+            notes_freq_range_upper.append(min_row)
+            # max row is not inclusive
+            # (first zero row after the labeled section)
+            notes_freq_range_lower.append(max_row)
+            note_length.append(np.shape(max_col - min_col))
 
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
-        note_length_array = note_length_array[note_length_array != 0]
         note_length_array_scaled = note_length_array * self.ms_per_pixel
         note_counts = {'note_size_threshold': self.note_thresh,
-                       'num_notes': num_notes_updated,
-                       'num_notes_per_syll': num_notes_updated / self.n_syll}
+                       'num_notes': num_notes,
+                       'num_notes_per_syll': num_notes / self.n_syll}
 
         basic_note_stats = get_basic_stats(note_length_array_scaled,
                                            'note_duration', '(ms)')
@@ -215,7 +222,7 @@ class Song(object):
 
         if self.n_syll > 1:
             # determine how often the next syllable is the same as the
-            # previous syllable (for chippies, should be oneless than number
+            # previous syllable (for chippies, should be one less than number
             # of syllables in the bout)
             sequential_rep1 = len(
                 np.where(np.diff(syll_pattern) == 0)[0]) / \
@@ -276,10 +283,10 @@ class Song(object):
             'overall_' + data_type + '_freq_range(Hz)': overall_freq_range_scaled
         }
 
-        freq_modulation_per_note = abs(
+        freq_modulation_per_segment = abs(
             np.asarray(freq_range_upper) - np.asarray(
                 freq_range_lower)) * self.hertzPerPixel
-        basic_freq_stats = get_basic_stats(freq_modulation_per_note,
+        basic_freq_stats = get_basic_stats(freq_modulation_per_segment,
                                            data_type + '_freq_modulation',
                                            '(Hz)')
 
@@ -326,6 +333,9 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
+    # change labels to be ones (so matrices are all zeros and ones for correlation measures)
+    sonogram[sonogram > 0] = 1
+
     n_offset = len(offsets)
     assert len(onsets) == n_offset, \
         "The number of offsets do not match the number of onsets"
@@ -339,6 +349,7 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
+
     for j in range(n_offset):
         sonogram_correlation[j, j] = 100
         ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
@@ -360,6 +371,7 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
 
             s1_0 = sonogram[y_min:y_max, onsets[j]:offsets[j]]
             s2_0 = sonogram[y_min:y_max, onsets[k]:offsets[k]]
+
             # fill both upper and lower diagonal of symmetric matrix
             sonogram_correlation[j, k] = calc_corr(s1_0, s2_0, max_overlap)
             sonogram_correlation[k, j] = sonogram_correlation[j, k]
@@ -392,28 +404,6 @@ def calc_corr(s1, s2, max_overlap):
     return syll_correlation.max() * 100. / max_overlap
 
 
-def get_notes(threshold_sonogram, onsets, offsets):
-    """
-    num of notes and categorization; also outputs freq ranges of each note
-    """
-    # zero anything before first onset or after last offset
-    # (not offset row is already zeros, so okay to include)
-    # this will take care of any noise before or after the song
-    # before labeling the notes
-    threshold_sonogram_crop = threshold_sonogram.copy()
-    threshold_sonogram_crop[:, 0:onsets[0]] = 0
-    threshold_sonogram_crop[:, offsets[-1]:-1] = 0
-
-    # ^connectivity 1=4 or 2=8(include diagonals)
-    labeled_sonogram, num_notes = label(threshold_sonogram_crop,
-                                        return_num=True,
-                                        connectivity=1)
-
-    props = regionprops(labeled_sonogram)
-
-    return num_notes, props, labeled_sonogram
-
-
 def calc_max_correlation(onsets, offsets, sonogram):
     sonogram_self_correlation = np.zeros(len(onsets))
 
@@ -425,8 +415,8 @@ def calc_max_correlation(onsets, offsets, sonogram):
 
 
 def calc_sylls_freq_ranges(offsets, onsets, sonogram):
-    """ find unique syllables, syllable pattern, and stereotypy
-
+    """
+    find unique syllables, syllable pattern, and stereotypy
     """
     sylls_freq_range_upper = []
     sylls_freq_range_lower = []
