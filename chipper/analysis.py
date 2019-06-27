@@ -153,7 +153,7 @@ class Song(object):
             # max row is not inclusive
             # (first zero row after the labeled section)
             notes_freq_range_lower.append(max_row)
-            note_length.append(np.shape(max_col - min_col))
+            note_length.append(max_col - min_col)
 
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
@@ -334,7 +334,8 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
     # change labels to be ones (so matrices are all zeros and ones for correlation measures)
-    sonogram[sonogram > 0] = 1
+    sonogram = sonogram.copy()
+    sonogram[sonogram > 0] = 1  # overwrites self.threshold_sonogram (which is passed in as sonogram) if I don't make copy first
 
     n_offset = len(offsets)
     assert len(onsets) == n_offset, \
