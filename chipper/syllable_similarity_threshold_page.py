@@ -3,7 +3,10 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import matplotlib.transforms as tx
+from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
+from skimage.measure import label, regionprops
+from skimage.morphology import remove_small_objects
 
 
 from chipper.popups import SyllSimThreshInstructionsPopup
@@ -14,6 +17,7 @@ import numpy as np
 
 
 class SyllSimThresholdPage(Screen):
+    user_note_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
         self.fig5, self.ax5 = plt.subplots()
@@ -54,6 +58,21 @@ class SyllSimThresholdPage(Screen):
             self.threshold_sonogram = thresh
             [self.rows, self.cols] = np.shape(self.threshold_sonogram)
 
+            # zero anything before first onset or after last offset
+            # (not offset row is already zeros, so okay to include)
+            # this will take care of any noise before or after the song
+            threshold_sonogram_crop = self.threshold_sonogram.copy()
+            threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
+            threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+
+            # ^connectivity 1=4 or 2=8(include diagonals)
+            labeled_sonogram = label(threshold_sonogram_crop,
+                                     connectivity=1)
+
+            corrected_sonogram = remove_small_objects(labeled_sonogram,
+                                                      min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
+                                                      connectivity=1)
+
             # prepare graph and make plot take up the entire space
             data = np.zeros((self.rows, self.cols))
             self.ax5.clear()
@@ -90,7 +109,7 @@ class SyllSimThresholdPage(Screen):
             self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
 
             self.son_corr, son_corr_bin = analyze.get_sonogram_correlation(
-                sonogram=self.threshold_sonogram, onsets=self.onsets,
+                sonogram=corrected_sonogram, onsets=self.onsets,
                 offsets=self.offsets, syll_duration=self.syll_dur,
                 corr_thresh=float(self.ids.user_syllsim.text)
             )
@@ -126,6 +145,7 @@ class SyllSimThresholdPage(Screen):
 
         # color syllables based on syntax
         labeled_sonogram = self.threshold_sonogram.copy()
+        # labeled_sonogram[labeled_sonogram > 0] = 1
         for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
             labeled_sonogram[:, on:off][labeled_sonogram[:, on:off] == 1] = syll + 3
 
