@@ -13,14 +13,13 @@ from skimage.morphology import remove_small_objects
 import chipper.utils as utils
 from chipper.logging import setup_logger
 
+
 log = setup_logger(logging.INFO)
 
 
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
-
-    # stop = threading.Event()  # will need if the thread for analysis is not daemon
 
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
@@ -57,10 +56,23 @@ class Analysis(Screen):
                               self.user_syll_sim_thresh).run_analysis()
                 output['f_name'] = f_name
                 final_output.append(output)
+            except NoNotesFound as e:
+                errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
+                self.ids.analysis_warnings.text = errors
+                log.debug(errors)
             except Exception as e:
                 errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
                 self.ids.analysis_warnings.text = errors
                 log.debug(errors)
+
+        self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
+
+        if len(final_output):
+            output_bout_data(out_path, final_output)
+        else:
+            errors += "WARNING : Could not proceed with any files"
+            self.ids.analysis_warnings.text = errors
+            log.debug(errors)
         # write errors to log file
         error_file = "{}_{}".format(out_path, "error_log")
         if os.path.exists(error_file):
@@ -69,9 +81,6 @@ class Analysis(Screen):
             action = 'w'
         with open(error_file, action) as f:
             f.write(errors)
-        self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
-
-        output_bout_data(out_path, final_output)
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
@@ -90,9 +99,6 @@ class Song(object):
         self.note_thresh = int(note_thresh)
         self.syll_sim_thresh = float(syll_sim_thresh)
 
-    def log(self, output):
-        log.info(output)
-
     def run_analysis(self):
         """ Runs entire analysis to describe song
 
@@ -104,11 +110,14 @@ class Song(object):
         # run analysis
         log.debug("Cleaning spectrogram")
         self.threshold_sonogram = self.clean_sonogram()
-        log.debug("Getting bout")
+
+        log.debug("Getting bout stats")
         bout_stats = self.get_bout_stats()
-        log.debug("Getting stats")
+
+        log.debug("Getting syllable stats")
         syllable_stats = self.get_syllable_stats()
-        log.debug("Getting note")
+
+        log.debug("Getting note stats")
         note_stats = self.get_note_stats()
 
         # write output
@@ -135,6 +144,7 @@ class Song(object):
 
     def get_note_stats(self):
         props = regionprops(self.threshold_sonogram)
+
         num_notes = len(props)
 
         # stats per note
@@ -353,10 +363,17 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
 
     for j in range(n_offset):
         sonogram_correlation[j, j] = 100
-        ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
+        try:
+            ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
+        except ValueError:
+            raise NoNotesFound()
+
         # do not want to fill the second half of the diagonal matrix
         for k in range(j + 1, n_offset):
-            ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+            try:
+                ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+            except ValueError:
+                raise NoNotesFound()
 
             if ymin_2 >= ymax_1 or ymin_1 >= ymax_2:
                 sonogram_correlation[j, k] = 0
@@ -508,3 +525,10 @@ def find_syllable_pattern(sonogram_correlation_binary):
     return syllable_pattern_checked
 
 
+class NoNotesFound(ValueError):
+    def __init__(self):
+        ValueError.__init__(
+            self,
+            "Syllable was considered to be noise (all notes were less than "
+            "note size threshold). Re-segment using the previous gzip or "
+            "re-determine note size to visualize the issue.")
