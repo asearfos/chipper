@@ -13,11 +13,12 @@ import shutil
 
 
 def make_syllable(song_amplitude, slope, shape, vertex=True, symmetric=False):
+    # for each syllable pick an amplitude within 30% of the song amplitude
     amp_scale = round(uniform(song_amplitude - song_amplitude*.3, song_amplitude + song_amplitude*.3), 2)
-    start_freq = randint(freq_min, freq_max)
+    start_freq = randint(freq_min, freq_max)  # Return ints from discrete uniform dist [low, high)
 
     if slope == 'flat':
-        end_freq =  start_freq
+        end_freq = start_freq
     elif slope == 'up':
         end_freq = randint(start_freq, freq_max)
     else: # slope == 'down'
@@ -29,10 +30,17 @@ def make_syllable(song_amplitude, slope, shape, vertex=True, symmetric=False):
         t = t-(len_syll/2)
     else:
         t = np.linspace(0, len_syll, sampling_rate*len_syll)
+
+    # create vector of ones for amplitude
     amplitude = np.linspace(1, 1, sampling_rate*len_syll)
+    # define how much of the syllable will be ramping up to full amplitude and back down will be
     edge = int(round(len(amplitude)*0.4))
+    # ramp up to full amplitude from 0
     amplitude[0:edge] = np.linspace(0, 1, edge)
+    # ramp down from full amplitude to zero
     amplitude[len(amplitude)-edge:] = np.linspace(1, 0, edge)
+
+    # multiply amplitude by exponential decay to decrease amplitude throughout the syllable (to mimic bird sounds)
     syll = np.exp(-3*t)*amplitude*amp_scale*chirp(t, start_freq, t[-1], end_freq, shape, vertex_zero=vertex)
     return amp_scale, start_freq, end_freq, len_syll, syll
 
