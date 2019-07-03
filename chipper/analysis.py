@@ -12,6 +12,7 @@ from skimage.morphology import remove_small_objects
 
 import chipper.utils as utils
 from chipper.logging import setup_logger
+import matplotlib.pyplot as plt
 
 
 log = setup_logger(logging.INFO)
@@ -129,18 +130,22 @@ class Song(object):
         # (not offset row is already zeros, so okay to include)
         # this will take care of any noise before or after the song
         threshold_sonogram_crop = self.threshold_sonogram.copy()
+
         threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
         threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+
+        for i, j in zip(self.offsets[:-1], self.onsets[1:]):
+            threshold_sonogram_crop[:, i:j] = 0
 
         # ^connectivity 1=4 or 2=8(include diagonals)
         labeled_sonogram = label(threshold_sonogram_crop,
                                  connectivity=1)
 
-        corrected_sonogram = remove_small_objects(labeled_sonogram,
-                                                  min_size=self.note_thresh+1,  # add one to make =< threshold
-                                                  connectivity=1)
-
-        return corrected_sonogram
+        return remove_small_objects(
+            labeled_sonogram,
+            min_size=self.note_thresh+1,  # add one to make =< threshold
+            connectivity=1
+        )
 
     def get_note_stats(self):
         props = regionprops(self.threshold_sonogram)
