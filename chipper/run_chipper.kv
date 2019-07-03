@@ -368,13 +368,13 @@
             cols: 1
 
             Label:
-                size_hint_y: 0.25
+                size_hint_y: 0.3
                 text_size: self.size
-                text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, analyze previously segmented syllables or perform both. Adjust settings if desired.'
+                text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for note size or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
                 valign: 'center'
 
             StackLayout:
-                size_hint_y: 0.25
+                size_hint_y: 0.3
                 CheckBox:
                     id: chipper
                     group: 'chipper_analyze'
@@ -391,6 +391,19 @@
                     size_hint_x: 0.9
                     size_hint_y: 0.3
                     on_press: chipper._do_press()
+
+                CheckBox:
+                    id: find_prev_gzips
+                    size_hint: 0.15, 0.3
+                    disabled: False if chipper.active else True
+                RadioLabel:
+                    text: 'Search for previously used parameters (most recent gzip in output folder).\n(note: slower loading time, will override defaults)'
+                    halign: 'left'
+                    valign: 'center'
+                    text_size: self.size
+                    size_hint: 0.85, 0.35
+                    disabled: False if chipper.active else True
+                    on_press: find_prev_gzips._do_press()
 
                 CheckBox:
                     id: determine_note_thresh
@@ -441,7 +454,7 @@
                     on_press: analyze._do_press()
 
             BoxLayout:
-                size_hint_y: 0.05
+                size_hint_y: 0.2
 
             GridLayout:
                 rows: 1
@@ -456,19 +469,6 @@
                     id: chipper_menu
                     padding: 10
                     spacing: 8
-
-                    CheckBox:
-                        id: find_prev_gzips
-                        size_hint: 0.15, 0.1
-                        disabled: False if chipper.active else True
-                    RadioLabel:
-                        text: 'Search for previously used parameters (most recent gzip in output folder).\n(note: slower loading time, will override defaults)'
-                        halign: 'left'
-                        valign: 'center'
-                        text_size: self.size
-                        size_hint: 0.85, 0.14
-                        disabled: False if chipper.active else True
-                        on_press: find_prev_gzips._do_press()
 
                     NumericInput:
                         id: signal_threshold_input
