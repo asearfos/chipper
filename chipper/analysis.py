@@ -12,7 +12,6 @@ from skimage.morphology import remove_small_objects
 
 import chipper.utils as utils
 from chipper.logging import setup_logger
-import matplotlib.pyplot as plt
 
 
 log = setup_logger(logging.INFO)
@@ -74,14 +73,15 @@ class Analysis(Screen):
             errors += "WARNING : Could not proceed with any files"
             self.ids.analysis_warnings.text = errors
             log.debug(errors)
-        # write errors to log file
-        error_file = "{}_{}".format(out_path, "error_log")
-        if os.path.exists(error_file):
-            action = 'a'
-        else:
-            action = 'w'
-        with open(error_file, action) as f:
-            f.write(errors)
+        if errors != '':
+            # write errors to log file
+            error_file = "{}_{}".format(out_path, "error_log")
+            if os.path.exists(error_file):
+                action = 'a'
+            else:
+                action = 'w'
+            with open(error_file, action) as f:
+                f.write(errors)
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
