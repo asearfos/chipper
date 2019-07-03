@@ -370,7 +370,7 @@
             Label:
                 size_hint_y: 0.3
                 text_size: self.size
-                text: 'Welcome to Chipper. To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for note size or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
+                text: 'Welcome to Chipper! To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for note size or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
                 valign: 'center'
 
             StackLayout:
@@ -576,6 +576,10 @@
                         or not min_syllable_input.text)) else False
 
                 BoxLayout:
+
+        BoxLayout:
+            size_hint_x: 0.02
+
 
 <FileExplorer>:
     id: browse
