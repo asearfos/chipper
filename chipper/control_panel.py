@@ -346,7 +346,7 @@ class ControlPanel(Screen):
         f_path = os.path.join(self.parent.directory, self.current_file)
         f_size = os.path.getsize(f_path)
         # 1 000 000 bytes is 1 megabyte
-        max_file_size = 2000000
+        max_file_size = 3000000
         if f_size > max_file_size:
             Logger.info("Large song")
             popups.LargeFilePopup(self, self.current_file, str(round(f_size/1000000, 1))).open()
