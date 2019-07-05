@@ -160,12 +160,6 @@ def get_logger(logger_name=BASE_LOGGER_NAME, log_level=None,
     -------
     A logging.Logger object with the requested name
 
-    Examples
-    --------
-
-    >>> from chipper.logging import get_logger
-    >>> logger = get_logger(__name__)
-    >>> logger.debug('Test message')
     """
     if BASE_LOGGER_NAME not in logging.Logger.manager.loggerDict.keys():
         setup_logger(**kwargs)

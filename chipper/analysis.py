@@ -10,7 +10,7 @@ from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
 import chipper.utils as utils
-from chipper.logging import setup_logger
+from chipper.log import setup_logger
 
 log = setup_logger(logging.INFO)
 
