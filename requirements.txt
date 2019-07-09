@@ -9,14 +9,3 @@ scikit-image
 cython
 docutils
 pygments
-
-# windows
-pypiwin32
-kivy.deps.sdl2
-kivy.deps.glew
-kivy.deps.gstreamer
-kivy.deps.glew_dev
-kivy.deps.sdl2_dev
-kivy.deps.gstreamer_dev
-
-# garden install --kivy graph, filebrowser, matplotlib, progressspinner
