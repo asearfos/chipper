@@ -1,7 +1,7 @@
 Documentation
 -------------
 
-The full Chipper manual is available online at ___.
+Full documentation is available as chipper_manual.pdf_ on GitHub.
 
 
 Install from source
@@ -52,3 +52,4 @@ Chipper landing page. You are ready to go!
 
 
 .. _Anaconda: https://www.anaconda.com/distribution/#download-section
+.. _chipper_manual.pdf: https://github.com/asearfos/chipper/blob/master/chipper_manual.pdf
