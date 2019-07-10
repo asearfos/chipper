@@ -1,11 +1,9 @@
-import logging
 import os
 import time
-import glob
-from chipper.logging import setup_logger
+from chipper.log import get_logger
 from chipper.analysis import Song, output_bout_data
 
-log = setup_logger(logging.INFO)
+log = get_logger(__file__)
 
 
 def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
@@ -20,7 +18,10 @@ def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
     out_path : str
 
     """
-    files = glob.glob(os.path.join(input_directory, '*.gzip'))
+
+    files = [i for i in os.listdir(os.path.join(input_directory))
+             if i.endswith('.gzip')]
+
     if not len(files):
         log.debug("No gzipped files in {}".format(input_directory))
         raise Exception("No gzipped files in {}".format(input_directory))
@@ -57,3 +58,5 @@ def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
         f.write(errors)
     log.info("{0} of {0} complete".format(n_files))
     output_bout_data(out_path, final_output)
+
+
