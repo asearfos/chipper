@@ -45,13 +45,15 @@ class ControlPanel(Screen):
 
         self.register_event_type('on_check_boolean')
 
-        self.fig2, self.ax2 = plt.subplots()
+        self.fig2 = matplotlib.figure.Figure()
+        # self.fig2, self.ax2 = plt.subplots()
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
 
-        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+        self.ax2 = self.fig2.add_subplot(111)
+        # self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
-        self.fig2.add_axes(self.ax2)
+        # self.fig2.add_axes(self.ax2)
         # all songs and files
         self.file_names = None
         self.files = None
@@ -506,9 +508,9 @@ class ControlPanel(Screen):
 
         # make plot take up the entire space
         self.ax2.clear()
-        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+        # self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
-        self.fig2.add_axes(self.ax2)
+        # self.fig2.add_axes(self.ax2)
 
         data = np.zeros((self.song.rows, self.song.cols))
         # plot data
