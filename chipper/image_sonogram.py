@@ -17,7 +17,8 @@ class ImageSonogram(GridLayout):
         self.plot_sonogram_canvas = FigureCanvasKivyAgg(self.fig1)
 
         # make plot take up the entire space
-        self.ax1 = self.fig1.add_subplot(111)
+        # self.ax1 = self.fig1.add_subplot(111)
+        self.ax1 = self.fig1.add_axes([0., 0., 1., 1.])
         # self.ax1 = plt.Axes(self.fig1, [0., 0., 1., 1.])
         self.ax1.set_axis_off()
         # self.fig1.add_axes(self.ax1)

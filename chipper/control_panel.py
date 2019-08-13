@@ -11,6 +11,7 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import matplotlib.transforms as tx
+import matplotlib.figure
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
 plt.style.use('dark_background')
@@ -50,7 +51,8 @@ class ControlPanel(Screen):
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
 
-        self.ax2 = self.fig2.add_subplot(111)
+        # self.ax2 = self.fig2.add_subplot(111)
+        self.ax2 = self.fig2.add_axes([0., 0., 1., 1.])
         # self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
         # self.fig2.add_axes(self.ax2)
