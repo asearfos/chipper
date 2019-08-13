@@ -11,6 +11,7 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 import matplotlib.transforms as tx
+import matplotlib.figure
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 
 plt.style.use('dark_background')
@@ -45,13 +46,16 @@ class ControlPanel(Screen):
 
         self.register_event_type('on_check_boolean')
 
-        self.fig2, self.ax2 = plt.subplots()
+        self.fig2 = matplotlib.figure.Figure()
+        # self.fig2, self.ax2 = plt.subplots()
         self.plot_binary_canvas = FigureCanvasKivyAgg(self.fig2)
         self.fig2.canvas.mpl_connect('key_press_event', self.move_mark)
 
-        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
+        # self.ax2 = self.fig2.add_subplot(111)
+        self.ax2 = self.fig2.add_axes([0., 0., 1., 1.])
+        # self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
-        self.fig2.add_axes(self.ax2)
+        # self.fig2.add_axes(self.ax2)
         # all songs and files
         self.file_names = None
         self.files = None
@@ -179,19 +183,10 @@ class ControlPanel(Screen):
 
         ymax = 0.75 if self.ids.syllable_beginning.state == 'down' else 0.90
 
-        # self.image_syllable_marks()
-        # self.bottom_image.image_syllable_marks(self.syllable_onsets,
-        #                                        self.syllable_offsets)
-
-        # use one of the below options to graph as another color/group of lines
+        # graph as another color/group of lines
         self.mark = self.ax2.axvline(self.graph_location, ymax=ymax,
                                      color='m', linewidth=0.75)
         self.plot_binary_canvas.draw()
-        # or can plot like this... not sure which is best
-        # self.ax2.plot(np.repeat(graph_location, 3),
-        # np.tile([0, .75, np.nan], 1), linewidth=2, color='m',
-        # transform=self.trans)
-        # self.plot_binary_canvas.draw()
 
     def add_onsets(self):
         # TODO: might be able to just use bisect.insort(list, new number)
@@ -506,9 +501,7 @@ class ControlPanel(Screen):
 
         # make plot take up the entire space
         self.ax2.clear()
-        self.ax2 = plt.Axes(self.fig2, [0., 0., 1., 1.])
         self.ax2.set_axis_off()
-        self.fig2.add_axes(self.ax2)
 
         data = np.zeros((self.song.rows, self.song.cols))
         # plot data
@@ -559,28 +552,6 @@ class ControlPanel(Screen):
         self.lines_off.set_ydata(np.tile([0, .90, np.nan],
                                          len(self.syllable_offsets)))
         self.plot_binary_canvas.draw()
-
-        # self.ax2.draw_artist(self.ax2.patch)
-        # self.ax2.draw_artist(self.lines)
-        # self.plot_binary_canvas.update()
-        # self.plot_binary_canvas.flush_events()
-
-        # for x in self.syllable_onsets.astype(np.int64):
-        #     self.vert_on.set_xdata(x)
-        #     self.plot_binary_canvas.draw()
-        # self.vert_on = self.ax2.axvline(x,
-        # ymax=0.90, color='m', linewidth=1)
-        # for x in self.syllable_offsets.astype(np.int64):
-        #     self.vert_off = self.ax2.axvline(x, color='m', linewidth=1)
-        # self.vert.set_xdata(xdata=indexes)
-
-        # remove old lines and replot onsets and offsets
-        # self.lines.pop(0).remove()
-        # indexes = np.squeeze(np.nonzero(syllable_marks))
-        # ymin = np.zeros(len(indexes))
-        # ymax = syllable_marks[syllable_marks != 0]
-        # self.lines[0] = self.ax2.vlines(indexes, ymin=ymin, ymax=ymax,
-        # colors='m', linewidth=0.5)
 
     def back(self):
         if self.i != 1:
