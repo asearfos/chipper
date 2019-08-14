@@ -8,9 +8,11 @@ import pandas as pd
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
+from skimage.morphology import remove_small_objects
 
 import chipper.utils as utils
 from chipper.log import setup_logger
+
 
 log = setup_logger(logging.INFO)
 
@@ -18,8 +20,6 @@ log = setup_logger(logging.INFO)
 class Analysis(Screen):
     user_note_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
-
-    # stop = threading.Event()  # will need if the thread for analysis is not daemon
 
     def __init__(self, *args, **kwargs):
         super(Analysis, self).__init__(*args, **kwargs)
@@ -56,21 +56,32 @@ class Analysis(Screen):
                               self.user_syll_sim_thresh).run_analysis()
                 output['f_name'] = f_name
                 final_output.append(output)
+            except NoNotesFound as e:
+                errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
+                self.ids.analysis_warnings.text = errors
+                log.debug(errors)
             except Exception as e:
                 errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
                 self.ids.analysis_warnings.text = errors
                 log.debug(errors)
-        # write errors to log file
-        error_file = "{}_{}".format(out_path, "error_log")
-        if os.path.exists(error_file):
-            action = 'a'
-        else:
-            action = 'w'
-        with open(error_file, action) as f:
-            f.write(errors)
+
         self.ids.processing_count.text = "{0} of {0} complete".format(n_files)
 
-        output_bout_data(out_path, final_output)
+        if len(final_output):
+            output_bout_data(out_path, final_output)
+        else:
+            errors += "WARNING : Could not proceed with any files"
+            self.ids.analysis_warnings.text = errors
+            log.debug(errors)
+        if errors != '':
+            # write errors to log file
+            error_file = "{}_{}".format(out_path, "error_log")
+            if os.path.exists(error_file):
+                action = 'a'
+            else:
+                action = 'w'
+            with open(error_file, action) as f:
+                f.write(errors)
         self.ids.analysis_layout.remove_widget(self.ids.progress_spinner)
         self.ids.analysis_done.disabled = False
 
@@ -89,9 +100,6 @@ class Song(object):
         self.note_thresh = int(note_thresh)
         self.syll_sim_thresh = float(syll_sim_thresh)
 
-    def log(self, output):
-        log.info(output)
-
     def run_analysis(self):
         """ Runs entire analysis to describe song
 
@@ -101,23 +109,48 @@ class Song(object):
         """
 
         # run analysis
-        log.debug("Getting bout")
+        log.debug("Cleaning spectrogram")
+        self.threshold_sonogram = self.clean_sonogram()
+
+        log.debug("Getting bout stats")
         bout_stats = self.get_bout_stats()
-        log.debug("Getting stats")
+
+        log.debug("Getting syllable stats")
         syllable_stats = self.get_syllable_stats()
-        log.debug("Getting note")
+
+        log.debug("Getting note stats")
         note_stats = self.get_note_stats()
 
         # write output
         final_output = update_dict([bout_stats, syllable_stats, note_stats])
         return final_output
 
+    def clean_sonogram(self):
+        # zero anything before first onset or after last offset
+        # (not offset row is already zeros, so okay to include)
+        # this will take care of any noise before or after the song
+        threshold_sonogram_crop = self.threshold_sonogram.copy()
+
+        threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
+        threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+
+        for i, j in zip(self.offsets[:-1], self.onsets[1:]):
+            threshold_sonogram_crop[:, i:j] = 0
+
+        # ^connectivity 1=4 or 2=8(include diagonals)
+        labeled_sonogram = label(threshold_sonogram_crop,
+                                 connectivity=1)
+
+        return remove_small_objects(
+            labeled_sonogram,
+            min_size=self.note_thresh+1,  # add one to make =< threshold
+            connectivity=1
+        )
+
     def get_note_stats(self):
-        num_notes, props, _ = get_notes(
-            threshold_sonogram=self.threshold_sonogram,
-            onsets=self.onsets, offsets=self.offsets)
-        # initialize, will be altered if the "note" is too small (<60 pixels)
-        num_notes_updated = num_notes
+        props = regionprops(self.threshold_sonogram)
+
+        num_notes = len(props)
 
         # stats per note
         notes_freq_range_upper = []
@@ -125,35 +158,24 @@ class Song(object):
         note_length = []
 
         for j in range(num_notes):
+            # use bounding box of the note
+            # (note, indexing is altered since python starts with 0 and
+            # we want to convert rows to actual frequency)
+            min_row, min_col, max_row, max_col = props[j].bbox
 
-            # use only the part of the matrix with the note
-            sonogram_one_note = props[j].filled_image
-
-            # check the note is large enough to be a note and not
-            if np.size(sonogram_one_note) <= self.note_thresh:
-                # just noise
-                note_length.append(0)  # place holder
-                num_notes_updated -= 1
-                # print('not a note')
-            else:
-                # use bounding box of the note
-                # (note, indexing is altered since python starts with 0 and
-                # we want to convert rows to actual frequency)
-                min_row, min_col, max_row, max_col = props[j].bbox
-                # min row is inclusive (first row with labeled section)
-                notes_freq_range_upper.append(min_row)
-                # max row is not inclusive
-                # (first zero row after the labeled section)
-                notes_freq_range_lower.append(max_row)
-                note_length.append(np.shape(sonogram_one_note)[1])
+            # min row is inclusive (first row with labeled section)
+            notes_freq_range_upper.append(min_row)
+            # max row is not inclusive
+            # (first zero row after the labeled section)
+            notes_freq_range_lower.append(max_row)
+            note_length.append(max_col - min_col)
 
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
-        note_length_array = note_length_array[note_length_array != 0]
         note_length_array_scaled = note_length_array * self.ms_per_pixel
         note_counts = {'note_size_threshold': self.note_thresh,
-                       'num_notes': num_notes_updated,
-                       'num_notes_per_syll': num_notes_updated / self.n_syll}
+                       'num_notes': num_notes,
+                       'num_notes_per_syll': num_notes / self.n_syll}
 
         basic_note_stats = get_basic_stats(note_length_array_scaled,
                                            'note_duration', '(ms)')
@@ -215,7 +237,7 @@ class Song(object):
 
         if self.n_syll > 1:
             # determine how often the next syllable is the same as the
-            # previous syllable (for chippies, should be oneless than number
+            # previous syllable (for chippies, should be one less than number
             # of syllables in the bout)
             sequential_rep1 = len(
                 np.where(np.diff(syll_pattern) == 0)[0]) / \
@@ -276,10 +298,10 @@ class Song(object):
             'overall_' + data_type + '_freq_range(Hz)': overall_freq_range_scaled
         }
 
-        freq_modulation_per_note = abs(
+        freq_modulation_per_segment = abs(
             np.asarray(freq_range_upper) - np.asarray(
                 freq_range_lower)) * self.hertzPerPixel
-        basic_freq_stats = get_basic_stats(freq_modulation_per_note,
+        basic_freq_stats = get_basic_stats(freq_modulation_per_segment,
                                            data_type + '_freq_modulation',
                                            '(Hz)')
 
@@ -326,6 +348,10 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
+    # change labels to be ones (so matrices are all zeros and ones for correlation measures)
+    sonogram = sonogram.copy()  # TODO had to write this in because otherwise it overwrites self.threshold_sonogram which is passed in as sonogram
+    sonogram[sonogram > 0] = 1 
+
     n_offset = len(offsets)
     assert len(onsets) == n_offset, \
         "The number of offsets do not match the number of onsets"
@@ -339,12 +365,20 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
     sonogram_self_correlation = calc_max_correlation(
         onsets, offsets, sonogram
     )
+
     for j in range(n_offset):
         sonogram_correlation[j, j] = 100
-        ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
+        try:
+            ymin_1, ymax_1 = get_square(sonogram, onsets[j], offsets[j])
+        except ValueError:
+            raise NoNotesFound()
+
         # do not want to fill the second half of the diagonal matrix
         for k in range(j + 1, n_offset):
-            ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+            try:
+                ymin_2, ymax_2 = get_square(sonogram, onsets[k], offsets[k])
+            except ValueError:
+                raise NoNotesFound()
 
             if ymin_2 >= ymax_1 or ymin_1 >= ymax_2:
                 sonogram_correlation[j, k] = 0
@@ -360,6 +394,7 @@ def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
 
             s1_0 = sonogram[y_min:y_max, onsets[j]:offsets[j]]
             s2_0 = sonogram[y_min:y_max, onsets[k]:offsets[k]]
+
             # fill both upper and lower diagonal of symmetric matrix
             sonogram_correlation[j, k] = calc_corr(s1_0, s2_0, max_overlap)
             sonogram_correlation[k, j] = sonogram_correlation[j, k]
@@ -392,28 +427,6 @@ def calc_corr(s1, s2, max_overlap):
     return syll_correlation.max() * 100. / max_overlap
 
 
-def get_notes(threshold_sonogram, onsets, offsets):
-    """
-    num of notes and categorization; also outputs freq ranges of each note
-    """
-    # zero anything before first onset or after last offset
-    # (not offset row is already zeros, so okay to include)
-    # this will take care of any noise before or after the song
-    # before labeling the notes
-    threshold_sonogram_crop = threshold_sonogram.copy()
-    threshold_sonogram_crop[:, 0:onsets[0]] = 0
-    threshold_sonogram_crop[:, offsets[-1]:-1] = 0
-
-    # ^connectivity 1=4 or 2=8(include diagonals)
-    labeled_sonogram, num_notes = label(threshold_sonogram_crop,
-                                        return_num=True,
-                                        connectivity=1)
-
-    props = regionprops(labeled_sonogram)
-
-    return num_notes, props, labeled_sonogram
-
-
 def calc_max_correlation(onsets, offsets, sonogram):
     sonogram_self_correlation = np.zeros(len(onsets))
 
@@ -425,8 +438,8 @@ def calc_max_correlation(onsets, offsets, sonogram):
 
 
 def calc_sylls_freq_ranges(offsets, onsets, sonogram):
-    """ find unique syllables, syllable pattern, and stereotypy
-
+    """
+    find unique syllables, syllable pattern, and stereotypy
     """
     sylls_freq_range_upper = []
     sylls_freq_range_lower = []
@@ -517,3 +530,10 @@ def find_syllable_pattern(sonogram_correlation_binary):
     return syllable_pattern_checked
 
 
+class NoNotesFound(ValueError):
+    def __init__(self):
+        ValueError.__init__(
+            self,
+            "Syllable was considered to be noise (all notes were less than "
+            "note size threshold). Re-segment using the previous gzip or "
+            "re-determine note size to visualize the issue.")
