@@ -144,7 +144,7 @@ class SyllSimThresholdPage(Screen):
                     round(syll_stereotypy_min[idx], 1),
                     round(syll_stereotypy_max[idx], 1),
                 )
-        if stereotypy_text == 'Syllable: Avg, Min, Max\n':
+        if stereotypy_text == spacing.format('Syllable', 'Avg', 'Min', 'Max'):
             stereotypy_text += 'No Repeated Syllables'
 
         self.ids.similarity.text = stereotypy_text
