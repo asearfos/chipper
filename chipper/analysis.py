@@ -87,7 +87,7 @@ class Analysis(Screen):
 
 
 class Song(object):
-    def __init__(self, file_name, note_thresh, syll_sim_thresh):
+    def __init__(self, file_name, noise_thresh, syll_sim_thresh):
         self.file_name = file_name
         ons, offs, thresh, ms, htz = load_bout_data(self.file_name)
         self.onsets = ons
@@ -97,7 +97,7 @@ class Song(object):
         self.hertzPerPixel = htz
         self.syll_dur = self.offsets - self.onsets
         self.n_syll = len(self.syll_dur)
-        self.note_thresh = int(note_thresh)
+        self.noise_thresh = int(noise_thresh)
         self.syll_sim_thresh = float(syll_sim_thresh)
 
     def run_analysis(self):
@@ -143,7 +143,7 @@ class Song(object):
 
         return remove_small_objects(
             labeled_sonogram,
-            min_size=self.note_thresh+1,  # add one to make =< threshold
+            min_size=self.noise_thresh + 1,  # add one to make =< threshold
             connectivity=1
         )
 
@@ -173,7 +173,7 @@ class Song(object):
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
         note_length_array_scaled = note_length_array * self.ms_per_pixel
-        note_counts = {'note_size_threshold': self.note_thresh,
+        note_counts = {'note_size_threshold': self.noise_thresh,
                        'num_notes': num_notes,
                        'num_notes_per_syll': num_notes / self.n_syll}
 
@@ -534,6 +534,6 @@ class NoNotesFound(ValueError):
     def __init__(self):
         ValueError.__init__(
             self,
-            "Syllable was considered to be noise (all notes were less than "
-            "note size threshold). Re-segment using the previous gzip or "
-            "re-determine note size to visualize the issue.")
+            "Syllable was considered to be noise (all notes were smaller than "
+            "noise threshold). Re-segment using the previous gzip or "
+            "re-determine noise threshold to visualize the issue.")
