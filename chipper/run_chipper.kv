@@ -838,7 +838,7 @@
 <NoteThresholdPage>:
     id: determine_note
     on_pre_enter: determine_note.setup()
-
+    font_name : 'RobotoMono-Regular'
     BoxLayout:
         orientation: 'vertical'
 
@@ -1060,6 +1060,7 @@
                     halign: 'left'
                     valign: 'top'
                     size_hint_y: 0.1
+                    font_name : 'RobotoMono-Regular'
 
                 Label:
                     id: similarity
@@ -1067,6 +1068,7 @@
                     text_size: self.size
                     halign: 'left'
                     valign: 'top'
+                    font_name : 'RobotoMono-Regular'
 
             GridLayout:
                 id: syllsim_graph
@@ -1091,12 +1093,12 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-                    on_release: user_syllsim.text = str(float(user_syllsim.text) + 10); determine_syllsim.new_thresh()
+                    on_release: user_syllsim.text = str(min(float(user_syllsim.text) + 10, 100)); determine_syllsim.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_syllsim.text = str(float(user_syllsim.text) - 10); determine_syllsim.new_thresh()
+                    on_release: user_syllsim.text = str(max(float(user_syllsim.text) - 10, 0)); determine_syllsim.new_thresh()
 
             NumericInput:
                 id: user_syllsim
