@@ -470,10 +470,10 @@ def output_bout_data(output_path, output_dict_basic, output_dict_add):
     df_output_note.set_index('f_name', inplace=True)
 
     if not output_path.endswith('txt'):
-        save_name = output_path + '.txt'
+        save_name = output_path + '_songsylls.txt'
         save_name_note = output_path + '_notes.txt'
     else:
-        save_name = output_path
+        save_name = output_path + '_songsylls'
         save_name_note = output_path + '_notes'
 
     if not os.path.isfile(save_name) and not os.path.isfile(output_path):
