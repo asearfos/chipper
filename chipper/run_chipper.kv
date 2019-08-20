@@ -3,7 +3,7 @@
 #:import FileBrowser kivy.garden.filebrowser
 #:import ProgressSpinner kivy.garden.progressspinner
 #:import webbrowser webbrowser
-#:import note_instructions_text note_threshold_instructions
+#:import noise_instructions_text noise_threshold_instructions
 #:import syllsim_instructions_text syllable_similarity_threshold_instructions
 
 <Manager>:
@@ -21,10 +21,10 @@
         user_min_silence: welcome.user_min_silence
         user_min_syllable: welcome.user_min_syllable
         find_gzips: welcome.find_gzips
-    NoteThresholdPage:
-        name: 'note_threshold_page'
-    NoteSummaryPage:
-        name: 'note_summary_page'
+    NoiseThresholdPage:
+        name: 'noise_threshold_page'
+    NoiseSummaryPage:
+        name: 'noise_summary_page'
     SyllSimThresholdPage:
         name: 'syllsim_threshold_page'
         user_note_thresh: welcome.user_note_thresh
@@ -177,9 +177,9 @@
         Button:
             text: 'Determine\nThreshold'
             halign: 'center'
-            on_release: app.root.current = 'note_threshold_page'; root.dismiss()
+            on_release: app.root.current = 'noise_threshold_page'; root.dismiss()
 
-<NoteThreshInstructionsPopup>
+<NoiseThreshInstructionsPopup>
     auto_dismiss: True
     title: 'How to Determine Threshold for Note Size'
     BoxLayout:
@@ -187,7 +187,7 @@
         Label:
             id: note_thresh_instructions
             multiline: True
-            text: note_instructions_text.text
+            text: noise_instructions_text.text
             text_size: self.width/1.5, None
             height: self.texture_size[1]
         GridLayout:
@@ -829,7 +829,7 @@
                     text: 'Back'
                     on_release: controls.back()
 
-<NoteThresholdPage>:
+<NoiseThresholdPage>:
     id: determine_note
     on_pre_enter: determine_note.setup()
 
@@ -877,15 +877,15 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-                    on_release: user_note_size.text = str(int(user_note_size.text) + 10); determine_note.new_thresh()
+                    on_release: user_noise_size.text = str(int(user_noise_size.text) + 10); determine_note.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_note_size.text = str(int(user_note_size.text) - 10); determine_note.new_thresh()
+                    on_release: noise_summary.text = str(int(user_noise_size.text) - 10); determine_note.new_thresh()
 
             TextInput:
-                id: user_note_size
+                id: user_noise_size
                 input_filter: 'int'
                 text: '120'
                 multiline: False
@@ -905,14 +905,14 @@
                 text: 'NEXT'
                 size_hint_x: 0.5
                 on_release: determine_note.next()
-                disabled: True if user_note_size.text == '' else False
+                disabled: True if user_noise_size.text == '' else False
 
         BoxLayout:
             size_hint_y: 0.01
 
-<NoteSummaryPage>:
-    id: note_summary
-    on_pre_enter: note_summary.calculate_note_thresh_stats()
+<NoiseSummaryPage>:
+    id: noise_summary
+    on_pre_enter: noise_summary.calculate_noise_thresh_stats()
 
     BoxLayout:
         orientation: 'vertical'
@@ -929,7 +929,7 @@
             size_hint_y: 0.8
 
             GridLayout:
-                id: note_hist
+                id: noise_hist
                 rows: 1
                 cols: 1
                 size_hint_x: 0.75
@@ -997,7 +997,7 @@
                 valign: 'center'
             Button:
                 text: 'SUBMIT'
-                on_release: note_summary.submit_note_thresh(); app.root.current = 'landing_page'
+                on_release: noise_summary.submit_note_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
                 disabled: True if submitted_note_thresh_input.text == '' else False
 

@@ -64,7 +64,7 @@ class DetermineNoteThresholdPopup(Popup):
         self.len_files = n_files
 
 
-class NoteThreshInstructionsPopup(Popup):
+class NoiseThreshInstructionsPopup(Popup):
     pass
 
 

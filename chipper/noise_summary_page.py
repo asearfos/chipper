@@ -7,15 +7,16 @@ from kivy.uix.screenmanager import Screen
 import numpy as np
 
 
-class NoteSummaryPage(Screen):
+class NoiseSummaryPage(Screen):
     def __init__(self, *args, **kwargs):
         self.fig4, self.ax4 = plt.subplots()
-        self.note_hist_canvas = FigureCanvasKivyAgg(self.fig4)
-        super(NoteSummaryPage, self).__init__(*args, **kwargs)
+        self.noise_hist_canvas = FigureCanvasKivyAgg(self.fig4)
+        super(NoiseSummaryPage, self).__init__(*args, **kwargs)
 
-    def calculate_note_thresh_stats(self):
+    def calculate_noise_thresh_stats(self):
         # note thresholds from all the songs processed
-        note_thresholds = self.manager.get_screen('note_threshold_page').note_thresholds
+        note_thresholds = self.manager.get_screen(
+            'noise_threshold_page').note_thresholds
 
         # clear the plot
         self.ax4.clear()
@@ -39,10 +40,10 @@ class NoteSummaryPage(Screen):
 
         self.ax4.set_xlabel('Note Size Threshold')
         self.ax4.set_ylabel('Number of Songs with Threshold')
-        self.note_hist_canvas.draw()
+        self.noise_hist_canvas.draw()
 
-        self.ids.note_hist.clear_widgets()
-        self.ids.note_hist.add_widget(self.note_hist_canvas)
+        self.ids.noise_hist.clear_widgets()
+        self.ids.noise_hist.add_widget(self.noise_hist_canvas)
 
         # calculate stats for the submitted thresholds and add them to the screen
         self.ids.num_files.text = 'Number of Files: ' + str((len(note_thresholds)))

@@ -14,8 +14,8 @@ Config.set('graphics', 'window_state', 'maximized')
 from chipper.landing_page import LandingPage
 from chipper.file_explorer import FileExplorer
 from chipper.control_panel import ControlPanel
-from chipper.note_threshold_page import NoteThresholdPage
-from chipper.note_summary_page import NoteSummaryPage
+from chipper.noise_threshold_page import NoiseThresholdPage
+from chipper.noise_summary_page import NoiseSummaryPage
 from chipper.syllable_similarity_threshold_page import SyllSimThresholdPage
 from chipper.syllable_similarity_summary_page import SyllSimSummaryPage
 from chipper.analysis import Analysis
