@@ -10,7 +10,7 @@ from skimage.morphology import remove_small_objects
 
 
 from chipper.popups import SyllSimThreshInstructionsPopup
-
+from chipper.log import get_logger
 import os
 import chipper.analysis as analyze
 import numpy as np
@@ -26,12 +26,12 @@ class SyllSimThresholdPage(Screen):
         self.ax5 = plt.Axes(self.fig5, [0., 0., 1., 1.])
         self.ax5.set_axis_off()
         self.fig5.add_axes(self.ax5)
-        super(SyllSimThresholdPage, self).__init__(*args, **kwargs)
-
-    def setup(self):
         self.syllsim_thresholds = []
         self.i = 0
-        # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
+        super(SyllSimThresholdPage, self).__init__(*args, **kwargs)
+        self.log = get_logger(__name__)
+
+    def setup(self):
         self.files = self.parent.files
         self.next()
 
@@ -48,77 +48,89 @@ class SyllSimThresholdPage(Screen):
         if self.i == len(self.files):
             self.manager.current = 'syllsim_summary_page'
         else:
-            self.ids.user_syllsim.text = self.ids.user_syllsim.text
-            ons, offs, thresh, ms, htz = analyze.load_bout_data(
-                os.path.join(self.parent.directory, self.files[self.i])
-            )
-            self.onsets = ons
-            self.offsets = offs
-            self.syll_dur = self.offsets - self.onsets
-            self.threshold_sonogram = thresh
-            [self.rows, self.cols] = np.shape(self.threshold_sonogram)
+            errors = ''
+            f_name = os.path.join(self.parent.directory, self.files[self.i])
+            try:
+                self.update(f_name)
+                self.i += 1
+            except Exception as e:
+                errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
+                # raise e
+                self.log.info(errors)
+                self.i += 1
+                self.log.info(self.i)
 
-            # zero anything before first onset or after last offset
-            # (not offset row is already zeros, so okay to include)
-            # this will take care of any noise before or after the song
-            threshold_sonogram_crop = self.threshold_sonogram.copy()
-            threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
-            threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+    def update(self, f_name):
+        self.ids.user_syllsim.text = self.ids.user_syllsim.text
+        ons, offs, thresh, ms, htz = analyze.load_bout_data(f_name)
+        self.onsets = ons
+        self.offsets = offs
+        self.syll_dur = self.offsets - self.onsets
+        self.threshold_sonogram = thresh
 
-            # ^connectivity 1=4 or 2=8(include diagonals)
-            self.labeled_sonogram = label(threshold_sonogram_crop,
-                                          connectivity=1)
 
-            corrected_sonogram = remove_small_objects(self.labeled_sonogram,
-                                                      min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
-                                                      connectivity=1)
+        # zero anything before first onset or after last offset
+        # (not offset row is already zeros, so okay to include)
+        # this will take care of any noise before or after the song
+        threshold_sonogram_crop = self.threshold_sonogram.copy()
+        threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
+        threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
 
-            # prepare graph and make plot take up the entire space
-            data = np.zeros((self.rows, self.cols))
-            self.ax5.clear()
-            self.ax5 = plt.Axes(self.fig5, [0., 0., 1., 1.])
-            self.ax5.set_axis_off()
-            self.fig5.add_axes(self.ax5)
+        # ^connectivity 1=4 or 2=8(include diagonals)
+        self.labeled_sonogram = label(threshold_sonogram_crop,
+                                      connectivity=1)
 
-            # plot placeholder data
-            cmap = plt.cm.tab20b
-            cmap.set_under(color='black')
-            cmap.set_over(color='gray')
-            cmap.set_bad(color='white')
-            self.plot_syllsim = self.ax5.imshow(
-                data + 3,
-                extent=[0, self.cols, 0, self.rows],
-                aspect='auto',
-                cmap=cmap,
-                # norm=matplotlib.colors.LogNorm(),
-                vmin=0,
-                vmax=20.
-            )
+        corrected_sonogram = remove_small_objects(self.labeled_sonogram,
+                                                  min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
+                                                  connectivity=1)
 
-            self.trans = tx.blended_transform_factory(self.ax5.transData,
-                                                      self.ax5.transAxes)
-            self.lines_on, = self.ax5.plot(np.repeat(self.onsets, 3),
-                                           np.tile([0, .75, np.nan],
-                                                   len(self.onsets)),
-                                           linewidth=0.75, color='g',
-                                           transform=self.trans)
-            self.lines_off, = self.ax5.plot(np.repeat(self.offsets, 3),
-                                            np.tile([0, .90, np.nan],
-                                                    len(self.offsets)),
-                                            linewidth=0.75, color='g',
-                                            transform=self.trans)
+        self.son_corr, son_corr_bin = analyze.get_sonogram_correlation(
+            sonogram=corrected_sonogram, onsets=self.onsets,
+            offsets=self.offsets, syll_duration=self.syll_dur,
+            corr_thresh=float(self.ids.user_syllsim.text)
+        )
+        self.init_plot()
+        self.new_thresh()
 
-            self.ids.syllsim_graph.clear_widgets()
-            self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
 
-            self.son_corr, son_corr_bin = analyze.get_sonogram_correlation(
-                sonogram=corrected_sonogram, onsets=self.onsets,
-                offsets=self.offsets, syll_duration=self.syll_dur,
-                corr_thresh=float(self.ids.user_syllsim.text)
-            )
+    def init_plot(self):
+        # prepare graph and make plot take up the entire space
+        rows, cols = np.shape(self.threshold_sonogram)
+        data = np.zeros((rows, cols))
+        self.ax5.clear()
+        self.ax5 = plt.Axes(self.fig5, [0., 0., 1., 1.])
+        self.ax5.set_axis_off()
+        self.fig5.add_axes(self.ax5)
 
-            self.new_thresh()
-            self.i += 1
+        # plot placeholder data
+        cmap = plt.cm.tab20b
+        cmap.set_under(color='black')
+        cmap.set_over(color='gray')
+        cmap.set_bad(color='white')
+        self.plot_syllsim = self.ax5.imshow(
+            data + 3,
+            extent=[0, cols, 0, rows],
+            aspect='auto',
+            cmap=cmap,
+            vmin=0,
+            vmax=20.
+        )
+
+        self.trans = tx.blended_transform_factory(self.ax5.transData,
+                                                  self.ax5.transAxes)
+        self.lines_on, = self.ax5.plot(np.repeat(self.onsets, 3),
+                                       np.tile([0, .75, np.nan],
+                                               len(self.onsets)),
+                                       linewidth=0.75, color='g',
+                                       transform=self.trans)
+        self.lines_off, = self.ax5.plot(np.repeat(self.offsets, 3),
+                                        np.tile([0, .90, np.nan],
+                                                len(self.offsets)),
+                                        linewidth=0.75, color='g',
+                                        transform=self.trans)
+
+        self.ids.syllsim_graph.clear_widgets()
+        self.ids.syllsim_graph.add_widget(self.plot_syllsim_canvas)
 
     def new_thresh(self):
         # get syllable correlations for entire sonogram
