@@ -56,11 +56,11 @@ class StartSegmentationPopup(Popup):
         self.len_files = n_files
 
 
-class DetermineNoteThresholdPopup(Popup):
+class DetermineNoiseThresholdPopup(Popup):
     len_files = StringProperty()
 
     def __init__(self, n_files, **kwargs):
-        super(DetermineNoteThresholdPopup, self).__init__(**kwargs)
+        super(DetermineNoiseThresholdPopup, self).__init__(**kwargs)
         self.len_files = n_files
 
 

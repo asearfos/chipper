@@ -12,7 +12,7 @@
         name: 'landing_page'
     FileExplorer:
         radio_chipper: welcome.radio_chipper
-        radio_note: welcome.radio_note
+        radio_noise: welcome.radio_noise
         radio_syllsim: welcome.radio_syllsim
         radio_analyze: welcome.radio_analyze
     ControlPanel:
@@ -27,11 +27,11 @@
         name: 'noise_summary_page'
     SyllSimThresholdPage:
         name: 'syllsim_threshold_page'
-        user_note_thresh: welcome.user_note_thresh
+        user_noise_thresh: welcome.user_noise_thresh
     SyllSimSummaryPage:
         name: 'syllsim_summary_page'
     Analysis:
-        user_note_thresh: welcome.user_note_thresh
+        user_noise_thresh: welcome.user_noise_thresh
         user_syll_sim_thresh: welcome.user_syll_sim_thresh
         name: 'analysis'
 
@@ -164,10 +164,10 @@
             halign: 'center'
             on_release: app.root.current = 'control_panel'; root.dismiss()
 
-<DetermineNoteThresholdPopup>
+<DetermineNoiseThresholdPopup>
     size_hint: .5, .3
     auto_dismiss: False
-    title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for note size?'
+    title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for noise?'
     BoxLayout:
         orientation: 'horizontal'
 
@@ -181,7 +181,7 @@
 
 <NoiseThreshInstructionsPopup>
     auto_dismiss: True
-    title: 'How to Determine Threshold for Note Size'
+    title: 'How to Determine Threshold for Noise'
     BoxLayout:
         orientation: 'vertical'
         Label:
@@ -286,14 +286,14 @@
 <LandingPage>:
     id: welcome
     radio_chipper: chipper.active
-    radio_note: determine_noise_thresh.active
+    radio_noise: determine_noise_thresh.active
     radio_syllsim: determine_syllsim_thresh.active
     radio_analyze: analyze.active
     find_gzips: find_prev_gzips.active
     user_signal_thresh: signal_threshold_input.text
     user_min_silence: min_silence_input.text
     user_min_syllable: min_syllable_input.text
-    user_note_thresh: noise_thresh_input.text
+    user_noise_thresh: noise_thresh_input.text
     user_syll_sim_thresh: syll_sim_input.text
 
     BoxLayout:
@@ -371,7 +371,7 @@
             Label:
                 size_hint_y: 0.3
                 text_size: self.size
-                text: 'Welcome to Chipper! To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for note size or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
+                text: 'Welcome to Chipper! To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for noise or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
                 valign: 'center'
 
             StackLayout:
@@ -414,7 +414,7 @@
                     size_hint_y: 0.3
                 RadioLabel:
                     id: determine_noise_thresh_label
-                    text: 'Determine Note Size Threshold (pixels)'
+                    text: 'Determine Noise Threshold (pixels)'
                     halign: 'left'
                     valign: 'center'
                     text_size: determine_noise_thresh_label.width, None
@@ -534,7 +534,7 @@
                         size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
-                        text: 'Note Size Threshold (pixels)'
+                        text: 'Noise Threshold (pixels)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -602,7 +602,7 @@
     user_signal_thresh: '3'
     user_min_silence: '10'
     user_min_syllable: '20'
-    user_note_thresh: '120'
+    user_noise_thresh: '120'
     user_syll_sim_thresh: '40.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
@@ -837,7 +837,7 @@
         orientation: 'vertical'
 
         CustomLabel:
-            text: 'Determine Threshold for Note Size'
+            text: 'Determine Threshold for Noise'
             font_size: '20sp'
             size_hint_y: 0.1
 
@@ -894,7 +894,7 @@
                 size_hint: 0.5, 0.1
 
             Label:
-                text: 'Threshold for Note Size (pixels)'
+                text: 'Threshold for Noise (pixels)'
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
@@ -918,7 +918,7 @@
         orientation: 'vertical'
 
         CustomLabel:
-            text: 'Note Size Threshold Summary'
+            text: 'Noise Threshold Summary'
             font_size: '18sp'
             size_hint_y: 0.1
 
@@ -990,7 +990,7 @@
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint_x: 0.25
             Label:
-                text: ' elements of unscaled spectrogram as threshold for note size.'
+                text: ' elements of unscaled spectrogram as threshold for noise.'
                 size_hint_x: 0.6
                 text_size: self.size
                 halign: 'left'

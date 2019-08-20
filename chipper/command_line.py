@@ -6,14 +6,14 @@ from chipper.analysis import Song, output_bout_data
 log = get_logger(__file__)
 
 
-def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
+def run_analysis(input_directory, user_noise_thresh, user_syll_sim_thresh,
                  out_path=None):
     """
 
     Parameters
     ----------
     input_directory : str
-    user_note_thresh : int
+    user_noise_thresh : int
     user_syll_sim_thresh : int
     out_path : str
 
@@ -40,7 +40,7 @@ def run_analysis(input_directory, user_note_thresh, user_syll_sim_thresh,
         log.info("{} of {} complete".format(i, n_files))
         try:
             log.info("{} of {} complete".format(i, n_files))
-            output = Song(f_name, user_note_thresh,
+            output = Song(f_name, user_noise_thresh,
                           user_syll_sim_thresh).run_analysis()
             output['f_name'] = f_name
             final_output.append(output)

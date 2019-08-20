@@ -18,7 +18,7 @@ log = setup_logger(logging.INFO)
 
 
 class Analysis(Screen):
-    user_note_thresh = StringProperty()
+    user_noise_thresh = StringProperty()
     user_syll_sim_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
@@ -52,7 +52,7 @@ class Analysis(Screen):
             self.ids.processing_count.text = "{} of {} complete".format(i, n_files)
             try:
                 log.info("{} of {} complete".format(i, n_files))
-                output = Song(f_name, self.user_note_thresh,
+                output = Song(f_name, self.user_noise_thresh,
                               self.user_syll_sim_thresh).run_analysis()
                 output['f_name'] = f_name
                 final_output.append(output)

@@ -17,7 +17,7 @@ import numpy as np
 
 
 class SyllSimThresholdPage(Screen):
-    user_note_thresh = StringProperty()
+    user_noise_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
         self.fig5, self.ax5 = plt.subplots()
@@ -70,7 +70,7 @@ class SyllSimThresholdPage(Screen):
                                           connectivity=1)
 
             corrected_sonogram = remove_small_objects(self.labeled_sonogram,
-                                                      min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
+                                                      min_size=float(self.user_noise_thresh) + 1,  # add one to make =< threshold
                                                       connectivity=1)
 
             # prepare graph and make plot take up the entire space
@@ -151,7 +151,7 @@ class SyllSimThresholdPage(Screen):
             syll_labeled_sonogram[:, on:off][syll_labeled_sonogram[:, on:off] == 1] = syll + 3
 
         for region in props:
-            if region.area <= int(self.user_note_thresh):
+            if region.area <= int(self.user_noise_thresh):
                 syll_labeled_sonogram[self.labeled_sonogram == region.label] = 1
 
         # update image in widget

@@ -6,7 +6,7 @@ from pathlib import Path
 from kivy.properties import BooleanProperty
 from kivy.uix.screenmanager import Screen
 
-from chipper.popups import StartSegmentationPopup, DetermineNoteThresholdPopup, \
+from chipper.popups import StartSegmentationPopup, DetermineNoiseThresholdPopup, \
     DetermineSyllSimThresholdPopup, \
     StartAnalysisPopup, NoGzipsFoundPopup, NoWavsFoundPopup
 from chipper.utils import get_basename, get_file_prefix
@@ -14,7 +14,7 @@ from chipper.utils import get_basename, get_file_prefix
 
 class FileExplorer(Screen):
     radio_chipper = BooleanProperty()
-    radio_note = BooleanProperty()
+    radio_noise = BooleanProperty()
     radio_syllsim = BooleanProperty()
     radio_analyze = BooleanProperty()
 
@@ -67,8 +67,8 @@ class FileExplorer(Screen):
             if not n_files:
                 no_gzips = NoGzipsFoundPopup()
                 no_gzips.open()
-            elif self.radio_note:
-                noise_popup = DetermineNoteThresholdPopup(str(n_files))
+            elif self.radio_noise:
+                noise_popup = DetermineNoiseThresholdPopup(str(n_files))
                 noise_popup.open()
             elif self.radio_syllsim:
                 syllsim_popup = DetermineSyllSimThresholdPopup(str(n_files))
