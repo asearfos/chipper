@@ -68,8 +68,8 @@ class FileExplorer(Screen):
                 no_gzips = NoGzipsFoundPopup()
                 no_gzips.open()
             elif self.radio_note:
-                note_popup = DetermineNoteThresholdPopup(str(n_files))
-                note_popup.open()
+                noise_popup = DetermineNoteThresholdPopup(str(n_files))
+                noise_popup.open()
             elif self.radio_syllsim:
                 syllsim_popup = DetermineSyllSimThresholdPopup(str(n_files))
                 syllsim_popup.open()

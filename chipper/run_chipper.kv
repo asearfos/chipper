@@ -185,7 +185,7 @@
     BoxLayout:
         orientation: 'vertical'
         Label:
-            id: note_thresh_instructions
+            id: noise_thresh_instructions
             multiline: True
             text: noise_instructions_text.text
             text_size: self.width/1.5, None
@@ -286,7 +286,7 @@
 <LandingPage>:
     id: welcome
     radio_chipper: chipper.active
-    radio_note: determine_note_thresh.active
+    radio_note: determine_noise_thresh.active
     radio_syllsim: determine_syllsim_thresh.active
     radio_analyze: analyze.active
     find_gzips: find_prev_gzips.active
@@ -407,20 +407,20 @@
                     on_press: find_prev_gzips._do_press()
 
                 CheckBox:
-                    id: determine_note_thresh
+                    id: determine_noise_thresh
                     group: 'chipper_analyze'
                     allow_no_selection: False
                     size_hint_x: 0.1
                     size_hint_y: 0.3
                 RadioLabel:
-                    id: determine_note_thresh_label
+                    id: determine_noise_thresh_label
                     text: 'Determine Note Size Threshold (pixels)'
                     halign: 'left'
                     valign: 'center'
-                    text_size: determine_note_thresh_label.width, None
+                    text_size: determine_noise_thresh_label.width, None
                     size_hint_x: 0.9
                     size_hint_y: 0.3
-                    on_press: determine_note_thresh._do_press()
+                    on_press: determine_noise_thresh._do_press()
 
                 CheckBox:
                     id: determine_syllsim_thresh
@@ -830,8 +830,8 @@
                     on_release: controls.back()
 
 <NoiseThresholdPage>:
-    id: determine_note
-    on_pre_enter: determine_note.setup()
+    id: determine_noise
+    on_pre_enter: determine_noise.setup()
 
     BoxLayout:
         orientation: 'vertical'
@@ -849,14 +849,14 @@
             BoxLayout:
 
             Button:
-                id: note_thresh_instructions_button
+                id: noise_thresh_instructions_button
                 text: 'Click Here for Instructions'
-                on_release: determine_note.note_thresh_instructions()
+                on_release: determine_noise.noise_thresh_instructions()
 
             BoxLayout:
 
         GridLayout:
-            id: note_graph
+            id: noise_graph
             rows: 1
             cols: 1
             size_hint_x: 1
@@ -877,19 +877,19 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-                    on_release: user_noise_size.text = str(int(user_noise_size.text) + 10); determine_note.new_thresh()
+                    on_release: user_noise_size.text = str(int(user_noise_size.text) + 10); determine_noise.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_noise_size.text = str(int(user_noise_size.text) - 10); determine_note.new_thresh()
+                    on_release: user_noise_size.text = str(int(user_noise_size.text) - 10); determine_noise.new_thresh()
 
             TextInput:
                 id: user_noise_size
                 input_filter: 'int'
                 text: '120'
                 multiline: False
-                on_text_validate: determine_note.new_thresh()
+                on_text_validate: determine_noise.new_thresh()
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint: 0.5, 0.1
 
@@ -904,7 +904,7 @@
             Button:
                 text: 'NEXT'
                 size_hint_x: 0.5
-                on_release: determine_note.next()
+                on_release: determine_noise.next()
                 disabled: True if user_noise_size.text == '' else False
 
         BoxLayout:

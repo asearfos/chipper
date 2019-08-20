@@ -17,7 +17,7 @@ class NoiseThresholdPage(Screen):
 
     def __init__(self, *args, **kwargs):
         self.fig3, self.ax3 = plt.subplots()
-        self.plot_notes_canvas = FigureCanvasKivyAgg(self.fig3)
+        self.plot_noise_canvas = FigureCanvasKivyAgg(self.fig3)
 
         self.ax3 = plt.Axes(self.fig3, [0., 0., 1., 1.])
         self.ax3.set_axis_off()
@@ -36,11 +36,11 @@ class NoiseThresholdPage(Screen):
         if self.i > 0:
             self.noise_thresholds.append(int(self.ids.user_noise_size.text))
         # otherwise it is the first time,
-        # so reset note size threshold to the default
+        # so reset noise size threshold to the default
         else:
             self.ids.user_noise_size.text = '120'
 
-        # if it is the last song go to note threshold summary page,
+        # if it is the last song go to noise threshold summary page,
         # otherwise process song
         if self.i == len(self.files):
             self.manager.current = 'noise_summary_page'
@@ -64,7 +64,7 @@ class NoiseThresholdPage(Screen):
             cmap = plt.cm.prism
             cmap.set_under(color='black')
             cmap.set_bad(color='white')
-            self.plot_notes = self.ax3.imshow(
+            self.plot_noise = self.ax3.imshow(
                 data + 3,
                 extent=[0, self.cols, 0, self.rows],
                 aspect='auto',
@@ -73,8 +73,8 @@ class NoiseThresholdPage(Screen):
                 vmin=3.01
             )
 
-            self.ids.note_graph.clear_widgets()
-            self.ids.note_graph.add_widget(self.plot_notes_canvas)
+            self.ids.noise_graph.clear_widgets()
+            self.ids.noise_graph.add_widget(self.plot_noise_canvas)
             self.new_thresh()
             self.i += 1
 
@@ -93,16 +93,16 @@ class NoiseThresholdPage(Screen):
                                               labeled_sonogram)
         # update image in widget
         # plot the actual data now
-        self.plot_notes.set_data(labeled_sonogram+3)
-        self.plot_notes_canvas.draw()
+        self.plot_noise.set_data(labeled_sonogram + 3)
+        self.plot_noise_canvas.draw()
 
-    def note_thresh_instructions(self):
-        note_popup = NoiseThreshInstructionsPopup()
-        note_popup.open()
+    def noise_thresh_instructions(self):
+        noise_popup = NoiseThreshInstructionsPopup()
+        noise_popup.open()
 
     def get_notes(self):
         """
-        num of notes and categorization; also outputs freq ranges of each note
+        num of notes and categorization
         """
         # zero anything before first onset or after last offset
         # (not offset row is already zeros, so okay to include)
