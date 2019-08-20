@@ -25,7 +25,7 @@ class NoiseThresholdPage(Screen):
         super(NoiseThresholdPage, self).__init__(*args, **kwargs)
 
     def setup(self):
-        self.note_thresholds = []
+        self.noise_thresholds = []
         self.i = 0
         # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
         self.files = self.parent.files
@@ -34,7 +34,7 @@ class NoiseThresholdPage(Screen):
     def next(self):
         # if not first entering the app, record the threshold
         if self.i > 0:
-            self.note_thresholds.append(int(self.ids.user_noise_size.text))
+            self.noise_thresholds.append(int(self.ids.user_noise_size.text))
         # otherwise it is the first time,
         # so reset note size threshold to the default
         else:

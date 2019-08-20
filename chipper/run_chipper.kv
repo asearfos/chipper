@@ -293,7 +293,7 @@
     user_signal_thresh: signal_threshold_input.text
     user_min_silence: min_silence_input.text
     user_min_syllable: min_syllable_input.text
-    user_note_thresh: note_thresh_input.text
+    user_note_thresh: noise_thresh_input.text
     user_syll_sim_thresh: syll_sim_input.text
 
     BoxLayout:
@@ -526,7 +526,7 @@
                         disabled: False if chipper.active else True
 
                     TextInput:
-                        id: note_thresh_input
+                        id: noise_thresh_input
                         input_filter: 'int'
                         text: '120'
                         hint_text: 'integer'
@@ -572,7 +572,7 @@
                     text: 'START'
                     on_release: app.root.current = 'choose_file' # welcome.check_input_before_start()
                     disabled:
-                        True if (analyze.active and (not note_thresh_input.text or not syll_sim_input.text)) \
+                        True if (analyze.active and (not noise_thresh_input.text or not syll_sim_input.text)) \
                         or (chipper.active and (not signal_threshold_input.text or not min_silence_input.text \
                         or not min_syllable_input.text)) else False
 
@@ -948,28 +948,28 @@
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: avg_note_thresh
+                    id: avg_noise_thresh
                     text: 'Average: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: std_dev_note_thresh
+                    id: std_dev_noise_thresh
                     text: 'Standard Deviation: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: min_note_thresh
+                    id: min_noise_thresh
                     text: 'Minimum: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: max_note_thresh
+                    id: max_noise_thresh
                     text: 'Maximum: '
                     text_size: self.size
                     halign: 'left'
@@ -985,7 +985,7 @@
                 text: 'Use '
                 size_hint_x: 0.05
             TextInput:
-                id: submitted_note_thresh_input
+                id: submitted_noise_thresh_input
                 input_filter: 'int'
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint_x: 0.25
@@ -997,9 +997,9 @@
                 valign: 'center'
             Button:
                 text: 'SUBMIT'
-                on_release: noise_summary.submit_note_thresh(); app.root.current = 'landing_page'
+                on_release: noise_summary.submit_noise_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
-                disabled: True if submitted_note_thresh_input.text == '' else False
+                disabled: True if submitted_noise_thresh_input.text == '' else False
 
 <SyllSimThresholdPage>:
     id: determine_syllsim
