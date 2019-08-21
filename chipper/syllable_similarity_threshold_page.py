@@ -85,14 +85,14 @@ class SyllSimThresholdPage(Screen):
             cmap.set_under(color='black')
             cmap.set_over(color='gray')
             cmap.set_bad(color='white')
+
             self.plot_syllsim = self.ax5.imshow(
                 data + 3,
                 extent=[0, self.cols, 0, self.rows],
                 aspect='auto',
                 cmap=cmap,
-                # norm=matplotlib.colors.LogNorm(),
                 vmin=0,
-                vmax=20.
+                vmax=1000.
             )
 
             self.trans = tx.blended_transform_factory(self.ax5.transData,
@@ -129,10 +129,13 @@ class SyllSimThresholdPage(Screen):
 
         # get syllable pattern
         syll_pattern = analyze.find_syllable_pattern(son_corr_bin)
-        self.ids.song_syntax.text = 'Song Syntax: ' + ", ".join(str(x) for x in syll_pattern)
+        display_pattern = ", ".join(str(x) for x in syll_pattern)
+        self.ids.song_syntax.text = 'Song Syntax: {}'.format(display_pattern)
 
         syll_stereotypy, syll_stereotypy_max, syll_stereotypy_min = \
             analyze.calc_syllable_stereotypy(self.son_corr, syll_pattern)
+
+        #  Formatting for summary
         spacing = '{:<15}{:<8}{:<8}{:<8}\n'
         stereotypy_text = spacing.format('Syllable', 'Avg', 'Min', 'Max')
 
@@ -150,34 +153,38 @@ class SyllSimThresholdPage(Screen):
         self.ids.similarity.text = stereotypy_text
 
         syll_labeled = self.threshold_sonogram.copy()
-        # making background color back
-        syll_labeled[syll_labeled == 0] = -1
+        # making background color back (negative number will)
+        syll_labeled[syll_labeled == 0] = -10
+        # need to find the max number to define the image
+        max_index = syll_pattern.max()
+        # set clip so that anything over will be colored grey
+        self.plot_syllsim.set_clim(0, max_index)
+        grey = max_index + 1
 
         # color syllable patterns
         for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
             syll_labeled[:, on:off][syll_labeled[:, on:off] == 1] = syll
 
-        # color syllables based on syntax
-        props = regionprops(self.labeled_sonogram)
-        # color noise
-        for region in props:
+        # color noise white, this value will be set to nan. But it will be
+        # overwritten in the noise below
+        # we are using a number larger than grey.
+        to_nan = grey + 1
+        for region in regionprops(self.labeled_sonogram):
             if region.area <= int(self.user_note_thresh):
-                # use 199 for indexing later
-                syll_labeled[self.labeled_sonogram == region.label] = 199
+                syll_labeled[self.labeled_sonogram == region.label] = to_nan
 
         # color offsets to grey
         # we use 100 since anything over 20 will go to gray
-        c = 100
         on = self.onsets[0]
         off = self.onsets[-1]
-        syll_labeled[:, 0:on][syll_labeled[:, 0:on] == 1] = c
-        syll_labeled[:, off:-1][syll_labeled[:, off:-1] == 1] = c
+        syll_labeled[:, 0:on][syll_labeled[:, 0:on] == 1] = grey
+        syll_labeled[:, off:-1][syll_labeled[:, off:-1] == 1] = grey
 
         for off, on in zip(self.offsets[:-1], self.onsets[1:]):
-            syll_labeled[:, off:on][syll_labeled[:, off:on] >= 0] = c
+            syll_labeled[:, off:on][syll_labeled[:, off:on] >= 0] = grey
 
         # little hack to make noise regions white only if inside onset/offsets
-        syll_labeled[syll_labeled == 199] = np.nan
+        syll_labeled[syll_labeled == to_nan] = np.nan
         # update image in widget
         # plot the actual data now
         self.plot_syllsim.set_data(syll_labeled)
