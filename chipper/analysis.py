@@ -523,7 +523,8 @@ def find_syllable_pattern(sonogram_correlation_binary):
     syllable_pattern_checked = np.zeros(syllable_pattern.shape, 'int')
     for j in range(len(syllable_pattern)):
         if syllable_pattern[j] < j:
-            syllable_pattern_checked[j] = syllable_pattern[syllable_pattern[j]]
+            syllable_pattern_checked[j] = syllable_pattern_checked[
+                syllable_pattern[j]]
         else:
             syllable_pattern_checked[j] = syllable_pattern[j]
 
