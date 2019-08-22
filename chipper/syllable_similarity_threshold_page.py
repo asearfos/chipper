@@ -153,13 +153,13 @@ class SyllSimThresholdPage(Screen):
         self.ids.similarity.text = stereotypy_text
 
         syll_labeled = self.threshold_sonogram.copy()
-        # making background color back (negative number will)
+        # making background color black (negative number will)
         syll_labeled[syll_labeled == 0] = -10
         # need to find the max number to define the image
         max_index = syll_pattern.max()
         # set clip so that anything over will be colored grey
-        self.plot_syllsim.set_clim(0, max_index)
-        grey = max_index + 1
+        self.plot_syllsim.set_clim(0, max_index + 1)
+        grey = max_index + 2
 
         # color syllable patterns
         for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
@@ -173,13 +173,13 @@ class SyllSimThresholdPage(Screen):
             if region.area <= int(self.user_note_thresh):
                 syll_labeled[self.labeled_sonogram == region.label] = to_nan
 
-        # color offsets to grey
-        # we use 100 since anything over 20 will go to gray
+        # color signal before and after song to grey
         on = self.onsets[0]
-        off = self.onsets[-1]
+        off = self.offsets[-1]
         syll_labeled[:, 0:on][syll_labeled[:, 0:on] == 1] = grey
         syll_labeled[:, off:-1][syll_labeled[:, off:-1] == 1] = grey
 
+        # color signal between syllables grey
         for off, on in zip(self.offsets[:-1], self.onsets[1:]):
             syll_labeled[:, off:on][syll_labeled[:, off:on] >= 0] = grey
 
