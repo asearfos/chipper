@@ -136,18 +136,24 @@ class SyllSimThresholdPage(Screen):
             analyze.calc_syllable_stereotypy(self.son_corr, syll_pattern)
 
         #  Formatting for summary
-        spacing = '{:<15}{:<8}{:<8}{:<8}\n'
-        stereotypy_text = spacing.format('Syllable', 'Avg', 'Min', 'Max')
+        spacing1 = '{:<12}{:<8}{:<8}{:<8}\n'
+        spacing2 = '{:<16}{:<8}{:<8}{:<8}\n'
+        spacing3 = '{:<15}{:<8}{:<8}{:<8}\n'
+        stereotypy_text = spacing1.format('Syllable', 'Avg', 'Min', 'Max')
 
         for idx in range(len(syll_stereotypy)):
             if not np.isnan(syll_stereotypy[idx]):
+                if idx >= 10:
+                    spacing = spacing3
+                else:
+                    spacing = spacing2
                 stereotypy_text += spacing.format(
                     str(idx),
                     round(syll_stereotypy[idx], 1),
                     round(syll_stereotypy_min[idx], 1),
                     round(syll_stereotypy_max[idx], 1),
                 )
-        if stereotypy_text == spacing.format('Syllable', 'Avg', 'Min', 'Max'):
+        if stereotypy_text == spacing1.format('Syllable', 'Avg', 'Min', 'Max'):
             stereotypy_text += 'No Repeated Syllables'
 
         self.ids.similarity.text = stereotypy_text
@@ -159,8 +165,8 @@ class SyllSimThresholdPage(Screen):
         u, indices = np.unique(syll_pattern, return_inverse=True)
         num_unique = len(u)
         # set clip so that anything over will be colored grey
-        self.plot_syllsim.set_clim(0, num_unique + 1)
-        grey = num_unique + 2
+        self.plot_syllsim.set_clim(0, num_unique)
+        grey = num_unique + 1
 
         # color syllable patterns
         for on, off, syll in zip(self.onsets, self.offsets, indices):
