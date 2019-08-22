@@ -156,13 +156,14 @@ class SyllSimThresholdPage(Screen):
         # making background color black (negative number will)
         syll_labeled[syll_labeled == 0] = -10
         # need to find the max number to define the image
-        max_index = syll_pattern.max()
+        u, indices = np.unique(syll_pattern, return_inverse=True)
+        num_unique = len(u)
         # set clip so that anything over will be colored grey
-        self.plot_syllsim.set_clim(0, max_index + 1)
-        grey = max_index + 2
+        self.plot_syllsim.set_clim(0, num_unique + 1)
+        grey = num_unique + 2
 
         # color syllable patterns
-        for on, off, syll in zip(self.onsets, self.offsets, syll_pattern):
+        for on, off, syll in zip(self.onsets, self.offsets, indices):
             syll_labeled[:, on:off][syll_labeled[:, on:off] == 1] = syll
 
         # color noise white, this value will be set to nan. But it will be
