@@ -80,7 +80,7 @@ class SyllSimThresholdPage(Screen):
         self.labeled_sonogram = label(threshold_sonogram_crop,
                                       connectivity=1)
 
-            corrected_sonogram = remove_small_objects(self.labeled_sonogram,
+        corrected_sonogram = remove_small_objects(self.labeled_sonogram,
                                                       min_size=float(self.user_noise_thresh) + 1,  # add one to make =< threshold
                                                       connectivity=1)
 
@@ -102,19 +102,19 @@ class SyllSimThresholdPage(Screen):
         self.ax5.set_axis_off()
         self.fig5.add_axes(self.ax5)
 
-            # plot placeholder data
-            cmap = plt.cm.tab20b
-            cmap.set_under(color='black')
-            cmap.set_over(color='gray')
-            cmap.set_bad(color='white')
+        # plot placeholder data
+        cmap = plt.cm.tab20b
+        cmap.set_under(color='black')
+        cmap.set_over(color='gray')
+        cmap.set_bad(color='white')
 
-            self.plot_syllsim = self.ax5.imshow(
-                data + 3,
-                extent=[0, cols, 0, rows],
-                aspect='auto',
-                cmap=cmap,
-                vmin=0,
-                vmax=1000.
+        self.plot_syllsim = self.ax5.imshow(
+            data + 3,
+            extent=[0, cols, 0, rows],
+            aspect='auto',
+            cmap=cmap,
+            vmin=0,
+            vmax=1000.
             )
 
         self.trans = tx.blended_transform_factory(self.ax5.transData,
