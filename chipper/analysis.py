@@ -528,21 +528,20 @@ def find_syllable_pattern(sonogram_correlation_binary):
     # get syllable pattern
     syllable_pattern = np.zeros(len(sonogram_correlation_binary), 'int')
     for j in range(len(sonogram_correlation_binary)):
-        syllable_pattern[j] = np.nonzero(sonogram_correlation_binary[:, j])[0][
-            0]
+        # find first non-zero similar index
+        syllable_pattern[j] = \
+            np.nonzero(sonogram_correlation_binary[:, j])[0][0]
 
     # check syllable pattern -->
     # should be no new number that is smaller than it's index
     # (ex: 12333634 --> the 4 should be a 3 but didn't match up enough;
     # know this since 4 < pos(4) = 8)
-
     syllable_pattern_checked = np.zeros(syllable_pattern.shape, 'int')
-    for j in range(len(syllable_pattern)):
-        if syllable_pattern[j] < j:
-            syllable_pattern_checked[j] = syllable_pattern[syllable_pattern[j]]
+    for index, syll_value in enumerate(syllable_pattern):
+        if syll_value < index:
+            syllable_pattern_checked[index] = syllable_pattern_checked[syll_value]
         else:
-            syllable_pattern_checked[j] = syllable_pattern[j]
-
+            syllable_pattern_checked[index] = syll_value
     return syllable_pattern_checked
 
 
@@ -553,3 +552,4 @@ class NoNotesFound(ValueError):
             "Syllable was considered to be noise (all notes were less than "
             "note size threshold). Re-segment using the previous gzip or "
             "re-determine note size to visualize the issue.")
+
