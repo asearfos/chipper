@@ -17,7 +17,7 @@ import numpy as np
 
 
 class SyllSimThresholdPage(Screen):
-    user_note_thresh = StringProperty()
+    user_noise_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
         self.fig5, self.ax5 = plt.subplots()
@@ -70,7 +70,7 @@ class SyllSimThresholdPage(Screen):
                                           connectivity=1)
 
             corrected_sonogram = remove_small_objects(self.labeled_sonogram,
-                                                      min_size=float(self.user_note_thresh) + 1,  # add one to make =< threshold
+                                                      min_size=float(self.user_noise_thresh) + 1,  # add one to make =< threshold
                                                       connectivity=1)
 
             # prepare graph and make plot take up the entire space
@@ -177,7 +177,7 @@ class SyllSimThresholdPage(Screen):
         # we are using a number larger than grey.
         to_nan = grey + 1
         for region in regionprops(self.labeled_sonogram):
-            if region.area <= int(self.user_note_thresh):
+            if region.area <= int(self.user_noise_thresh):
                 syll_labeled[self.labeled_sonogram == region.label] = to_nan
 
         # color signal before and after song to grey

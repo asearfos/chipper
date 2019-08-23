@@ -6,26 +6,26 @@ from matplotlib.colors import ListedColormap
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
-from chipper.popups import NoteThreshInstructionsPopup
+from chipper.popups import NoiseThreshInstructionsPopup
 
 import os
 import chipper.analysis as analyze
 import numpy as np
 
 
-class NoteThresholdPage(Screen):
+class NoiseThresholdPage(Screen):
 
     def __init__(self, *args, **kwargs):
         self.fig3, self.ax3 = plt.subplots()
-        self.plot_notes_canvas = FigureCanvasKivyAgg(self.fig3)
+        self.plot_noise_canvas = FigureCanvasKivyAgg(self.fig3)
 
         self.ax3 = plt.Axes(self.fig3, [0., 0., 1., 1.])
         self.ax3.set_axis_off()
         self.fig3.add_axes(self.ax3)
-        super(NoteThresholdPage, self).__init__(*args, **kwargs)
+        super(NoiseThresholdPage, self).__init__(*args, **kwargs)
 
     def setup(self):
-        self.note_thresholds = []
+        self.noise_thresholds = []
         self.i = 0
         # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
         self.files = self.parent.files
@@ -34,18 +34,18 @@ class NoteThresholdPage(Screen):
     def next(self):
         # if not first entering the app, record the threshold
         if self.i > 0:
-            self.note_thresholds.append(int(self.ids.user_note_size.text))
+            self.noise_thresholds.append(int(self.ids.user_noise_size.text))
         # otherwise it is the first time,
-        # so reset note size threshold to the default
+        # so reset noise size threshold to the default
         else:
-            self.ids.user_note_size.text = '120'
+            self.ids.user_noise_size.text = '120'
 
-        # if it is the last song go to note threshold summary page,
+        # if it is the last song go to noise threshold summary page,
         # otherwise process song
         if self.i == len(self.files):
-            self.manager.current = 'note_summary_page'
+            self.manager.current = 'noise_summary_page'
         else:
-            self.ids.user_note_size.text = self.ids.user_note_size.text
+            self.ids.user_noise_size.text = self.ids.user_noise_size.text
             ons, offs, thresh, ms, htz = analyze.load_bout_data(
                 os.path.join(self.parent.directory, self.files[self.i])
             )
@@ -64,7 +64,7 @@ class NoteThresholdPage(Screen):
             cmap = plt.cm.prism
             cmap.set_under(color='black')
             cmap.set_bad(color='white')
-            self.plot_notes = self.ax3.imshow(
+            self.plot_noise = self.ax3.imshow(
                 data + 3,
                 extent=[0, self.cols, 0, self.rows],
                 aspect='auto',
@@ -73,8 +73,8 @@ class NoteThresholdPage(Screen):
                 vmin=3.01
             )
 
-            self.ids.note_graph.clear_widgets()
-            self.ids.note_graph.add_widget(self.plot_notes_canvas)
+            self.ids.noise_graph.clear_widgets()
+            self.ids.noise_graph.add_widget(self.plot_noise_canvas)
             self.new_thresh()
             self.i += 1
 
@@ -84,7 +84,7 @@ class NoteThresholdPage(Screen):
         # change label of all notes with size > threshold to be the same
         # and all < to be the same
         for region in props:
-            if region.area > int(self.ids.user_note_size.text):
+            if region.area > int(self.ids.user_noise_size.text):
                 labeled_sonogram[labeled_sonogram == region.label] = region.area
             else:
                 labeled_sonogram[labeled_sonogram == region.label] = 1
@@ -93,16 +93,16 @@ class NoteThresholdPage(Screen):
                                               labeled_sonogram)
         # update image in widget
         # plot the actual data now
-        self.plot_notes.set_data(labeled_sonogram+3)
-        self.plot_notes_canvas.draw()
+        self.plot_noise.set_data(labeled_sonogram + 3)
+        self.plot_noise_canvas.draw()
 
-    def note_thresh_instructions(self):
-        note_popup = NoteThreshInstructionsPopup()
-        note_popup.open()
+    def noise_thresh_instructions(self):
+        noise_popup = NoiseThreshInstructionsPopup()
+        noise_popup.open()
 
     def get_notes(self):
         """
-        num of notes and categorization; also outputs freq ranges of each note
+        num of notes and categorization
         """
         # zero anything before first onset or after last offset
         # (not offset row is already zeros, so okay to include)
