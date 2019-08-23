@@ -3,7 +3,7 @@
 #:import FileBrowser kivy.garden.filebrowser
 #:import ProgressSpinner kivy.garden.progressspinner
 #:import webbrowser webbrowser
-#:import note_instructions_text note_threshold_instructions
+#:import noise_instructions_text noise_threshold_instructions
 #:import syllsim_instructions_text syllable_similarity_threshold_instructions
 
 <Manager>:
@@ -12,7 +12,7 @@
         name: 'landing_page'
     FileExplorer:
         radio_chipper: welcome.radio_chipper
-        radio_note: welcome.radio_note
+        radio_noise: welcome.radio_noise
         radio_syllsim: welcome.radio_syllsim
         radio_analyze: welcome.radio_analyze
     ControlPanel:
@@ -21,17 +21,17 @@
         user_min_silence: welcome.user_min_silence
         user_min_syllable: welcome.user_min_syllable
         find_gzips: welcome.find_gzips
-    NoteThresholdPage:
-        name: 'note_threshold_page'
-    NoteSummaryPage:
-        name: 'note_summary_page'
+    NoiseThresholdPage:
+        name: 'noise_threshold_page'
+    NoiseSummaryPage:
+        name: 'noise_summary_page'
     SyllSimThresholdPage:
         name: 'syllsim_threshold_page'
-        user_note_thresh: welcome.user_note_thresh
+        user_noise_thresh: welcome.user_noise_thresh
     SyllSimSummaryPage:
         name: 'syllsim_summary_page'
     Analysis:
-        user_note_thresh: welcome.user_note_thresh
+        user_noise_thresh: welcome.user_noise_thresh
         user_syll_sim_thresh: welcome.user_syll_sim_thresh
         name: 'analysis'
 
@@ -170,10 +170,10 @@
             halign: 'center'
             on_release: app.root.current = 'control_panel'; root.dismiss()
 
-<DetermineNoteThresholdPopup>
+<DetermineNoiseThresholdPopup>
     size_hint: .5, .3
     auto_dismiss: False
-    title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for note size?'
+    title: 'Do you want to use ' + root.len_files + ' songs to determine the threshold for noise?'
     BoxLayout:
         orientation: 'horizontal'
 
@@ -183,17 +183,17 @@
         Button:
             text: 'Determine\nThreshold'
             halign: 'center'
-            on_release: app.root.current = 'note_threshold_page'; root.dismiss()
+            on_release: app.root.current = 'noise_threshold_page'; root.dismiss()
 
-<NoteThreshInstructionsPopup>
+<NoiseThreshInstructionsPopup>
     auto_dismiss: True
-    title: 'How to Determine Threshold for Note Size'
+    title: 'How to Determine Threshold for Noise'
     BoxLayout:
         orientation: 'vertical'
         Label:
-            id: note_thresh_instructions
+            id: noise_thresh_instructions
             multiline: True
-            text: note_instructions_text.text
+            text: noise_instructions_text.text
             text_size: self.width/1.5, None
             height: self.texture_size[1]
         GridLayout:
@@ -292,14 +292,14 @@
 <LandingPage>:
     id: welcome
     radio_chipper: chipper.active
-    radio_note: determine_note_thresh.active
+    radio_noise: determine_noise_thresh.active
     radio_syllsim: determine_syllsim_thresh.active
     radio_analyze: analyze.active
     find_gzips: find_prev_gzips.active
     user_signal_thresh: signal_threshold_input.text
     user_min_silence: min_silence_input.text
     user_min_syllable: min_syllable_input.text
-    user_note_thresh: note_thresh_input.text
+    user_noise_thresh: noise_thresh_input.text
     user_syll_sim_thresh: syll_sim_input.text
 
     BoxLayout:
@@ -377,7 +377,7 @@
             Label:
                 size_hint_y: 0.3
                 text_size: self.size
-                text: 'Welcome to Chipper! To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for note size or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
+                text: 'Welcome to Chipper! To begin, choose whether you would like to segment syllables, use previously segmented syllables to determine thresholds for noise or syllable similarity, or run analysis on segmentations. Adjust settings if desired.'
                 valign: 'center'
 
             StackLayout:
@@ -413,20 +413,20 @@
                     on_press: find_prev_gzips._do_press()
 
                 CheckBox:
-                    id: determine_note_thresh
+                    id: determine_noise_thresh
                     group: 'chipper_analyze'
                     allow_no_selection: False
                     size_hint_x: 0.1
                     size_hint_y: 0.3
                 RadioLabel:
-                    id: determine_note_thresh_label
-                    text: 'Determine Note Size Threshold (pixels)'
+                    id: determine_noise_thresh_label
+                    text: 'Determine Noise Threshold (pixels)'
                     halign: 'left'
                     valign: 'center'
-                    text_size: determine_note_thresh_label.width, None
+                    text_size: determine_noise_thresh_label.width, None
                     size_hint_x: 0.9
                     size_hint_y: 0.3
-                    on_press: determine_note_thresh._do_press()
+                    on_press: determine_noise_thresh._do_press()
 
                 CheckBox:
                     id: determine_syllsim_thresh
@@ -532,7 +532,7 @@
                         disabled: False if chipper.active else True
 
                     TextInput:
-                        id: note_thresh_input
+                        id: noise_thresh_input
                         input_filter: 'int'
                         text: '120'
                         hint_text: 'integer'
@@ -540,7 +540,7 @@
                         size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
-                        text: 'Note Size Threshold (pixels)'
+                        text: 'Noise Threshold (pixels)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -578,7 +578,7 @@
                     text: 'START'
                     on_release: app.root.current = 'choose_file' # welcome.check_input_before_start()
                     disabled:
-                        True if (analyze.active and (not note_thresh_input.text or not syll_sim_input.text)) \
+                        True if (analyze.active and (not noise_thresh_input.text or not syll_sim_input.text)) \
                         or (chipper.active and (not signal_threshold_input.text or not min_silence_input.text \
                         or not min_syllable_input.text)) else False
 
@@ -608,7 +608,7 @@
     user_signal_thresh: '3'
     user_min_silence: '10'
     user_min_syllable: '20'
-    user_note_thresh: '120'
+    user_noise_thresh: '120'
     user_syll_sim_thresh: '40.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
@@ -835,15 +835,15 @@
                     text: 'Back'
                     on_release: controls.back()
 
-<NoteThresholdPage>:
-    id: determine_note
-    on_pre_enter: determine_note.setup()
-    font_name : 'RobotoMono-Regular'
+<NoiseThresholdPage>:
+    id: determine_noise
+    on_pre_enter: determine_noise.setup()
+
     BoxLayout:
         orientation: 'vertical'
 
         CustomLabel:
-            text: 'Determine Threshold for Note Size'
+            text: 'Determine Threshold for Noise'
             font_size: '20sp'
             size_hint_y: 0.1
 
@@ -855,14 +855,14 @@
             BoxLayout:
 
             Button:
-                id: note_thresh_instructions_button
+                id: noise_thresh_instructions_button
                 text: 'Click Here for Instructions'
-                on_release: determine_note.note_thresh_instructions()
+                on_release: determine_noise.noise_thresh_instructions()
 
             BoxLayout:
 
         GridLayout:
-            id: note_graph
+            id: noise_graph
             rows: 1
             cols: 1
             size_hint_x: 1
@@ -883,24 +883,24 @@
                 Button:
                     font_size: '18sp'
                     text: '+'
-                    on_release: user_note_size.text = str(int(user_note_size.text) + 10); determine_note.new_thresh()
+                    on_release: user_noise_size.text = str(int(user_noise_size.text) + 10); determine_noise.new_thresh()
 
                 Button:
                     font_size: '18sp'
                     text: u'\u2014'
-                    on_release: user_note_size.text = str(int(user_note_size.text) - 10); determine_note.new_thresh()
+                    on_release: user_noise_size.text = str(int(user_noise_size.text) - 10); determine_noise.new_thresh()
 
             TextInput:
-                id: user_note_size
+                id: user_noise_size
                 input_filter: 'int'
                 text: '120'
                 multiline: False
-                on_text_validate: determine_note.new_thresh()
+                on_text_validate: determine_noise.new_thresh()
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint: 0.5, 0.1
 
             Label:
-                text: 'Threshold for Note Size (pixels)'
+                text: 'Threshold for Noise (pixels)'
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
@@ -910,21 +910,21 @@
             Button:
                 text: 'NEXT'
                 size_hint_x: 0.5
-                on_release: determine_note.next()
-                disabled: True if user_note_size.text == '' else False
+                on_release: determine_noise.next()
+                disabled: True if user_noise_size.text == '' else False
 
         BoxLayout:
             size_hint_y: 0.01
 
-<NoteSummaryPage>:
-    id: note_summary
-    on_pre_enter: note_summary.calculate_note_thresh_stats()
+<NoiseSummaryPage>:
+    id: noise_summary
+    on_pre_enter: noise_summary.calculate_noise_thresh_stats()
 
     BoxLayout:
         orientation: 'vertical'
 
         CustomLabel:
-            text: 'Note Size Threshold Summary'
+            text: 'Noise Threshold Summary'
             font_size: '18sp'
             size_hint_y: 0.1
 
@@ -935,7 +935,7 @@
             size_hint_y: 0.8
 
             GridLayout:
-                id: note_hist
+                id: noise_hist
                 rows: 1
                 cols: 1
                 size_hint_x: 0.75
@@ -954,28 +954,28 @@
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: avg_note_thresh
+                    id: avg_noise_thresh
                     text: 'Average: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: std_dev_note_thresh
+                    id: std_dev_noise_thresh
                     text: 'Standard Deviation: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: min_note_thresh
+                    id: min_noise_thresh
                     text: 'Minimum: '
                     text_size: self.size
                     halign: 'left'
                     valign: 'center'
                     size_hint: 1, 0.1
                 Label:
-                    id: max_note_thresh
+                    id: max_noise_thresh
                     text: 'Maximum: '
                     text_size: self.size
                     halign: 'left'
@@ -991,21 +991,21 @@
                 text: 'Use '
                 size_hint_x: 0.05
             TextInput:
-                id: submitted_note_thresh_input
+                id: submitted_noise_thresh_input
                 input_filter: 'int'
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint_x: 0.25
             Label:
-                text: ' elements of unscaled spectrogram as threshold for note size.'
+                text: ' elements of unscaled spectrogram as threshold for noise.'
                 size_hint_x: 0.6
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
             Button:
                 text: 'SUBMIT'
-                on_release: note_summary.submit_note_thresh(); app.root.current = 'landing_page'
+                on_release: noise_summary.submit_noise_thresh(); app.root.current = 'landing_page'
                 size_hint_x: 0.1
-                disabled: True if submitted_note_thresh_input.text == '' else False
+                disabled: True if submitted_noise_thresh_input.text == '' else False
 
 <SyllSimThresholdPage>:
     id: determine_syllsim
@@ -1060,7 +1060,6 @@
                     halign: 'left'
                     valign: 'top'
                     size_hint_y: 0.1
-                    font_name : 'RobotoMono-Regular'
 
                 Label:
                     id: similarity
@@ -1068,7 +1067,6 @@
                     text_size: self.size
                     halign: 'left'
                     valign: 'top'
-                    font_name : 'RobotoMono-Regular'
 
             GridLayout:
                 id: syllsim_graph
