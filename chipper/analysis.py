@@ -178,7 +178,7 @@ class Song(object):
         # collect stats into dictionaries for output
         note_length_array = np.asarray(note_length)
         note_length_array_scaled = note_length_array * self.ms_per_pixel
-        note_counts = {'note_size_threshold': self.noise_thresh,
+        note_counts = {'noise_threshold': self.noise_thresh,
                        'num_notes': num_notes,
                        'num_notes_per_syll': num_notes / self.n_syll}
 
