@@ -9,7 +9,7 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 
-from chipper.popups import SyllSimThreshInstructionsPopup
+from chipper.popups import SyllSimThreshInstructionsPopup, NoNotesInSyllablePopup
 from chipper.log import get_logger
 import os
 import chipper.analysis as analyze
@@ -26,22 +26,24 @@ class SyllSimThresholdPage(Screen):
         self.ax5 = plt.Axes(self.fig5, [0., 0., 1., 1.])
         self.ax5.set_axis_off()
         self.fig5.add_axes(self.ax5)
-        self.syllsim_thresholds = []
-        self.i = 0
         super(SyllSimThresholdPage, self).__init__(*args, **kwargs)
         self.log = get_logger(__name__)
 
     def setup(self):
+        self.syllsim_thresholds = []
+        self.i = 0
         self.files = self.parent.files
+        self.record = True
         self.next()
 
     def next(self):
         # if not first entering the app, record the threshold
-        if self.i > 0:
+        if self.i > 0 and self.record:
             self.syllsim_thresholds.append(float(self.ids.user_syllsim.text))
         # otherwise it is the first time, so reset syllable similarity threshold to the default
         else:
             self.ids.user_syllsim.text = '70.0'
+            # TODO: change to the threshold in text box on welcome page
 
         # if it is the last song go to syllable similarity threshold
         # summary page, otherwise process song'
@@ -53,10 +55,16 @@ class SyllSimThresholdPage(Screen):
             try:
                 self.update(f_name)
                 self.i += 1
+                self.record = True
             except Exception as e:
+                self.ids.syllsim_graph.clear_widgets()
+                # TODO remove the syllable summary and syntax
                 errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
                 # raise e
                 self.log.info(errors)
+                self.record = False
+                all_noise = NoNotesInSyllablePopup(self)
+                all_noise.open()
                 self.i += 1
                 self.log.info(self.i)
 

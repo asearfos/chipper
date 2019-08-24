@@ -94,3 +94,10 @@ class NoGzipsFoundPopup(Popup):
 
 class NoWavsFoundPopup(Popup):
     pass
+
+
+class NoNotesInSyllablePopup(Popup):
+
+    def __init__(self, determine_noise, **kwargs):
+        super(NoNotesInSyllablePopup, self).__init__(**kwargs)
+        self.determine_noise = determine_noise

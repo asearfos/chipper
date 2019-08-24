@@ -289,6 +289,15 @@
             text: 'Back'
             on_release: root.dismiss()
 
+<NoNotesInSyllablePopup>
+    size_hint: 0.5, 0.3
+    auto_dismiss: False
+    title: 'The next file has at least one syllable which is only composed of noise. This would be due to your noise threshold. Either re-segment the file using the gzip or reassess your noise threshold to visualize the issue'
+    BoxLayout:
+        Button:
+            text: 'Next'
+            on_release: root.determine_noise.next(); root.dismiss();
+
 <LandingPage>:
     id: welcome
     radio_chipper: chipper.active
