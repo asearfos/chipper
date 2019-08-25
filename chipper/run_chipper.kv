@@ -291,10 +291,10 @@
             text: 'Back'
             on_release: root.dismiss()
 
-<NoNotesInSyllablePopup>
+<ErrorInSyllSimThresholdWidgetPopup>
     size_hint: 0.5, 0.3
     auto_dismiss: False
-    title: 'The next file has at least one syllable which is only composed of noise. This could be due to your noise threshold. Either re-segment the file using the gzip or reassess your noise threshold to visualize the issue.'
+    title: root.message
     BoxLayout:
         Button:
             text: 'Next'

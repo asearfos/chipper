@@ -9,7 +9,7 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 
 
-from chipper.popups import SyllSimThreshInstructionsPopup, NoNotesInSyllablePopup
+from chipper.popups import SyllSimThreshInstructionsPopup, ErrorInSyllSimThresholdWidgetPopup
 from chipper.log import get_logger
 import os
 import chipper.analysis as analyze
@@ -64,7 +64,7 @@ class SyllSimThresholdPage(Screen):
                 # raise e
                 self.log.info(errors)
                 self.record = False
-                all_noise = NoNotesInSyllablePopup(self)
+                all_noise = ErrorInSyllSimThresholdWidgetPopup(self, errors)
                 all_noise.open()
                 self.i += 1
                 self.log.info(self.i)
