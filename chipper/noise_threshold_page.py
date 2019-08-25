@@ -3,6 +3,7 @@ matplotlib.use("module://kivy.garden.matplotlib.backend_kivy")
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
 
@@ -14,6 +15,7 @@ import numpy as np
 
 
 class NoiseThresholdPage(Screen):
+    user_noise_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
         self.fig3, self.ax3 = plt.subplots()
@@ -38,7 +40,7 @@ class NoiseThresholdPage(Screen):
         # otherwise it is the first time,
         # so reset noise size threshold to the default
         else:
-            self.ids.user_noise_size.text = '120'
+            self.ids.user_noise_size.text = self.user_noise_thresh
 
         # if it is the last song go to noise threshold summary page,
         # otherwise process song

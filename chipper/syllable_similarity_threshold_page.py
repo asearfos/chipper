@@ -18,6 +18,7 @@ import numpy as np
 
 class SyllSimThresholdPage(Screen):
     user_noise_thresh = StringProperty()
+    user_syll_sim_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
         self.fig5, self.ax5 = plt.subplots()
@@ -42,8 +43,7 @@ class SyllSimThresholdPage(Screen):
             self.syllsim_thresholds.append(float(self.ids.user_syllsim.text))
         # otherwise it is the first time, so reset syllable similarity threshold to the default
         else:
-            self.ids.user_syllsim.text = '70.0'
-            # TODO: change to the threshold in text box on welcome page
+            self.ids.user_syllsim.text = self.user_syll_sim_thresh
 
         # if it is the last song go to syllable similarity threshold
         # summary page, otherwise process song'
@@ -58,7 +58,8 @@ class SyllSimThresholdPage(Screen):
                 self.record = True
             except Exception as e:
                 self.ids.syllsim_graph.clear_widgets()
-                # TODO remove the syllable summary and syntax
+                self.ids.similarity.text = ''
+                self.ids.song_syntax.text = ''
                 errors += "WARNING : Skipped file {0}\n{1}\n".format(f_name, e)
                 # raise e
                 self.log.info(errors)

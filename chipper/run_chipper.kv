@@ -23,11 +23,13 @@
         find_gzips: welcome.find_gzips
     NoiseThresholdPage:
         name: 'noise_threshold_page'
+        user_noise_thresh: welcome.user_noise_thresh
     NoiseSummaryPage:
         name: 'noise_summary_page'
     SyllSimThresholdPage:
         name: 'syllsim_threshold_page'
         user_noise_thresh: welcome.user_noise_thresh
+        user_syll_sim_thresh: welcome.user_syll_sim_thresh
     SyllSimSummaryPage:
         name: 'syllsim_summary_page'
     Analysis:
@@ -292,7 +294,7 @@
 <NoNotesInSyllablePopup>
     size_hint: 0.5, 0.3
     auto_dismiss: False
-    title: 'The next file has at least one syllable which is only composed of noise. This would be due to your noise threshold. Either re-segment the file using the gzip or reassess your noise threshold to visualize the issue'
+    title: 'The next file has at least one syllable which is only composed of noise. This could be due to your noise threshold. Either re-segment the file using the gzip or reassess your noise threshold to visualize the issue.'
     BoxLayout:
         Button:
             text: 'Next'
@@ -561,7 +563,7 @@
                         input_filter: 'float'
                         min_value: 0
                         max_value: 100
-                        text: '40.0'
+                        text: '70.0'
                         hint_text: '0-100%'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.18, 0.1
@@ -618,7 +620,7 @@
     user_min_silence: '10'
     user_min_syllable: '20'
     user_noise_thresh: '120'
-    user_syll_sim_thresh: '40.0'
+    user_syll_sim_thresh: '70.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 
