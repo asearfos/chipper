@@ -10,7 +10,7 @@
 
  4.  Example of Syllable Segmentation
 
- 5.  Note Size Threshold Widget
+ 5.  Noise Threshold Widget
 
  6.  Syllable Similarity Threshold Widget
 
@@ -50,7 +50,7 @@ Install from source
     $ garden install \--kivy progressspinner
 
 For full code visit
-[https://github.com/asearfos/chipper](https://github.com/asearfos/chipper).
+[https://github.com/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper).
 
 **Overview**
 
@@ -58,7 +58,7 @@ The Chipper landing page allows you to choose whether you want to
 
  1.  segment songs (or other acoustic signals)
 
- 2.  determine the threshold for note size
+ 2.  determine the threshold for noise
 
  3.  determine the threshold for syllable similarity, or
 
@@ -69,15 +69,15 @@ These steps should be conducted in the order listed.
 ![landing page](static/landing_page.png "landing page")
 
 For **Syllable Segmentation** choose parameter defaults for top percent
-of signal kept, minimum silence duration and minimum syllable duration
+of signal kept, minimum silence duration, and minimum syllable duration
 with which to start the parsing of every song. You can also select
 "Search for previously used parameters" which will look for gzips in any
 SegSyllsOuput\_YYYYMMDD\_THHMMSS folders in the selected folder for
 segmentation. If any gzips are found, the most recent one will be used
 to load the previous settings and segmentation conducted for the song.
 
-For **Song Analysis** choose parameters for note size (to distinguish
-between notes and noise) and percent syllable similarity (to determine
+For **Song Analysis** choose parameters for noise threshold (to distinguish
+between signal and noise) and percent syllable similarity (to determine
 syntax). We suggest first using the threshold widgets for best results;
 after finishing each widget, the new parameter for analysis will be
 populated.
@@ -86,39 +86,39 @@ populated.
 
 Starting Syllable Segmentation will first take you to a file explorer to
 choose either a single WAV file or folder of WAV files. The length of
-the songs, and the size of the file can depend greatly on your computing
-resources and screen size. We recommend songs \~0.5s to 10s long or
-files no larger than 3MB. Depending on the computing resources you may
+the songs and the size of the files Chipper can handle depends greatly on 
+your computing resources and screen size. We recommend songs \~0.5s to 10s 
+long or files no larger than 3MB. Depending on the computing resources you may
 experience lag with files between 2-3MB. Thus, we recommend choosing
 bouts of song to segment using another program such as Audacity
 (audacity.sourceforge.net).
 
-Note: We have set a warning message for files over 3MB in which the user
+*Note: We have set a warning message for files over 3MB in which the user
 can select to either toss or process the file; this is a safety to
 ensure the user knows they may experience a lag or even crash Chipper if
 the file is much larger than recommended and has not been previously
-parsed. If you are consistently parsing files larger than this and want
-to change this threshold, see line 349 of control\_panel.py (and line
-266 in run\_chipper.kv for popup message).
+parsed. If you are consistently parsing files larger than this with no 
+issue and want to change this threshold, see line 344 of control\_panel.py 
+(and line 267 in run\_chipper.kv for popup message).*
 
-The first file will load using the default parameters to automatically
+Each file will load using the default parameters to automatically
 parse the song. Next adjust the parameters to finalize your
 segmentation.
 
 Here is a suggested order in changing parameters:
 
- 1.  Adjust the high-pass and low-pass filter slider (left of top sonogram).
+ 1.  Adjust the high-pass and low-pass filter slider (left of top spectrogram).
 
  2.  If there are some portions of the song that seem very low in amplitude,
   try normalizing the signal.
 
  3.  Adjust the signal threshold to reduce noise.
 
-     Tip: You can use the crop sliders (under the bottom sonogram) to remove the 
-     onsets/offsets temporarily to see if you like what the signal threshold is 
-     giving you without having the lines crowd your view. Be sure to put these 
-     sliders back after you are done, as the onsets and offsets must be in place 
-     to submit a segmentation.
+     *Tip: You can use the crop sliders (under the bottom spectrogram) to 
+     remove the onsets/offsets temporarily to see if you like what the 
+     signal threshold is giving you without having the lines crowd your view. 
+     Be sure to put these sliders back after you are done, as the onsets and
+      offsets must be in place to submit a segmentation.*
 
 4.  Adjust minimum silence duration to the ***minimum value*** that segments
  the way you think is correct. Using the smallest value that gives you good 
@@ -128,15 +128,15 @@ Here is a suggested order in changing parameters:
   apart from one another to parse together, try increasing the minimum 
   silence duration quite a bit.
 
-5.  You may need to iterate between \#3 and \#4 a little bit.
+5.  You may need to iterate between steps \#3 and \#4.
 
-6.  Use minimum syllable duration if you are still not getting it to parse 
-well. Usually you will not have to move this at all or much. (But this will 
-depend on the song type you are parsing.) It is often just used to get rid 
-of little bits of noise that are parsing as syllables or include small 
-syllables that are not parsing.
+6.  Use minimum syllable duration if you are still not satisfied with the 
+parsing. Usually you will not have to adjust this parameter much or at all. 
+(However, this will depend on the song type you are parsing.) It is often 
+useful in getting rid of little bits of noise that are parsing as syllables 
+or include small syllables that are not parsing.    
 
-7.  Use the crop sliders (under the bottom sonogram) to remove onsets and 
+7.  Use the crop sliders (under the bottom spectrogram) to remove onsets and 
 offsets before or after the song that are just capturing noise.
 
 8.  Add/Delete any onsets/offsets that are missing or extraneous. Try to add
@@ -269,7 +269,7 @@ be used in song analysis.
 
 The colors are to help you distinguish separate notes. A note is
 considered to be a set of connected elements (by edges not corners, e.g.
-4-connected) in the binary sonogram having an area greater than the
+4-connected) in the binary spectrogram having an area greater than the
 threshold. So, if two notes very close to one another appear separate
 and are the same color, they are most likely one note. This may be due
 to the limits of screen resolution.
