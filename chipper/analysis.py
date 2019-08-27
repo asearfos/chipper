@@ -549,6 +549,6 @@ class NoNotesFound(ValueError):
     def __init__(self):
         ValueError.__init__(
             self,
-            "Syllable was considered to be noise (all notes were smaller than "
-            "noise threshold). Re-segment using the previous gzip or "
-            "re-determine noise threshold to visualize the issue.")
+            "A syllable was considered to be only noise. This could be due "
+            "to your noise threshold. Re-segment using the previous "
+            "gzip or redetermine noise threshold to visualize the issue.")

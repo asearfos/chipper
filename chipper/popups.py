@@ -94,3 +94,12 @@ class NoGzipsFoundPopup(Popup):
 
 class NoWavsFoundPopup(Popup):
     pass
+
+
+class ErrorInSyllSimThresholdWidgetPopup(Popup):
+    message = StringProperty()
+
+    def __init__(self, determine_noise, e, **kwargs):
+        super(ErrorInSyllSimThresholdWidgetPopup, self).__init__(**kwargs)
+        self.determine_noise = determine_noise
+        self.message = e

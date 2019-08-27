@@ -23,11 +23,13 @@
         find_gzips: welcome.find_gzips
     NoiseThresholdPage:
         name: 'noise_threshold_page'
+        user_noise_thresh: welcome.user_noise_thresh
     NoiseSummaryPage:
         name: 'noise_summary_page'
     SyllSimThresholdPage:
         name: 'syllsim_threshold_page'
         user_noise_thresh: welcome.user_noise_thresh
+        user_syll_sim_thresh: welcome.user_syll_sim_thresh
     SyllSimSummaryPage:
         name: 'syllsim_summary_page'
     Analysis:
@@ -288,6 +290,15 @@
         Button:
             text: 'Back'
             on_release: root.dismiss()
+
+<ErrorInSyllSimThresholdWidgetPopup>
+    size_hint: 0.5, 0.3
+    auto_dismiss: False
+    title: root.message
+    BoxLayout:
+        Button:
+            text: 'Next'
+            on_release: root.determine_noise.next(); root.dismiss();
 
 <LandingPage>:
     id: welcome
@@ -552,7 +563,7 @@
                         input_filter: 'float'
                         min_value: 0
                         max_value: 100
-                        text: '40.0'
+                        text: '70.0'
                         hint_text: '0-100%'
                         padding: [6, ( self.height - self.line_height )/2]
                         size_hint: 0.18, 0.1
@@ -609,7 +620,7 @@
     user_min_silence: '10'
     user_min_syllable: '20'
     user_noise_thresh: '120'
-    user_syll_sim_thresh: '40.0'
+    user_syll_sim_thresh: '70.0'
     on_pre_enter: controls.setup()
     top_image: graph_sonogram
 
