@@ -14,7 +14,7 @@
 
  6.  Syllable Similarity Threshold Widget
 
- 7.  Running analysis
+ 7.  Running Analysis
 
  8.  Analysis Output
 
@@ -72,7 +72,7 @@ For **Syllable Segmentation** choose parameter defaults for top percent
 of signal kept, minimum silence duration, and minimum syllable duration
 with which to start the parsing of every song. You can also select
 "Search for previously used parameters" which will look for gzips in any
-SegSyllsOuput\_YYYYMMDD\_THHMMSS folders in the selected folder for
+*SegSyllsOuput\_YYYYMMDD\_THHMMSS* folders in the selected folder for
 segmentation. If any gzips are found, the most recent one will be used
 to load the previous settings and segmentation conducted for the song.
 
@@ -136,27 +136,30 @@ parsing. Usually you will not have to adjust this parameter much or at all.
 useful in getting rid of little bits of noise that are parsing as syllables 
 or include small syllables that are not parsing.    
 
-7.  Use the crop sliders (under the bottom spectrogram) to remove onsets and 
-offsets before or after the song that are just capturing noise.
+7.  Use the crop sliders (under the bottom spectrogram) to remove onsets and
+ offsets capturing any signal before or after the song.  
 
 8.  Add/Delete any onsets/offsets that are missing or extraneous. Try to add
  as few manual onsets/offsets as possible. It is better to have too many and
   have to remove.
 
-    *Tip:* Use the left and right arrow keys to move between the selected 
-    onset/offset and the others. *Use "Enter" to accept addition or deletion of 
+    *Tip: Use the left and right arrow keys to move between the selected 
+    onset/offset and the others. Use "Enter" to accept addition or deletion of 
     onsets/offsets. Use "x" to cancel addition or deletion of onsets/offsets.*
 
 9.  Submit your parsed song, or toss if you think it is too noisy and you 
 are not getting good data!
 
-    *Careful not to hit submit or toss twice in a row if you think the button 
-    did not work. It might just be loading the next file. The **buttons should 
-    turn blue if they have been selected** and will be gray again when the new 
-    image is loaded.*
+    *Careful not to hit submit or toss twice in a row. If you think the 
+    button did not work, it might just be loading the next file. The 
+    **buttons should turn blue if they have been selected** and will be gray
+     again when the new image is loaded.*
 
 Once you have parsed all the files in a folder, there will be a new folder 
-called *SegSyllsOutput\_YYYYMMDD\_THHMMSS*. Three text files will be provided:
+called *SegSyllsOutput_YYYYMMDD_THHMMSS*. Each file submitted will have an 
+associated gzip used in the next steps in Chipper. This is the only portion 
+needed for Chipper to run Analysis. However, three human-readable text files
+will also be provided for the user:       
 
 1. *segmentedSyllables\_parameters\_all* with the parameters used to
 parse the songs,
@@ -167,10 +170,7 @@ offsets, and
 3. *segmentedSyllables\_tossed* with a list of the files that were
 tossed.
 
-Each file submitted will also have an associated gzip used in the next
-steps in Chipper.
-
-*Note: If Chipper crashes during segmentation (or the user exits), the
+*Note: If Chipper crashes during segmentation (or the user exits Chipper), the
 text files will not be output; however, gzips for any segmentations that
 were submitted will be present in the output folder. To run the next
 steps, only gzips are needed. The text outputs are solely for the user's
@@ -216,7 +216,7 @@ information.*
 
  8. Adjust minimum silence duration. This both got rid of some of the onsets
   and offsets around noise on the ends of the song as well as some of the 
-  noise at the end of syllables from a sort of echo.
+  noise at the end of syllables that appears to be an echo.
     ![min silence](static/min_silence_duration_circled.png "min silence")
 
  9. Use minimum syllable duration to get the beginning of the last syllable 
@@ -226,7 +226,7 @@ information.*
     syllable")
 
  10. Add/Delete any onsets/offsets that are missing or extraneous. Here we 
- deleted two syllable beginnings and two syllable endings.
+ delete two syllable beginnings and two syllable endings.
      ![delete syllable beginning 1](static/del_syll_beg1_circled.png 
      "delete syllable beginning 1")
      
@@ -248,7 +248,7 @@ in the threshold widgets and analysis.
     ![exit segmentation](static/exit_segmentation_circled.png "exit 
     segmentation")
 
-13. The output folder, *SegSyllsOutput\_YYYYMMDD-THHMMSS* can now be found in 
+13. The output folder, *SegSyllsOutput\_YYYYMMDD\_THHMMSS* can now be found in 
 the same folder as the WAV files you ran. This folder contains the three 
 human-readable text file outputs as well as the gzips for each submitted WAV
  file.
@@ -256,10 +256,10 @@ human-readable text file outputs as well as the gzips for each submitted WAV
     
     ![output files](static/output_files_circled.png "output files")
 
-**Note Size Threshold Widget**
+**Noise Threshold Widget**
 
 The purpose of the widget is to help you determine a common threshold
-for note size for all of your data. We recommend you perform this step
+for noise for all of your data. We recommend you perform this step
 for a set of songs from the same species. Specifically, you can use a
 subset of your data (\~20 songs) to determine the threshold. You will
 adjust the threshold for each song until satisfied with the results. A
@@ -267,12 +267,14 @@ summary of the thresholds used for the sample songs will be given at the
 end. Then, you will be given the chance to adjust the final threshold to
 be used in song analysis.
 
-The colors are to help you distinguish separate notes. A note is
-considered to be a set of connected elements (by edges not corners, e.g.
-4-connected) in the binary spectrogram having an area greater than the
-threshold. So, if two notes very close to one another appear separate
-and are the same color, they are most likely one note. This may be due
-to the limits of screen resolution.
+The colors are to help you distinguish separate notes. A note is considered 
+to be a set of connected elements (by edges not corners, e.g. 4-connected) 
+in the binary spectrogram having an area greater than the noise threshold. 
+So, if two notes very close to one another appear separate and are the same 
+color, they are most likely one note. This may be due to the limits of 
+screen resolution. If the area of a note is smaller than the Noise 
+Threshold, it will be considered noise appearing white in the spectrogram. 
+Noise will not be considered in the analysis calculations.
 
 **Syllable Similarity Widget**
 
@@ -285,27 +287,31 @@ results. A summary of the thresholds used for the sample songs will be
 given at the end. Then, you will be given the chance to adjust the final
 threshold to be used in song analysis.
 
-The colors are to help you distinguish the syntax of the song which is
-also written numerically above the spectrogram. Two syllables are
-considered to be identical if they overlap with an accuracy greater than
-or equal to the syllable similarity threshold. The syntax is found
-sequentially, meaning if the second syllable is found to be the same as
-the first, and the third syllable is found to be the same as the second
-but not the first, the third will still be the same as both the first
-and second syllables. To help, the average, minimum and maximum percent
-similarity between like syllables is also provided. Note: the minimum
-can be less than the threshold because syntax is found sequentially.
+The colors are to help you distinguish the syntax of the song which is also 
+written numerically above the spectrogram. Two syllables are considered to 
+be identical if they overlap with an accuracy greater than or equal to the 
+syllable similarity threshold. The syntax is found sequentially, meaning if 
+the second syllable is found to be the same as the first, and the third 
+syllable is found to be the same as the second but not the first, the third 
+will still be the same as both the first and second syllables. To help, the 
+average, minimum and maximum percent similarity between like syllables is 
+also provided. Note: the minimum can be less than the threshold because 
+syntax is found sequentially.
+
+Any signal between syllables will be grey and will not be considered in the 
+analysis. Similarly, any noise (determined using the Noise Threshold from 
+the previous step) will be white and will not be considered in the analysis. 
 
 **Running Analysis**
 
-The Note Size Threshold and Syllable Similarity Threshold will be used
+The Noise Threshold and Syllable Similarity Threshold will be used
 in Song Analysis. If you have not used the two widgets to determine
 appropriate thresholds, do so before running Song Analysis.
 
 Starting Song Analysis will first take you to a file explorer to choose
 a folder of gzip outputs from Syllable Segmentation.
 
-*Note: the gzips do not have to be in their original output folder; the
+*Note: The gzips do not have to be in their original output folder; the
 user could have moved them to a new location. If other file types are in
 the same folder, they will be ignored.*
 
@@ -323,23 +329,28 @@ Exit" Chipper.
 
 ![running analysis](static/running_analysis.png "running analysis")
 
-When all gzips are completed, the spinning wheel will no long be
-present, and the button "Return to Home" will become active. Find the
-Song Analysis output *AnalysisOutput\_YYYYMMDD\_THHMMSS.txt* with
-measurements for each song in the folder you analyzed.
+When all gzips are completed, the spinning wheel will no longer be present, 
+and the button “Return to Home” will become active. Two Song Analysis output
+ files can now be found in the folder you analyzed.
+
+1. *AnalysisOutput\_YYYYMMDD\_THHMMSS\_songsylls* with measurements pertaining
+ to the song and syllables.
+2. *AnalysisOutput\_YYYYMMDD\_THHMMSS\_notes* with measurements pertaining to 
+the notes. The user should be careful using these measurements as noisy 
+song files will not have accurate note information. 
 
 **Analysis Output**
 
-The *AnalysisOutput\_YYYYMMDD\_THHMMSS.txt* file includes 42 measurements
-for all gzips run through Song Analysis and the two thresholds submitted
-by the user for the calculations.
+Together the *AnalysisOutput\_YYYYMMDD\_THHMMSS\_songsylls* and 
+*AnalysisOutput\_YYYYMMDD\_THHMMSS\_notes* files include
+ 42 measurements for all gzips run through Song Analysis and the two 
+ thresholds submitted by the user for the calculations.
 
-Note Size Threshold is used to remove any signal less than or equal to
-the submitted parameter. This is done very first such that all
-calculations (not just note related values) will be affected by this
-last bit of "cleaning". Then, for note-specific measures, any signal
-connected and greater than the threshold will be considered an
-independent note.
+Noise Threshold is used to remove any connected signal with an area less 
+than or equal to the submitted parameter. This is done very first such that 
+all note-related and frequency-related calculations will be affected by this
+ last bit of “cleaning”. Any calculations that specifically use the onsets and 
+ offsets will not be affected.
 
 Syllable Similarity Threshold is used to determine if two syllables are
 considered to be of the same type. This affects syllable pattern
@@ -352,7 +363,7 @@ offsets.
 
 For definitions of each of the measurements see the table below; for
 more detailed information see
-[https://github.com/asearfos/chipper/blob/master/chipper/analysis.py](https://github.com/asearfos/chipper/blob/master/chipper/analysis.py).
+[https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py](https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py).
   
   | term | calculation |
   |---|---|
@@ -385,7 +396,7 @@ more detailed information see
   | num\_unique\_syllables | unique values in syllable pattern |
   | overall\_notes\_freq\_range(Hz) | max(maximum frequency of each note) − min(minimum frequency of each note) |
   | overall\_sylls\_freq\_range(Hz) | max(maximum frequency of each syllable) − min(minimum frequency of each syllable) |
-  | sequential\_repetition | |
+  | sequential\_repetition | number of repeated syllables/(number of syllables - 1) |
   | smallest\_note\_duration(ms) | min(time of note beginning − time of note ending) |
   | smallest\_notes\_freq\_modulation(Hz) | min(note frequency peak − note frequency trough) |
   | smallest\_silence\_duration(ms) | min(time of syllable onset − time of previous syllable offset) |
@@ -398,5 +409,5 @@ more detailed information see
   | std\_syllable\_stereotypy | std(syllable\_stereotypy) |
   | std\_sylls\_freq\_modulation(Hz) | std(syllable frequency peak − syllable frequency trough) |
   | syll\_correlation\_threshold | provided by user |
-  | syllable\_pattern | syllable syntax in which syllables that have overlapping signal (using sliding window in time, not frequency space) greater than or equal to the syllable similarity threshold are labeled the same |
+  | syllable\_pattern | pattern in which syllables considered to be the same type had a maximum overlap of signal (using sliding window in time, not frequency space) greater than or equal to the syllable similarity threshold |
   | syllable\_stereotypy | list of the mean(correlation between each pair of like syllables) |
