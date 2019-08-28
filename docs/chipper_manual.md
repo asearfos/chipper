@@ -6,7 +6,7 @@
 
  2.  Overview
 
- 3.  Segmenting Songs
+ 3.  Syllable Segmentation
 
  4.  Example of Syllable Segmentation
 
@@ -82,7 +82,7 @@ syntax). We suggest first using the threshold widgets for best results;
 after finishing each widget, the new parameter for analysis will be
 populated.
 
-**Segmenting Songs (or other acoustic signals)**
+**Syllable Segmentation**
 
 Starting Syllable Segmentation will first take you to a file explorer to
 choose either a single WAV file or folder of WAV files. The length of
@@ -156,19 +156,44 @@ are not getting good data!
      again when the new image is loaded.*
 
 Once you have parsed all the files in a folder, there will be a new folder 
-called *SegSyllsOutput_YYYYMMDD_THHMMSS*. Each file submitted will have an 
-associated gzip used in the next steps in Chipper. This is the only portion 
-needed for Chipper to run Analysis. However, three human-readable text files
-will also be provided for the user:       
+called *SegSyllsOutput_YYYYMMDD_THHMMSS*. For every WAV file that was 
+successfully segmented, there will be an associated gzip which will be used 
+in the next steps in Chipper. Specifically each gzip is written after the 
+user hits “Submit”. These gzips are used to review the segmentation again 
+using Syllable Segmentation or to determine Thresholds and run Analysis in 
+the next steps.   
 
-1. *segmentedSyllables\_parameters\_all* with the parameters used to
-parse the songs,
+In addition, four human-readable text files are output once the last file is
+ either submitted or tossed.          
 
-2. *segmentedSyllables\_syllables\_all* with a list of onsets and
-offsets, and
+1. *segmentedSyllables\_parameters\_all*  includes a list of all the Chipper
+ parameters used to reach the submitted segmentation. 
+ 
+ | | |
+ |---|---|
+ | FileName | name of WAV file |
+ | FrequencyFilter | [high-pass, low-pass] filter in number of pixels from the bottom of the spectrogram |
+ | BoutRange | [left crop, right crop] in pixels from teh left of the spectrogram |
+ | PercentSignalKept | top percent of signal kept |
+ | MinSilenceDuration | number of pixels |
+ | MinSyllableDuration | number of pixels |
+ | Normalized | 'yes' or 'no' indicating whether the song was normalized or not |
 
-3. *segmentedSyllables\_tossed* with a list of the files that were
-tossed.
+2. *segmentedSyllables\_syllables\_all* with a list of onsets and a list of 
+offsets in pixels from the left of the spectrogram.  
+
+3. *segmentedSyllables\_conversions\_all* includes the conversions necessary
+ to change the parameters from pixels into milliseconds or Hz for each WAV 
+ file processed.  
+ 
+ | | |
+ |---|---|
+ | FileName | name of WAV file |
+ | timeAxisConversion | number of milliseconds per pixel|
+ | BoutRange | number of Hz per pixel|
+
+4. *segmentedSyllables\_tossed* with a list of the files that were tossed. 
+There should be no gzips provided for the files in this list.  
 
 *Note: If Chipper crashes during segmentation (or the user exits Chipper), the
 text files will not be output; however, gzips for any segmentations that
