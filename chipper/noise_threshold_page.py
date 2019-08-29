@@ -6,7 +6,7 @@ from matplotlib.colors import ListedColormap
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 from skimage.measure import label, regionprops
-
+from skimage.morphology import remove_small_objects
 from chipper.popups import NoiseThreshInstructionsPopup
 
 import os
@@ -18,6 +18,8 @@ class NoiseThresholdPage(Screen):
     user_noise_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
+        self.noise_thresholds = []
+        self.i = 0
         self.fig3, self.ax3 = plt.subplots()
         self.plot_noise_canvas = FigureCanvasKivyAgg(self.fig3)
 
@@ -27,9 +29,6 @@ class NoiseThresholdPage(Screen):
         super(NoiseThresholdPage, self).__init__(*args, **kwargs)
 
     def setup(self):
-        self.noise_thresholds = []
-        self.i = 0
-        # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
         self.files = self.parent.files
         self.next()
 
@@ -66,8 +65,9 @@ class NoiseThresholdPage(Screen):
             cmap = plt.cm.prism
             cmap.set_under(color='black')
             cmap.set_bad(color='white')
+
             self.plot_noise = self.ax3.imshow(
-                data + 3,
+                data,
                 extent=[0, self.cols, 0, self.rows],
                 aspect='auto',
                 cmap=cmap,
@@ -82,45 +82,38 @@ class NoiseThresholdPage(Screen):
 
     def new_thresh(self):
         # find notes and label based on connectivity
-        num_notes, props, labeled_sonogram = self.get_notes()
-        # change label of all notes with size > threshold to be the same
-        # and all < to be the same
-        for region in props:
-            if region.area > int(self.ids.user_noise_size.text):
-                labeled_sonogram[labeled_sonogram == region.label] = region.area
-            else:
-                labeled_sonogram[labeled_sonogram == region.label] = 1
-
-        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1,
-                                              labeled_sonogram)
-        # update image in widget
-        # plot the actual data now
-        self.plot_noise.set_data(labeled_sonogram + 3)
-        self.plot_noise_canvas.draw()
-
-    def noise_thresh_instructions(self):
-        noise_popup = NoiseThreshInstructionsPopup()
-        noise_popup.open()
-
-    def get_notes(self):
-        """
-        num of notes and categorization
-        """
         # zero anything before first onset or after last offset
         # (not offset row is already zeros, so okay to include)
         # this will take care of any noise before or after the song
         # before labeling the notes
         threshold_sonogram_crop = self.threshold_sonogram.copy()
+
+        # Make onsets and offsets and offsets black (hidden)
         threshold_sonogram_crop[:, 0:self.onsets[0]] = 0
         threshold_sonogram_crop[:, self.offsets[-1]:-1] = 0
+        for off, on in zip(self.offsets[:-1], self.onsets[1:]):
+            threshold_sonogram_crop[:, off:on][
+                threshold_sonogram_crop[:, off:on] >= 0] = 0
 
         # ^connectivity 1=4 or 2=8(include diagonals)
-        labeled_sonogram, num_notes = label(threshold_sonogram_crop,
-                                            return_num=True,
-                                            connectivity=1)
+        labeled_sonogram = label(threshold_sonogram_crop, connectivity=1)
 
-        props = regionprops(labeled_sonogram)
+        # change label of all notes with size > threshold to be the same
+        # and all < to be the same
+        for region in regionprops(labeled_sonogram):
+            if region.area > int(self.ids.user_noise_size.text):
+                labeled_sonogram[labeled_sonogram == region.label] = region.area
+            else:
+                labeled_sonogram[labeled_sonogram == region.label] = 1
 
-        return num_notes, props, labeled_sonogram
+        # mask noise white
+        labeled_sonogram = np.ma.masked_where(labeled_sonogram == 1,
+                                              labeled_sonogram)
+        # update image in widget
+        self.plot_noise.set_data(labeled_sonogram+3)
+        # plot the actual data now
+        self.plot_noise_canvas.draw()
 
-
+    def noise_thresh_instructions(self):
+        noise_popup = NoiseThreshInstructionsPopup()
+        noise_popup.open()
