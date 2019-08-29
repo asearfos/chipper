@@ -19,4 +19,7 @@ text = 'The colors are here to help you distinguish the syntax of the song which
        'Any signal between syllables appears grey and will not be ' \
        'considered in the analysis. Similarly, any noise (determined using ' \
        'the Noise Threshold from the previous step) will appear white and ' \
-       'will not be considered in the analysis.'
+       'will not be considered in the analysis. ' \
+       'You can return to this widget as many times as you wish to ' \
+       'visualize the segmentation and chosen thresholds for any songs of ' \
+       'interest.'
