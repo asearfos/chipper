@@ -18,8 +18,6 @@ class NoiseThresholdPage(Screen):
     user_noise_thresh = StringProperty()
 
     def __init__(self, *args, **kwargs):
-        self.noise_thresholds = []
-        self.i = 0
         self.fig3, self.ax3 = plt.subplots()
         self.plot_noise_canvas = FigureCanvasKivyAgg(self.fig3)
 
@@ -29,6 +27,9 @@ class NoiseThresholdPage(Screen):
         super(NoiseThresholdPage, self).__init__(*args, **kwargs)
 
     def setup(self):
+        self.noise_thresholds = []
+        self.i = 0
+        # self.files = [os.path.basename(i) for i in glob.glob(self.parent.directory + '*.gzip')]
         self.files = self.parent.files
         self.next()
 
