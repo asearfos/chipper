@@ -105,7 +105,7 @@ class ControlPanel(Screen):
     def move_mark(self, event, move_interval=7):
         if self.ids.add.state == 'down':  # adding
             if event.key in self.direction_to_int and \
-                    (25 <= self.graph_location < self.cols - 25):
+                    (25 <= self.graph_location < self.song.cols - 25):
                 self.graph_location += self.direction_to_int[
                                            event.key] * move_interval
                 self.update_mark(self.graph_location)
