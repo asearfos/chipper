@@ -301,6 +301,9 @@ screen resolution. If the area of a note is smaller than the Noise
 Threshold, it will be considered noise appearing white in the spectrogram. 
 Noise will not be considered in the analysis calculations.
 
+You can return to this widget as many times as you wish to visualize the 
+chosen threshold for any songs of interest.
+
 Below is the example song with the *default* noise threshold. In this case, 
 there only looks to be one syllable that has signal being incorrectly 
 labeled as noise.   
@@ -338,6 +341,9 @@ syntax is found sequentially.
 Any signal between syllables will be grey and will not be considered in the 
 analysis. Similarly, any noise (determined using the Noise Threshold from 
 the previous step) will be white and will not be considered in the analysis.
+
+You can return to this widget as many times as you wish to visualize the 
+segmentation and chosen threshold for any songs of interest.  
 
 Below is the example song with the *default* syllable similarity threshold. In
  this case, the syntax is close to what we would consider correct for this 
