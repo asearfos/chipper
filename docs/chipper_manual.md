@@ -301,6 +301,18 @@ screen resolution. If the area of a note is smaller than the Noise
 Threshold, it will be considered noise appearing white in the spectrogram. 
 Noise will not be considered in the analysis calculations.
 
+Below is the example song with the *default* noise threshold. In this case, 
+there only looks to be one syllable that has signal being incorrectly 
+labeled as noise.   
+    ![default noise](static/default_noise_threshold_circled.png "default 
+    noise")
+
+Reducing the noise threshold, the second note of the syllable is now 
+correctly labeled. Here is the example song with the *adjusted* noise 
+threshold.
+    ![changed noise](static/changed_noise_threshold.png "changed 
+    noise")
+
 **Syllable Similarity Widget**
 
 The purpose of the widget is to help you determine a common threshold
@@ -325,7 +337,20 @@ syntax is found sequentially.
 
 Any signal between syllables will be grey and will not be considered in the 
 analysis. Similarly, any noise (determined using the Noise Threshold from 
-the previous step) will be white and will not be considered in the analysis. 
+the previous step) will be white and will not be considered in the analysis.
+
+Below is the example song with the *default* syllable similarity threshold. In
+ this case, the syntax is close to what we would consider correct for this 
+ bird; however, there are a set of three similar syllables at the end that 
+ are labeled “12, 13, 12”.   
+    ![default syllsim](static/default_syllsim_threshold_circled.png "default 
+    syllsim")
+
+Adjusting the syllable similarity threshold allows us to reach the correct 
+syntax. Here is the example song with the *adjusted* syllable similarity 
+threshold.
+    ![changed syllsim](static/changed_syllsim_threshold.png 
+    "changed syllsim")
 
 **Running Analysis**
 
