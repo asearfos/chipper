@@ -638,6 +638,15 @@ class ControlPanel(Screen):
         Logger.info("Saving parameters")
         df_parameters = pd.DataFrame.from_dict(self.save_parameters_all,
                                                orient='index')
+        for r in df_parameters.BoutRange:
+            # adjust bout ranges so that they do not include the padding of the
+            # spectrogram (150 pixels each side), so user can convert
+            # correctly using human-readable files
+            r[:] = [x - 150 for x in r]
+            if r[0] < 0:
+                r[0] = 0
+            if r[-1] > (self.song.cols - 300):
+                r[-1] = (self.song.cols - 300)
         df_parameters.index.name = 'FileName'
         df_parameters.to_csv(
             os.path.join(self.output_path,
@@ -647,9 +656,22 @@ class ControlPanel(Screen):
 
         df_syllables = pd.DataFrame.from_dict(self.save_syllables_all,
                                               orient='index')
+        # adjust onsets and offests so that they do not include the padding of
+        # the spectrogram (150 pixels each side), so user can convert
+        # correctly using human-readable files
+        for on, off in zip(df_syllables.Onsets, df_syllables.Offsets):
+            on[:] = [x-150 for x in on]
+            off[:] = [y-150 for y in off]
         df_syllables.index.name = 'FileName'
         df_syllables.to_csv(os.path.join(self.output_path,
                                          'segmentedSyllables_syllables_all.txt'),
+                            sep="\t")
+
+        df_conversions = pd.DataFrame.from_dict(self.save_conversions_all,
+                                              orient='index')
+        df_conversions.index.name = 'FileName'
+        df_conversions.to_csv(os.path.join(self.output_path,
+                                         'segmentedSyllables_conversions_all.txt'),
                             sep="\t")
 
         df_tossed = pd.DataFrame.from_dict(self.save_tossed, orient='index')
