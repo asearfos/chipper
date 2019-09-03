@@ -1297,7 +1297,7 @@
                 id: analysis_done
                 text: 'Return to Home'
                 disabled: True
-                on_release: app.root.current = 'landing_page'
+                on_release: analysis_warnings.text = ''; app.root.current = 'landing_page'
 
             BoxLayout:
                 size_hint_x: 0.25
