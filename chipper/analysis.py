@@ -263,7 +263,7 @@ class Song(object):
             'sequential_repetition': sequential_rep1,
             'syllable_stereotypy': syll_stereotypy_final,
             'mean_syllable_stereotypy': mean_syll_stereotypy,
-            'std_syllable_stereotypy': std_syll_stereotypy}
+            'stdev_syllable_stereotypy': std_syll_stereotypy}
 
         # syllable freq range
         freq_upper, freq_lower = calc_sylls_freq_ranges(
@@ -508,12 +508,12 @@ def get_basic_stats(durations, data_type, units):
         stats = {'largest_' + data_type + units: 'NA',
                  'smallest_' + data_type + units: 'NA',
                  'avg_' + data_type + units: 'NA',
-                 'std_' + data_type + units: 'NA'}
+                 'stdev_' + data_type + units: 'NA'}
     else:
         stats = {'largest_' + data_type + units: max(durations),
                  'smallest_' + data_type + units: min(durations),
                  'avg_' + data_type + units: np.mean(durations),
-                 'std_' + data_type + units: np.std(durations, ddof=1)}
+                 'stdev_' + data_type + units: np.std(durations, ddof=1)}
     return stats
 
 
