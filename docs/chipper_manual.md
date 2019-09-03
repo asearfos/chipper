@@ -91,7 +91,10 @@ your computing resources and screen size. We recommend songs \~0.5s to 10s
 long or files no larger than 3MB. Depending on the computing resources you may
 experience lag with files between 2-3MB. Thus, we recommend choosing
 bouts of song to segment using another program such as Audacity
-(audacity.sourceforge.net).
+(audacity.sourceforge.net). Similarly, if a bout is very short, it may 
+appear stretched; you can always reduce this effect when selecting a bout in
+ Audacity by not cutting the bout too close or by adding time to the 
+ beginning or end of the bout.    
 
 *Note: We have set a warning message for files over 3MB in which the user
 can select to either toss or process the file; this is a safety to
@@ -103,7 +106,9 @@ issue and want to change this threshold, see line 344 of control\_panel.py
 
 Each file will load using the default parameters to automatically
 parse the song. Next adjust the parameters to finalize your
-segmentation.
+segmentation. For definitions of the parameters and how they are applied to 
+the spectrogram, see Searfoss, Pino, Creanza 2019 or the code at github
+.com/CreanzaLab/chipper.  
 
 Here is a suggested order in changing parameters:
 
@@ -297,8 +302,8 @@ to be a set of connected elements (by edges not corners, e.g. 4-connected)
 in the binary spectrogram having an area greater than the noise threshold. 
 So, if two notes very close to one another appear separate and are the same 
 color, they are most likely one note. This may be due to the limits of 
-screen resolution. If the area of a note is smaller than the Noise 
-Threshold, it will be considered noise appearing white in the spectrogram. 
+screen resolution. If the area of a note is less than or equal to the noise 
+threshold, it will be considered noise, appearing white in the spectrogram. 
 Noise will not be considered in the analysis calculations.
 
 You can return to this widget as many times as you wish to visualize the 
@@ -393,7 +398,8 @@ and the button “Return to Home” will become active. Two Song Analysis output
  to the song and syllables.
 2. *AnalysisOutput\_YYYYMMDD\_THHMMSS\_notes* with measurements pertaining to 
 the notes. The user should be careful using these measurements as noisy 
-song files will not have accurate note information. 
+song files will not have accurate note information due to disconnected 
+signal. User can always visualize the notes using the Noise Threshold widget.
 
 **Analysis Output**
 
@@ -458,12 +464,12 @@ more detailed information see
   | smallest\_silence\_duration(ms) | min(time of syllable onset − time of previous syllable offset) |
   | smallest\_syllable\_duration(ms) | min(time of syllable offset − time of syllable onset) |
   | smallest\_sylls\_freq\_modulation(Hz) | min(syllable frequency peak − syllable frequency trough) |
-  | std\_note\_duration(ms) | std(time of note beginning − time of note ending) |
-  | std\_notes\_freq\_modulation(Hz) | std(note frequency peak − note frequency trough) |
-  | std\_silence\_duration(ms) | std(time of syllable onset − time of previous syllable offset) |
-  | std\_syllable\_duration(ms) | std(time of syllable offset − time of syllable onset) |
-  | std\_syllable\_stereotypy | std(syllable\_stereotypy) |
-  | std\_sylls\_freq\_modulation(Hz) | std(syllable frequency peak − syllable frequency trough) |
+  | stdev\_note\_duration(ms) | standard deviation(time of note beginning − time of note ending) |
+  | stdev\_notes\_freq\_modulation(Hz) | standard deviation(note frequency peak − note frequency trough) |
+  | stdev\_silence\_duration(ms) | standard deviation(time of syllable onset − time of previous syllable offset) |
+  | stdev\_syllable\_duration(ms) | standard deviation(time of syllable offset − time of syllable onset) |
+  | stdev\_syllable\_stereotypy | standard deviation(syllable\_stereotypy) |
+  | stdev\_sylls\_freq\_modulation(Hz) | standard deviation(syllable frequency peak − syllable frequency trough) |
   | syll\_correlation\_threshold | provided by user |
   | syllable\_pattern | pattern in which syllables considered to be the same type had a maximum overlap of signal (using sliding window in time, not frequency space) greater than or equal to the syllable similarity threshold |
   | syllable\_stereotypy | list of the mean(correlation between each pair of like syllables) |
