@@ -5,7 +5,8 @@ segmentation and analysis of birdsongs or other acoustic signals.
 ### Documentation
 
 Full documentation is available as a [Chipper Manual](https://github.com/CreanzaLab/chipper/blob/master/docs/chipper_manual.md) on 
-GitHub. For associated publication see *Searfoss, Pino, Creanza 2019*.
+GitHub. For associated publication see *Searfoss, Pino, Creanza 2019 (Under
+ Review)*.
 
 ### Download Chipper
 
