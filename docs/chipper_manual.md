@@ -192,15 +192,15 @@ In addition, four human-readable text files are output once the last file is
 1. *segmentedSyllables\_parameters\_all*  includes a list of all the Chipper
  parameters used to reach the submitted segmentation. 
  
- | | |
- |---|---|
- | FileName | name of WAV file |
- | FrequencyFilter | [high-pass, low-pass] filter in number of pixels from the bottom of the spectrogram |
- | BoutRange | [left crop, right crop] in pixels from teh left of the spectrogram |
- | PercentSignalKept | top percent of signal kept |
- | MinSilenceDuration | number of pixels |
- | MinSyllableDuration | number of pixels |
- | Normalized | 'yes' or 'no' indicating whether the song was normalized or not |
+     | | |
+     |---|---|
+     | FileName | name of WAV file |
+     | FrequencyFilter | [high-pass, low-pass] filter in number of pixels from the bottom of the spectrogram |
+     | BoutRange | [left crop, right crop] in pixels from teh left of the spectrogram |
+     | PercentSignalKept | top percent of signal kept |
+     | MinSilenceDuration | number of pixels |
+     | MinSyllableDuration | number of pixels |
+     | Normalized | 'yes' or 'no' indicating whether the song was normalized or not |
 
 2. *segmentedSyllables\_syllables\_all* with a list of onsets and a list of 
 offsets in pixels from the left of the spectrogram.  
@@ -209,11 +209,11 @@ offsets in pixels from the left of the spectrogram.
  to change the parameters from pixels into milliseconds or Hz for each WAV 
  file processed.  
  
- | | |
- |---|---|
- | FileName | name of WAV file |
- | timeAxisConversion | number of milliseconds per pixel|
- | BoutRange | number of Hz per pixel|
+     | | |
+     |---|---|
+     | FileName | name of WAV file |
+     | timeAxisConversion | number of milliseconds per pixel|
+     | BoutRange | number of Hz per pixel|
 
 4. *segmentedSyllables\_tossed* with a list of the files that were tossed. 
 There should be no gzips provided for the files in this list.  
@@ -511,6 +511,6 @@ more detailed information see
   | stdev\_syllable\_duration(ms) | standard deviation(time of syllable offset − time of syllable onset) |
   | stdev\_syllable\_stereotypy | standard deviation(stereotypy values for each repeated syllable) <BR>\[see syllable_stereotypy definition below] |
   | stdev\_sylls\_freq\_modulation(Hz) | standard deviation(maximum frequency − minimum frequency for each syllable) |
-  | syll\_correlation\_threshold | provided by user (Syllable Similarity Threshold) <BR>\[see Syllable Similarity widget] <BR><BR>Note: The percent similarity between any pair of syllables is defined as maximum(cross-correlation between each pair of syllables)/maximum(autocorrelation of each of the compared syllables) × 100. If this percent similarity is greater than or equal to the syll\_correlation\_threshold, the two syllables are considered the same. |
+  | syll\_correlation\_threshold | provided by user (Syllable Similarity Threshold) \[see Syllable Similarity widget] <BR><BR>Note: The percent similarity between any pair of syllables is defined as maximum(cross-correlation between each pair of syllables)/maximum(autocorrelation of each of the compared syllables) × 100. If this percent similarity is greater than or equal to the syll\_correlation\_threshold, the two syllables are considered the same. |
   | syllable\_pattern | syllable_pattern list of the syllables in the order that they are sung, where each unique syllable is assigned a number (i.e. the song syntax) |
   | syllable\_stereotypy | list of the mean(pairwise percent similarities) for each repeated syllable, where percent similarity is the maximum(cross-correlation between each pair of syllables)/maximum(autocorrelation of each of the compared syllables) × 100 |
