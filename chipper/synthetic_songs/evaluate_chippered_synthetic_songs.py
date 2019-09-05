@@ -42,8 +42,6 @@ real_values['Track'] = real_values.apply(lambda row:
                                              '.csv')[0],
                                          axis=1)
 
-# print(sum(real_values.Syllable_Durations[0]))
-
 real_values['song_duration'] = real_values.apply(lambda row:
                                                  sum(row.Syllable_Durations)
                                                  + sum(row.Silence_Durations),
@@ -85,7 +83,7 @@ real_values['min_syll_freq'] = real_values.apply(lambda row:
 Read in Chipper outputs
 """
 
-nicole_data = pd.read_csv("ChipperedByNicole_Try2ForPaper\AnalysisOutput_20190902_T135312_songsylls.txt", sep="\t")
+nicole_data = pd.read_csv("ChipperedByNicole_Try1ForPaper_basedOn20190528\AnalysisOutput_20190902_T175722_songsylls.txt", sep="\t")
 nicole_data['User'] = 'Nicole'
 megan_data = pd.read_csv("ChipperedByMegan_Try1ForPaper_basedOn20190528\AnalysisOutput_20190902_T150653_songsylls.txt", sep="\t")
 megan_data['User'] = 'Megan'
@@ -102,9 +100,6 @@ chipper_data['Noise'] = chipper_data.apply(lambda row:
                                            ''.join(row.FileName.split('_')[4:]),
                                            axis=1)
 chipper_data['Noise'].replace(inplace=True, to_replace=r'', value=r'None')
-
-
-print(chipper_data.shape)
 
 """
 Plotting
@@ -123,40 +118,12 @@ variables = [['bout_duration(ms)', 'song_duration', 1000],
 
 order = ['None',
          'WhiteNoise001',
-         'S4A0662220180409161600clip',
          'WhiteNoise01',
+         'S4A0662220180409161600clip',
          'S4A0662220180722170100clip']
 
-""""
-Plot real values vs chipper measurements
-"""
-# merge tables using Name (from real values) and Track (from chipper data)
-combined_data = chipper_data.merge(real_values, how='left', on='Track')
-# combined_data = combined_data[combined_data.Noise != 'WhiteNoise0001']
-# combined_data = combined_data[combined_data.Noise != 'WhiteNoise1']
+chipper_data = chipper_data[chipper_data.Noise.isin(order)]
 
-for var in variables:
-    fig = plt.figure(figsize=(11.69, 8.27))
-    my_dpi = 96
-    sns.set(style='white')
-    # for i in np.unique(combined_data.Noise):
-    #     data = combined_data[combined_data.Noise == i]
-    #     g = sns.regplot(x=data[var[0]], y=data[var[1]]*var[2], scatter_kws=dict(alpha=0))
-    g = sns.scatterplot(x=combined_data[var[0]], y=combined_data[var[1]]*var[2],
-                        hue=combined_data['Noise'], hue_order=order,
-                        style=combined_data['User'], markers=['|', '_'],
-                        palette=sns.color_palette("RdPu", 7))
-    # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    x0, x1 = g.get_xlim()
-    y0, y1 = g.get_ylim()
-    lims = [max(x0, y0), min(x1, y1)]
-    g.plot(lims, lims, ':k')
-
-    # plt.savefig('FiguresForCommitteeMtg/' + var[0] + '.pdf', type='pdf', dpi=fig.dpi,
-    #             bbox_inches='tight', transparent=True)
-
-    plt.close()
-    # plt.show()
 
 """"
 Plot real values vs chipper measurements (no noise only)
@@ -167,16 +134,19 @@ no_vs_real = chipper_data.merge(real_values, how='left', on='Track')
 no_vs_real = no_vs_real[no_vs_real.Noise == 'None']
 
 for var in variables:
-    fig = plt.figure(figsize=(11.69, 8.27))
+    fig = plt.figure(figsize=(8.27, 8.27))
     my_dpi = 96
     sns.set(style='white')
+    sns.set_style("ticks")
     g = sns.scatterplot(x=no_vs_real[var[1]]*var[2], y=no_vs_real[var[0]],
-                        style=no_vs_real['User'], markers=['|', '_'], color='k')
-    g = sns.regplot(x=no_vs_real[var[1]]*var[2], y=no_vs_real[var[0]], scatter_kws=dict(alpha=0), color='k')
+                        style=no_vs_real['User'], markers=['|', '_'],
+                        color='k', linewidth=2)
+    g = sns.regplot(x=no_vs_real[var[1]]*var[2], y=no_vs_real[var[0]],
+                    scatter_kws=dict(alpha=0), color='k')
     # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     x0, x1 = g.get_xlim()
     y0, y1 = g.get_ylim()
-    lims = [max(x0, y0), min(x1, y1)]
+    lims = [min(x0, y0), max(x1, y1)]
     g.plot(lims, lims, ':k')
 
     plt.savefig('PlotsForPaper/RealVsNoNoise/' + var[0] + '.pdf',
@@ -185,6 +155,7 @@ for var in variables:
 
     plt.close()
     # plt.show()
+
 
 # """"
 # Plot no noise vs other chipper measurements
@@ -211,6 +182,7 @@ for var in variables:
 #     fig = plt.figure(figsize=(11.69, 8.27))
 #     my_dpi = 96
 #     sns.set(style='white')
+#     sns.set_style("ticks")
 #     g = sns.scatterplot(x=no_noise_as_real['avg_syll_dur'], y=no_noise_as_real['avg_syllable_duration(ms)'],
 #                         hue=no_noise_as_real['Noise'], hue_order=order[1:],
 #                         style=no_noise_as_real['User'], markers=['|', '_'], palette=sns.color_palette("RdPu", 4))
@@ -256,7 +228,6 @@ amplitude_values['FileName'] = amplitude_values.apply(lambda row:
                                                       axis=1)
 
 snr_fig_data = chipper_data.merge(amplitude_values, how='left', on='FileName')
-# snr_fig_data['snr'] = snr_fig_data.Signal_Amplitude/snr_fig_data.Noise_Amplitude
 snr_fig_data['snr'] = snr_fig_data['Signal_Amplitude'].div(other=snr_fig_data['Noise_Amplitude'])
 
 # make the no-noise wav file measurements be the true values
@@ -271,7 +242,6 @@ no_noise.columns = ['avg_silence_duration_nn', 'avg_syllable_duration_nn',
                     'Track']
 
 combined_no_noise = snr_fig_data.merge(no_noise, how='left', on=['Track', 'User'])
-print(combined_no_noise.columns)
 
 combined_no_noise['avg_silence_duration_acc'] = combined_no_noise['avg_silence_duration_nn'] - \
                                                 combined_no_noise['avg_silence_duration(ms)']
@@ -304,25 +274,33 @@ combined_no_noise['num_syllables_acc'] = combined_no_noise['num_syllables_nn'] -
 combined_no_noise = combined_no_noise[combined_no_noise.Noise != 'None']
 
 combined_no_noise['snr'] = combined_no_noise.apply(lambda row: row.snr[0], axis=1)
-print(combined_no_noise.snr)
 
 accuracy_vars = ['avg_silence_duration_acc', 'avg_syllable_duration_acc',
                  'avg_sylls_freq_modulation_acc', 'avg_sylls_lower_freq_acc',
                  'avg_sylls_upper_freq_acc', 'bout_duration_acc',
                  'max_sylls_freq_acc', 'min_sylls_freq_acc', 'num_syllables_acc']
+
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    print(combined_no_noise[combined_no_noise['Track'] == 'SynSongs_amp100_30p_3'])
+
 for col in accuracy_vars:
-    fig = plt.figure(figsize=(11.69, 8.27))
+    fig = plt.figure(figsize=(8.27, 8.27))
     my_dpi = 96
     sns.set(style='white')
+    sns.set_style("ticks")
+
+    pal = sns.color_palette('RdPu', 5)
     g = sns.scatterplot(x=combined_no_noise['snr'], y=combined_no_noise[col],
-                        style=combined_no_noise['User'], markers=['|', '_'], color='k')
-    # g = sns.regplot(x=no_vs_real[var[1]]*var[2], y=no_vs_real[var[0]], scatter_kws=dict(alpha=0), color='k')
-    # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    # plt.xscale('log')
-    plt.savefig('PlotsForPaper/FiguresOfSNR/' + col +
+                        style=combined_no_noise['User'], markers=['|', '_'],
+                        linewidth=2,
+                        hue=combined_no_noise['Noise'], hue_order=order,
+                        palette=sns.color_palette('RdPu', 5))
+
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.xscale('log')
+    plt.savefig('PlotsForPaper/FiguresOfSNR/FiguresOfSNR_xlog/' + col +
                 '.pdf', type='pdf', dpi=fig.dpi,
                 bbox_inches='tight', transparent=True)
 
     plt.close()
     # plt.show()
-    print(combined_no_noise.shape)

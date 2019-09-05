@@ -16,11 +16,13 @@ os.chdir("C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\SyntheticSongs/")
 Read in Chipper outputs
 """
 
-nicole_data_try1 = pd.read_csv("ChipperedByNicole_Try1ForPaper_basedOn20190528\AnalysisOutput_20190902_T175722_songsylls.txt", sep="\t")
+nicole_data_try1 = pd.read_csv(
+    "ChipperedByNicole_Try1ForPaper_basedOn20190528\AnalysisOutput_20190902_T175722_songsylls.txt", sep="\t")
 nicole_data_try1['User'] = 'Nicole'
 nicole_data_try1['Try'] = 1
 
-nicole_data_try2 = pd.read_csv("ChipperedByNicole_Try2ForPaper\AnalysisOutput_20190902_T135312_songsylls.txt", sep="\t")
+nicole_data_try2 = pd.read_csv(
+    "ChipperedByNicole_Try3ForPaper\AnalysisOutput_20190903_T215612_songsylls.txt", sep="\t")
 nicole_data_try2['User'] = 'Nicole'
 nicole_data_try2['Try'] = 2
 
@@ -36,8 +38,6 @@ megan_data_try2['Try'] = 2
 chipper_data = pd.concat([nicole_data_try1, megan_data_try1, nicole_data_try2, megan_data_try2], ignore_index=True)
 chipper_data['FileName'].replace(regex=True, inplace=True, to_replace=r'\SegSyllsOutput_', value=r'')
 chipper_data['FileName'].replace(regex=True, inplace=True, to_replace=r'.gzip', value=r'')
-
-print(chipper_data.shape)
 
 """
 Plotting
@@ -56,18 +56,15 @@ variables = [['bout_duration(ms)', 'song_duration', 1000],
 
 order = ['None',
          'WhiteNoise001',
-         'S4A0662220180409161600clip',
          'WhiteNoise01',
+         'S4A0662220180409161600clip',
          'S4A0662220180722170100clip']
-
-
 """
 Reproducibility (using Megan Try 1 and Nicole Try 1)
 """
 data1 = chipper_data[chipper_data['Try'] == 1]
 
 for var in variables:
-    print(var[0])
     data_for_reprod = data1.pivot(index='FileName', columns='User',
                                   values=var[0])
     data_for_reprod = data_for_reprod.rename_axis('FileName').reset_index()
@@ -76,25 +73,27 @@ for var in variables:
                                                        4:]),
                                                      axis=1)
     data_for_reprod['Noise'].replace(inplace=True, to_replace=r'', value=r'None')
+    data_for_reprod = data_for_reprod[data_for_reprod.Noise.isin(order)]
 
-    fig = plt.figure(figsize=(11.69, 8.27))
+    fig = plt.figure(figsize=(8.27, 8.27))
     my_dpi = 96
     sns.set(style='white')
-    # for i in np.unique(chipper_data.Noise):
-    #     data = chipper_data[chipper_data.Noise == i]
-    #     g = sns.regplot(x=data[var[0]], y=data[var[1]]*var[2], scatter_kws=dict(alpha=0))
+    sns.set_style("ticks")
+
     g = sns.scatterplot(x=data_for_reprod['Nicole'], y=data_for_reprod['Megan'],
                         hue=data_for_reprod['Noise'], hue_order=order,
-                        palette=sns.color_palette("RdPu", 5))
+                        palette=sns.color_palette("RdPu", 5),
+                        linewidth=0.25,
+                        edgecolor='k')
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     x0, x1 = g.get_xlim()
     y0, y1 = g.get_ylim()
-    lims = [max(x0, y0), min(x1, y1)]
+    lims = [min(x0, y0), max(x1, y1)]
     g.plot(lims, lims, ':k')
 
-    # plt.savefig('PlotsForPaper/NicoleVSMegan/' + var[0] + '.pdf', type='pdf',
-    #             dpi=fig.dpi,
-    #             bbox_inches='tight', transparent=True)
+    plt.savefig('PlotsForPaper/NicoleVSMegan/' + var[0] + '.pdf', type='pdf',
+                dpi=fig.dpi,
+                bbox_inches='tight', transparent=True)
 
     plt.close()
     # plt.show()
@@ -106,7 +105,6 @@ Repeatability (using Nicole Try 1 and Nicole Try 2)
 data2 = chipper_data[chipper_data['User'] == 'Nicole']
 
 for var in variables:
-    print(var[0])
     data_for_repeat = data2.pivot(index='FileName', columns='Try',
                                   values=var[0])
     data_for_repeat = data_for_repeat.rename_axis('FileName').reset_index()
@@ -115,63 +113,70 @@ for var in variables:
                                                        4:]),
                                                      axis=1)
     data_for_repeat['Noise'].replace(inplace=True, to_replace=r'', value=r'None')
+    data_for_repeat = data_for_repeat[data_for_repeat.Noise.isin(order)]
 
-    fig = plt.figure(figsize=(11.69, 8.27))
+    fig = plt.figure(figsize=(8.27, 8.27))
     my_dpi = 96
     sns.set(style='white')
-    # for i in np.unique(chipper_data.Noise):
-    #     data = chipper_data[chipper_data.Noise == i]
-    #     g = sns.regplot(x=data[var[0]], y=data[var[1]]*var[2], scatter_kws=dict(alpha=0))
+    sns.set_style("ticks")
+
     g = sns.scatterplot(x=data_for_repeat[1], y=data_for_repeat[2],
                         hue=data_for_repeat['Noise'], hue_order=order,
-                        palette=sns.color_palette("RdPu", 5))
+                        palette=sns.color_palette("RdPu", 5),
+                        linewidth=0.25,
+                        edgecolor='k')
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     x0, x1 = g.get_xlim()
     y0, y1 = g.get_ylim()
-    lims = [max(x0, y0), min(x1, y1)]
+    lims = [min(x0, y0), max(x1, y1)]
     g.plot(lims, lims, ':k')
 
-    # plt.savefig('PlotsForPaper/NicoleVSNicole/' + var[0] + '.pdf', type='pdf',
-    #             dpi=fig.dpi,
-    #             bbox_inches='tight', transparent=True)
-
-    plt.close()
-    # plt.show()
-
-
-"""
-Repeatability (using Megan Try 1 and Megan Try 2)
-"""
-
-data2 = chipper_data[chipper_data['User'] == 'Megan']
-
-for var in variables:
-    print(var[0])
-    data_for_repeat = data2.pivot(index='FileName', columns='Try',
-                                  values=var[0])
-    data_for_repeat = data_for_repeat.rename_axis('FileName').reset_index()
-    data_for_repeat['Noise'] = data_for_repeat.apply(lambda row:
-                                               ''.join(row.FileName.split('_')[
-                                                       4:]),
-                                                     axis=1)
-    data_for_repeat['Noise'].replace(inplace=True, to_replace=r'', value=r'None')
-
-    fig = plt.figure(figsize=(11.69, 8.27))
-    my_dpi = 96
-    sns.set(style='white')
-    # for i in np.unique(chipper_data.Noise):
-    #     data = chipper_data[chipper_data.Noise == i]
-    #     g = sns.regplot(x=data[var[0]], y=data[var[1]]*var[2], scatter_kws=dict(alpha=0))
-    g = sns.scatterplot(x=data_for_repeat[1], y=data_for_repeat[2])
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    x0, x1 = g.get_xlim()
-    y0, y1 = g.get_ylim()
-    lims = [max(x0, y0), min(x1, y1)]
-    g.plot(lims, lims, ':k')
-
-    plt.savefig('PlotsForPaper/MeganVSMegan/' + var[0] + '.pdf', type='pdf',
+    plt.savefig('PlotsForPaper/NicoleVSNicole_T13/' + var[0] + '.pdf',
+                type='pdf',
                 dpi=fig.dpi,
                 bbox_inches='tight', transparent=True)
 
     plt.close()
     # plt.show()
+
+#
+# """
+# Repeatability (using Megan Try 1 and Megan Try 2)
+# """
+#
+# data2 = chipper_data[chipper_data['User'] == 'Megan']
+#
+# for var in variables:
+#     print(var[0])
+#     data_for_repeat = data2.pivot(index='FileName', columns='Try',
+#                                   values=var[0])
+#     data_for_repeat = data_for_repeat.rename_axis('FileName').reset_index()
+#     data_for_repeat['Noise'] = data_for_repeat.apply(lambda row:
+#                                                ''.join(row.FileName.split('_')[
+#                                                        4:]),
+#                                                      axis=1)
+#     data_for_repeat['Noise'].replace(inplace=True, to_replace=r'', value=r'None')
+#     data_for_repeat = data_for_repeat[data_for_repeat.Noise.isin(order)]
+#
+#     fig = plt.figure(figsize=(11.69, 8.27))
+#     my_dpi = 96
+#     sns.set(style='white')
+#     sns.set_style("ticks")
+#
+#     g = sns.scatterplot(x=data_for_repeat[1], y=data_for_repeat[2],
+#                         hue=data_for_repeat['Noise'], hue_order=order,
+#                         palette=sns.color_palette("RdPu", 5),
+#                         linewidth=0.25,
+#                         edgecolor='k')
+#     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+#     x0, x1 = g.get_xlim()
+#     y0, y1 = g.get_ylim()
+#     lims = [min(x0, y0), max(x1, y1)]
+#     g.plot(lims, lims, ':k')
+#
+#     # plt.savefig('PlotsForPaper/MeganVSMegan/' + var[0] + '.pdf', type='pdf',
+#     #             dpi=fig.dpi,
+#     #             bbox_inches='tight', transparent=True)
+#
+#     plt.close()
+#     # plt.show()
