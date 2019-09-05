@@ -158,7 +158,9 @@ are not getting good data!
     *Careful not to hit submit or toss twice in a row. If you think the 
     button did not work, it might just be loading the next file. The 
     **buttons should turn blue if they have been selected** and will be gray
-     again when the new image is loaded.*
+     again when the new image is loaded. However, if you do accidentally 
+     skip or toss a song you can use the “Back” button to return to the 
+     previous song.*  
 
 Once you have parsed all the files in a folder, there will be a new folder 
 called *SegSyllsOutput_YYYYMMDD_THHMMSS*. For every WAV file that was 
