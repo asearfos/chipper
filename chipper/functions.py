@@ -13,6 +13,7 @@ def load_bout_data(f_name):
     """
     Load sonogram and syllable marks (onsets and offsets).
     """
+    print(f_name)
     try:
         song_data = utils.load_gz_p(f_name)
     except:
