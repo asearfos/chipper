@@ -23,7 +23,7 @@
 Option 1: Download Chipper
 
 1. Download the version of Chipper for your operating system (found under 
-releases at [https://github.com/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper)). 
+releases at [https://github.com/CreanzaLab/chipper/releases](https://github.com/CreanzaLab/chipper/releases)). 
 2. Unzip the folder.
 3. Navigate to and double click the executable named chipper.exe, which may 
 have
