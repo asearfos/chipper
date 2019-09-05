@@ -2,23 +2,23 @@
 
 **Table of Contents**
 
- 1.  How to Install
+ 1.  [How to Install](#how-to-install)
 
- 2.  Overview
+ 2.  [Overview](#overview)
 
- 3.  Syllable Segmentation
+ 3.  [Syllable Segmentation](#syllable-segmentation)
 
- 4.  Example of Syllable Segmentation
+ 4.  [Example of Syllable Segmentation](#example-of-syllable-segmentation)
 
- 5.  Noise Threshold Widget
+ 5.  [Noise Threshold Widget](#noise-threshold-widget)
 
- 6.  Syllable Similarity Threshold Widget
+ 6.  [Syllable Similarity Threshold Widget](#syllable-similarity-threshold-widget)
 
- 7.  Running Analysis
+ 7.  [Running Analysis](#running-analysis)
 
- 8.  Analysis Output
+ 8.  [Analysis Output](#analysis-output)
 
-**How to Install**
+### How to Install
 
 Option 1: Download Chipper
 
@@ -63,7 +63,7 @@ Option 2: Install from source (primarily for developers)
 For full code visit
 [https://github.com/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper).
 
-**Overview**
+### Overview
 
 The Chipper landing page allows you to choose whether you want to
 
@@ -95,7 +95,7 @@ determine syntax). We suggest first using the noise and syllable similarity
 threshold widgets for best results; after finishing each widget, the new 
 parameter for analysis will be populated.
 
-**Syllable Segmentation**
+### Syllable Segmentation
 
 Starting Syllable Segmentation will first take you to a file explorer to
 choose either a single WAV file or folder of WAV files. The length of
@@ -224,7 +224,7 @@ were submitted will be present in the output folder. To run the next
 steps, only gzips are needed. The text outputs are solely for the user's
 information.*
 
-**Example of Syllable Segmentation**
+### Example of Syllable Segmentation
 
  1. Select "Syllable Segmentation".
  ![syllable segmentation](static/syllable_segmentation_circled.png 
@@ -309,7 +309,7 @@ human-readable text file outputs as well as the gzips for each submitted WAV
     
     ![output files](static/output_files_circled.png "output files")
 
-**Noise Threshold Widget**
+### Noise Threshold Widget
 
 The purpose of the widget is to help you determine a common size threshold 
 for noise for all of your data. Since audio noise often appears on a 
@@ -353,7 +353,7 @@ threshold.
     ![changed noise](static/changed_noise_threshold.png "changed 
     noise")
 
-**Syllable Similarity Widget**
+### Syllable Similarity Threshold Widget
 
 The purpose of the widget is to help you determine a common threshold
 for syllable similarity for all of your data. When syllables are compared 
@@ -399,7 +399,7 @@ threshold.
     ![changed syllsim](static/changed_syllsim_threshold.png 
     "changed syllsim")
 
-**Running Analysis**
+### Running Analysis
 
 The Noise Threshold and Syllable Similarity Threshold will be used
 in Song Analysis. If you have not used the two widgets to determine
@@ -442,7 +442,7 @@ from field recordings unless the user is confident that syllables are parsed
  correctly into notes. The user can always visualize the notes using the 
  Noise Threshold widget.     
 
-**Analysis Output**
+### Analysis Output
 
 Together the *AnalysisOutput\_YYYYMMDD\_THHMMSS\_songsylls* and 
 *AnalysisOutput\_YYYYMMDD\_THHMMSS\_notes* files include
