@@ -457,8 +457,8 @@ all note-related and frequency-related calculations will be affected by this
 
 Syllable Similarity Threshold is used to determine if two syllables are
 considered to be repetitions the same syllable. This affects syllable pattern
-(syntax) and any measures associated with it---sequential repetition,
-syllable stereotypy, and mean and standard deviation of syllable
+(syntax) and any measures associated with it---syllable pattern, sequential 
+repetition, syllable stereotypy, and mean and standard deviation of syllable
 stereotypy.
 
 All Syllable calculations are conducted on the signal between onsets and
@@ -468,7 +468,7 @@ For definitions of each of the measurements see the table below; for
 more detailed information see
 [https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py](https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py).
   
-  | term | calculation |
+  | Term | Calculation |
   |---|---|
   | avg\_note\_duration(ms) | mean(time of note beginning − time of note ending) |
   | avg\_notes\_freq\_modulation(Hz) | mean(maximum frequency − minimum frequency for each note) |
