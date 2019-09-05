@@ -490,7 +490,7 @@ more detailed information see
   | mean\_syllable\_stereotypy | mean(stereotypy values for each repeated syllable) <BR>\[see syllable_stereotypy definition below] |
   | min\_notes\_freq(Hz) | min(minimum frequency of each note) |
   | min\_sylls\_freq(Hz) | min(minimum frequency of each syllable) |
-  | note\_size\_threshold | provided by user (Noise Threshold) \[see Noise Threshold Widget] <BR><BR>Note: Clusters of signal (4-connected elements of the spectrogram) that have an area larger than this threshold are considered notes, and those less than or equal to this threshold are considered noise and removed from analysis. |
+  | noise\_threshold | provided by user (Noise Threshold) \[see Noise Threshold Widget] <BR><BR>Note: Clusters of signal (4-connected elements of the spectrogram) that have an area larger than this threshold are considered notes, and those less than or equal to this threshold are considered noise and removed from analysis. |
   | num\_notes | number of 4-connected elements of the spectrogram with an area greater than the noise threshold |
   | num\_notes\_per\_syll | (total number of notes)/(total number of syllables) |
   | num\_syllable\_per\_bout\_duration(1/ms) | (number of syllables)/(song duration) |
