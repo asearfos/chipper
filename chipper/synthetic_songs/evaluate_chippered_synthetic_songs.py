@@ -34,19 +34,23 @@ for f in all_csv_files:
         real_values = real_values.append(data, ignore_index=True)
 
 real_values = real_values[['Track', 'Amplitude Scales', 'Starting Frequencies',
-                           'Ending Frequencies', 'Syllable Durations', 'Silence Durations']]
+                           'Ending Frequencies', 'Syllable Durations',
+                           'Silence Durations']]
 real_values.columns = [c.replace(' ', '_') for c in real_values.columns]
 real_values['Track'] = real_values.apply(lambda row:
-                                         row.Track.split('\\')[-1].split('.csv')[0],
+                                         row.Track.split('\\')[-1].split(
+                                             '.csv')[0],
                                          axis=1)
 
 # print(sum(real_values.Syllable_Durations[0]))
 
 real_values['song_duration'] = real_values.apply(lambda row:
-                                                 sum(row.Syllable_Durations) + sum(row.Silence_Durations),
+                                                 sum(row.Syllable_Durations)
+                                                 + sum(row.Silence_Durations),
                                                  axis=1)
 real_values['avg_syll_dur'] = real_values.apply(lambda row:
-                                                np.mean(row.Syllable_Durations),
+                                                np.mean(
+                                                    row.Syllable_Durations),
                                                 axis=1)
 real_values['avg_sil_dur'] = real_values.apply(lambda row:
                                                np.mean(row.Silence_Durations),
@@ -81,9 +85,9 @@ real_values['min_syll_freq'] = real_values.apply(lambda row:
 Read in Chipper outputs
 """
 
-nicole_data = pd.read_csv("ChipperedByNicole_v20190528\AnalysisOutput_20190627_T184003.txt", sep="\t")
+nicole_data = pd.read_csv("ChipperedByNicole_Try2ForPaper\AnalysisOutput_20190902_T135312_songsylls.txt", sep="\t")
 nicole_data['User'] = 'Nicole'
-megan_data = pd.read_csv("ChipperedByMegan_v20190528\AnalysisOutput_20190627_T191243.txt", sep="\t")
+megan_data = pd.read_csv("ChipperedByMegan_Try1ForPaper_basedOn20190528\AnalysisOutput_20190902_T150653_songsylls.txt", sep="\t")
 megan_data['User'] = 'Megan'
 
 chipper_data = pd.concat([nicole_data, megan_data], ignore_index=True)
@@ -117,7 +121,10 @@ variables = [['bout_duration(ms)', 'song_duration', 1000],
              ['min_sylls_freq(Hz)', 'min_syll_freq', 1]
              ]
 
-order = ['None', 'WhiteNoise001', 'S4A0662220180409161600clip', 'WhiteNoise01',
+order = ['None',
+         'WhiteNoise001',
+         'S4A0662220180409161600clip',
+         'WhiteNoise01',
          'S4A0662220180722170100clip']
 
 """"
@@ -125,8 +132,8 @@ Plot real values vs chipper measurements
 """
 # merge tables using Name (from real values) and Track (from chipper data)
 combined_data = chipper_data.merge(real_values, how='left', on='Track')
-combined_data = combined_data[combined_data.Noise != 'WhiteNoise0001']
-combined_data = combined_data[combined_data.Noise != 'WhiteNoise1']
+# combined_data = combined_data[combined_data.Noise != 'WhiteNoise0001']
+# combined_data = combined_data[combined_data.Noise != 'WhiteNoise1']
 
 for var in variables:
     fig = plt.figure(figsize=(11.69, 8.27))
@@ -137,7 +144,8 @@ for var in variables:
     #     g = sns.regplot(x=data[var[0]], y=data[var[1]]*var[2], scatter_kws=dict(alpha=0))
     g = sns.scatterplot(x=combined_data[var[0]], y=combined_data[var[1]]*var[2],
                         hue=combined_data['Noise'], hue_order=order,
-                        style=combined_data['User'], markers=['|', '_'], palette=sns.color_palette("RdPu", 5))
+                        style=combined_data['User'], markers=['|', '_'],
+                        palette=sns.color_palette("RdPu", 7))
     # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     x0, x1 = g.get_xlim()
     y0, y1 = g.get_ylim()
@@ -171,8 +179,9 @@ for var in variables:
     lims = [max(x0, y0), min(x1, y1)]
     g.plot(lims, lims, ':k')
 
-    # plt.savefig('FiguresForCommitteeMtg/' + var[0] + '.pdf', type='pdf', dpi=fig.dpi,
-    #             bbox_inches='tight', transparent=True)
+    plt.savefig('PlotsForPaper/RealVsNoNoise/' + var[0] + '.pdf',
+                type='pdf', dpi=fig.dpi,
+                bbox_inches='tight', transparent=True)
 
     plt.close()
     # plt.show()
@@ -309,9 +318,11 @@ for col in accuracy_vars:
                         style=combined_no_noise['User'], markers=['|', '_'], color='k')
     # g = sns.regplot(x=no_vs_real[var[1]]*var[2], y=no_vs_real[var[0]], scatter_kws=dict(alpha=0), color='k')
     # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.xscale('log')
-    # plt.savefig('FiguresOfSNR/FiguresOfSNR_xlog/' + col + '.pdf', type='pdf', dpi=fig.dpi,
-    #             bbox_inches='tight', transparent=True)
+    # plt.xscale('log')
+    plt.savefig('PlotsForPaper/FiguresOfSNR/' + col +
+                '.pdf', type='pdf', dpi=fig.dpi,
+                bbox_inches='tight', transparent=True)
 
-    # plt.close()
-    plt.show()
+    plt.close()
+    # plt.show()
+    print(combined_no_noise.shape)
