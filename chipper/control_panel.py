@@ -61,11 +61,6 @@ class ControlPanel(Screen):
         self.files = None
         self.output_path = None
 
-        # storage for parameters
-        self.save_parameters_all = {}
-        self.save_syllables_all = {}
-        self.save_tossed = {}
-        self.save_conversions_all = {}
         # attributes for song that is being worked on
         self.i = None
         self.song = None
@@ -268,6 +263,12 @@ class ControlPanel(Screen):
     # called in kv just before entering control panel screen (on_pre_enter)
     def setup(self):
         Logger.info("Setting up")
+        # storage for parameters
+        self.save_parameters_all = {}
+        self.save_syllables_all = {}
+        self.save_tossed = {}
+        self.save_conversions_all = {}
+
         self.i = 0
         self.files = self.parent.files
         self.file_names = self.parent.file_names
