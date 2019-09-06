@@ -157,48 +157,6 @@ for var in variables:
     # plt.show()
 
 
-# """"
-# Plot no noise vs other chipper measurements
-# """
-# no_noise = combined_data[combined_data.Noise == 'None']
-# for v in variables:
-#     no_noise[v[1]] = no_noise[v[0]]  # put no noise values in place of real values
-#
-# no_noise = no_noise[['Track', 'Amplitude_Scales', 'Starting_Frequencies',
-#                      'Ending_Frequencies', 'Syllable_Durations', 'Silence_Durations',
-#                      'song_duration', 'avg_syll_dur', 'avg_sil_dur', 'num_sylls',
-#                      'avg_syll_freq_mod', 'avg_syll_max_freq', 'avg_syll_min_freq',
-#                      'max_syll_freq', 'min_syll_freq']]
-#
-# no_noise_as_real = chipper_data.merge(no_noise, how='left', on='Track')
-# no_noise_as_real = no_noise_as_real[no_noise_as_real.Noise != 'WhiteNoise0001']
-# no_noise_as_real = no_noise_as_real[no_noise_as_real.Noise != 'WhiteNoise1']
-# no_noise_as_real = no_noise_as_real[no_noise_as_real.Noise != 'None']
-# print(no_noise_as_real.columns)
-# print(no_noise_as_real[['avg_syllable_duration(ms)']])
-# # quit()
-#
-# for var in variables:
-#     fig = plt.figure(figsize=(11.69, 8.27))
-#     my_dpi = 96
-#     sns.set(style='white')
-#     sns.set_style("ticks")
-#     g = sns.scatterplot(x=no_noise_as_real['avg_syll_dur'], y=no_noise_as_real['avg_syllable_duration(ms)'],
-#                         hue=no_noise_as_real['Noise'], hue_order=order[1:],
-#                         style=no_noise_as_real['User'], markers=['|', '_'], palette=sns.color_palette("RdPu", 4))
-#     # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-#     x0, x1 = g.get_xlim()
-#     y0, y1 = g.get_ylim()
-#     lims = [max(x0, y0), min(x1, y1)]
-#     g.plot(lims, lims, ':k')
-#
-#     # plt.savefig('FiguresForCommitteeMtg/' + var[0] + '.pdf', type='pdf', dpi=fig.dpi,
-#     #             bbox_inches='tight', transparent=True)
-#
-#     # plt.close()
-#     # plt.show()
-
-
 """
 Plot SNR versus accuracy compared to no noise
 """
