@@ -195,25 +195,25 @@ In addition, four human-readable text files are output once the last file is
      | | |
      |---|---|
      | FileName | name of WAV file |
-     | FrequencyFilter | [high-pass, low-pass] filter in number of pixels from the bottom of the spectrogram |
-     | BoutRange | [left crop, right crop] in pixels from teh left of the spectrogram |
+     | FrequencyFilter | [high-pass, low-pass] in number of matrix elements from the bottom of the spectrogram |
+     | BoutRange | [left crop, right crop] in number of matrix elements from the left of the spectrogram |
      | PercentSignalKept | top percent of signal kept |
-     | MinSilenceDuration | number of pixels |
-     | MinSyllableDuration | number of pixels |
+     | MinSilenceDuration | number of spectrogram matrix elements |
+     | MinSyllableDuration | number of spectrogram matrix elements |
      | Normalized | 'yes' or 'no' indicating whether the song was normalized or not |
 
 2. *segmentedSyllables\_syllables\_all* with a list of onsets and a list of 
-offsets in pixels from the left of the spectrogram.  
+offsets in number of matrix elements from the left of the spectrogram.  
 
 3. *segmentedSyllables\_conversions\_all* includes the conversions necessary
- to change the parameters from pixels into milliseconds or Hz for each WAV 
- file processed.  
+ to change the parameters from spectrogram matrix elements into milliseconds or
+  Hz for each WAV file processed.  
  
      | | |
      |---|---|
      | FileName | name of WAV file |
-     | timeAxisConversion | number of milliseconds per pixel|
-     | BoutRange | number of Hz per pixel|
+     | timeAxisConversion | number of milliseconds per matrix element|
+     | BoutRange | number of Hz per matrix element|
 
 4. *segmentedSyllables\_tossed* with a list of the files that were tossed. 
 There should be no gzips provided for the files in this list.  
@@ -342,8 +342,8 @@ Noise will not be considered in the analysis calculations.
 Below is the example song with the *default* noise threshold. In this case, 
 there only looks to be one syllable with signal that is incorrectly labeled 
 as noise. This signal (circled below) is shown in white, indicating it has 
-few enough pixels to be considered noise. If we reduce the threshold, 
-smaller notes will be considered signal instead of noise.       
+few enough spectrogram matrix elements to be considered noise. If we reduce 
+the threshold, smaller notes will be considered signal instead of noise.       
     ![default noise](static/default_noise_threshold_circled.png "default 
     noise")
 

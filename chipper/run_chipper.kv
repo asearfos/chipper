@@ -346,7 +346,7 @@
                 Label:
                     id: publication
                     markup: True
-                    text: 'Searfoss, Pino, Creanza 2019 [i](Under Review)[/i]'
+                    text: 'Searfoss, Pino, Creanza 2019'
                 Label:
                     id: art_by
                     markup: True
@@ -431,7 +431,7 @@
                     size_hint_y: 0.3
                 RadioLabel:
                     id: determine_noise_thresh_label
-                    text: 'Determine Noise Threshold (pixels)'
+                    text: 'Determine Noise Threshold'
                     halign: 'left'
                     valign: 'center'
                     text_size: determine_noise_thresh_label.width, None
@@ -447,7 +447,7 @@
                     size_hint_y: 0.3
                 RadioLabel:
                     id: determine_syllsim_thresh_label
-                    text: 'Determine Syllable Similarity Threshold (%)'
+                    text: 'Determine Syllable Similarity Threshold'
                     halign: 'left'
                     valign: 'center'
                     text_size: determine_syllsim_thresh_label.width, None
@@ -551,7 +551,7 @@
                         size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
-                        text: 'Noise Threshold (pixels)'
+                        text: 'Noise Threshold (# of matrix elements)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -569,7 +569,7 @@
                         size_hint: 0.18, 0.1
                         disabled: False if analyze.active else True
                     Label:
-                        text: '% Syllable Similarity (> are same syllable)'
+                        text: 'Syllable Similarity Threshold (%)'
                         halign: 'left'
                         valign: 'center'
                         text_size: self.size
@@ -911,7 +911,7 @@
                 size_hint: 0.5, 0.1
 
             Label:
-                text: 'Threshold for Noise (pixels)'
+                text: 'Threshold for Noise (areas greater than this number of spectrogram matrix elements are considered signal)'
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
@@ -1007,7 +1007,7 @@
                 padding: [6, ( self.height - self.line_height )/2]
                 size_hint_x: 0.25
             Label:
-                text: ' elements of unscaled spectrogram as threshold for noise.'
+                text: 'connected spectrogram matrix elements as threshold for noise.'
                 size_hint_x: 0.6
                 text_size: self.size
                 halign: 'left'
@@ -1121,7 +1121,7 @@
                 size_hint: 0.5, 0.1
 
             Label:
-                text: 'Threshold for Syllable Similarity (%)'
+                text: 'Threshold for Syllable Similarity (%) (pairs of syllables above this threshold are considered repetitions of the same syllable)'
                 text_size: self.size
                 halign: 'left'
                 valign: 'center'
@@ -1217,7 +1217,7 @@
                 min_value: 0
                 max_value: 100
                 padding: [6, ( self.height - self.line_height )/2]
-                size_hint_x: 0.1
+                size_hint_x: 0.25
             Label:
                 text: ' % as threshold for syllable similarity.'
                 size_hint_x: 0.6

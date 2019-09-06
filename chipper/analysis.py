@@ -354,7 +354,7 @@ def calc_syllable_stereotypy(sonogram_corr, syllable_pattern_checked):
 def get_sonogram_correlation(sonogram, onsets, offsets, syll_duration,
                              corr_thresh=50.0):
     # change labels to be ones (so matrices are all zeros and ones for correlation measures)
-    sonogram = sonogram.copy()  # TODO had to write this in because otherwise it overwrites self.threshold_sonogram which is passed in as sonogram
+    sonogram = sonogram.copy()
     sonogram[sonogram > 0] = 1 
 
     n_offset = len(offsets)

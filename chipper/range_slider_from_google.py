@@ -7,8 +7,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import (NumericProperty, AliasProperty, OptionProperty,
                              ReferenceListProperty, BoundedNumericProperty, ListProperty)
 
-# TODO: fix the slider so that value1 cannot be greater than value 2 (happens when one is moved after both being the same value)
-
 Builder.load_string('''
 
 <RangeSlider>:

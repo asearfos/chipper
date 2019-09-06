@@ -110,7 +110,6 @@ class Sonogram(object):
                         id_min_sil=None, id_min_syl=None):
 
         if filter_boundary is not None:
-            # TODO: this is current fix for range slider,
             # could fix in range_slider_from_google.py instead of here
             # have to check list from range sliders to make sure the first one
             # is less than the second

@@ -28,8 +28,6 @@ from kivy.logger import Logger
 Logger.disabled = False
 
 
-# TODO improve how self variables are being used; some have the same variable
-#  but not self as function inputs....
 class ControlPanel(Screen):
     # these connect the landing page user input to the control panel
     find_gzips = BooleanProperty()
@@ -184,7 +182,6 @@ class ControlPanel(Screen):
         self.plot_binary_canvas.draw()
 
     def add_onsets(self):
-        # TODO: might be able to just use bisect.insort(list, new number)
         # https://stackoverflow.com/questions/29408661/add-elements-into-a
         # -sorted-array-in-ascending-order
         if self.graph_location is None:
@@ -273,10 +270,6 @@ class ControlPanel(Screen):
         self.files = self.parent.files
         self.file_names = self.parent.file_names
         # these are the dictionaries that are added to with each song
-
-        # ToDo: add "_reChipper" to end of output_path if previous .gzips used.
-        # self.output_path = self.parent.directory + "SegSyllsOutput_" + \
-        #                    time.strftime("%Y%m%d_T%H%M%S")  # + "_reChipper"
 
         self.output_path = os.path.join(
             self.parent.directory,
@@ -414,8 +407,7 @@ class ControlPanel(Screen):
         )
 
         # initialize the matplotlib figures/axes (no data yet)
-        # TODO: decide if rows and cols should be self variables instead
-        #  of passing into functions
+
         # ImageSonogram is its own class and top_image is an instance of it
         # (defined in kv) - had trouble doing this for the bottom image
         Logger.info("Creating initial sonogram")

@@ -1,7 +1,7 @@
 text = 'WOW! That is a lot of colors! \n\n' \
        'Quick Reference: noise is in white, notes are in color.\n\n' \
        'The colors are here to help you distinguish separate notes. ' \
-       'A note is considered to be a set of connected elements in the binary sonogram ' \
+       'A note is considered to be a set of connected matrix elements in the binary spectrogram ' \
        'having an area greater than the noise threshold. ' \
        'So, if two notes are very close to one another and the same color, they are most likely one note. ' \
        'This may be due to the limits of screen resolution.  If the area of ' \
