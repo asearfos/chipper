@@ -114,8 +114,8 @@ can select to either toss or process the file; this is a safety to
 ensure the user knows they may experience a lag or even crash Chipper if
 the file is much larger than recommended and has not been previously
 parsed. If you are consistently parsing files larger than this with no 
-issue and want to change this threshold, see line 344 of control\_panel.py 
-(and line 267 in run\_chipper.kv for popup message).*
+issue and want to change this threshold, see line 338 of control\_panel.py 
+(and line 275 in run\_chipper.kv for popup message).*
 
 Each file will load using the default parameters from the landing page to 
 automatically parse the song. Next adjust the sliders to finalize your 
