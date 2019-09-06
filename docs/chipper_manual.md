@@ -22,8 +22,7 @@
 
 Option 1: Download Chipper
 
-1. Download the version of Chipper for your operating system (found under 
-releases at [https://github.com/CreanzaLab/chipper/releases](https://github.com/CreanzaLab/chipper/releases)). 
+1. [Download](https://github.com/CreanzaLab/chipper/releases) the correct version of Chipper for your operating system.
 2. Unzip the folder.
 3. Navigate to and double click the executable named chipper.exe, which may 
 have
@@ -465,8 +464,7 @@ All Syllable calculations are conducted on the signal between onsets and
 offsets (i.e. signal that occurs between syllables is not analyzed).
 
 For definitions of each of the measurements see the table below; for
-more detailed information see
-[https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py](https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py).
+more detailed information see [analysis.py](https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py).
   
   | Term | Calculation |
   |---|---|

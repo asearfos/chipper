@@ -10,8 +10,7 @@ GitHub. For associated publication see *Searfoss, Pino, Creanza 2019 (Under
 
 ### Download Chipper
 
-1. Download the version of Chipper for your operating system (found under 
-releases at [https://github.com/CreanzaLab/chipper/releases](https://github.com/CreanzaLab/chipper/releases)). 
+1. [Download](https://github.com/CreanzaLab/chipper/releases) the correct version of Chipper for your operating system.
 2. Unzip the folder.
 3. Navigate to and double click the executable named chipper.exe, which may 
 have
