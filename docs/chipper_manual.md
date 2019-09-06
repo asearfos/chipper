@@ -43,21 +43,21 @@ Option 2: Install from source (primarily for developers)
  2.  From within a terminal or command prompt window we will install most 
  packages with conda
 
-    $ conda create -n chipper\_env python=3.7\
-    $ condapip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew\
-    $ kivy.deps.gstreamer kivy.deps.glew\_dev kivy.deps.sdl2\_dev\
-    $ kivy.deps.gstreamer\_dev
+    $ conda create -n chipper_env python=3.7
+    $ condapip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew
+    $ kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev
+    $ kivy.deps.gstreamer_dev
 
  3.  Additional steps for Windows users:
 
-    $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew\_dev kivy.deps.sdl2\_dev kivy.deps.gstreamer\_dev
+    $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
 
  4.  Install kivy packages
 
-    $ garden install \--kivy graph\
-    $ garden install \--kivy filebrowser\
-    $ garden install \--kivy matplotlib\
-    $ garden install \--kivy progressspinner
+    $ garden install --kivy graph
+    $ garden install --kivy filebrowser
+    $ garden install --kivy matplotlib
+    $ garden install --kivy progressspinner
 
 For full code visit
 [https://github.com/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper).
