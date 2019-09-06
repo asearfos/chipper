@@ -30,10 +30,8 @@ class NoiseSummaryPage(Screen):
             # eliminate the extra bin at the end.
             if max(noise_thresholds) - min(noise_thresholds) >= 1000:
                 bins = np.arange(min(noise_thresholds), max(noise_thresholds) + 150, 100) - 50
-                print('>= 1000', bins)
             elif max(noise_thresholds) - min(noise_thresholds) >= 250:
                 bins = np.arange(min(noise_thresholds), max(noise_thresholds) + 15, 10) - 5
-                print('>= 500', bins)
             else:
                 bins = np.arange(min(noise_thresholds), max(noise_thresholds) + 1.5, 1) - 0.5
             self.ax4.hist(x=noise_thresholds, bins=bins, color=(0.196, 0.643, 0.80), alpha=0.7)

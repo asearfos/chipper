@@ -238,8 +238,8 @@ accuracy_vars = ['avg_silence_duration_acc', 'avg_syllable_duration_acc',
                  'avg_sylls_upper_freq_acc', 'bout_duration_acc',
                  'max_sylls_freq_acc', 'min_sylls_freq_acc', 'num_syllables_acc']
 
-with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-    print(combined_no_noise[combined_no_noise['Track'] == 'SynSongs_amp100_30p_3'])
+# with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+#     print(combined_no_noise[combined_no_noise['Track'] == 'SynSongs_amp100_30p_3'])
 
 for col in accuracy_vars:
     fig = plt.figure(figsize=(8.27, 8.27))

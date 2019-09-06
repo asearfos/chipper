@@ -134,10 +134,8 @@ for i in range(0, 50):
     wavform = all_signal
 
     if len(time) > len(wavform):
-        # print('t > y')
         wavform = np.pad(wavform, (0, len(time)-len(wavform)), mode='constant', constant_values=0)
     elif len(time) < len(wavform):
-        # print('t < y', len(y)-len(t))
         time = np.pad(wavform, (0, len(wavform)-len(time)), mode='constant', constant_values=0)
 
     time = np.pad(time, (10000, 10000), mode='constant', constant_values=0)
