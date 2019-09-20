@@ -24,9 +24,8 @@ Option 1: Download Chipper
 
 1. [Download](https://github.com/CreanzaLab/chipper/releases) the correct version of Chipper for your operating system.
 2. Unzip the folder.
-3. Navigate to and double click the executable named chipper.exe, which may 
-have
-a bird as an icon. 
+3. Navigate to and double click the executable/application named 
+run_chipper, which may have a bird as an icon.  
 4. You will now see a terminal window open, and soon after, the
 Chipper landing page will load. You are ready to go!
 
@@ -230,12 +229,12 @@ information.*
     "syllable segmentation")
 
  2. Navigate to and select a WAV file or folder of WAV files to parse. 
- Double click ..\\ if you need to go back up a folder. In this case we are 
- using the second bout from the Xeno Canto recording 381923. (XC381923 
+ Double click ..\ (for PC) or ../ (for Mac or Linux) to move back up a folder.
+  Here we use the second bout from the Xeno Canto recording 381923. (XC381923 
  contributed by Lucas, Creative Commons Attribution-NonCommercial-ShareAlike
   4.0, [https://www.xeno-canto.org/381923](https://www.xeno-canto.org/381923)).
    ![navigate to folder](static/navigate_to_folder_circled.png 
-   "navigate to folder")
+"navigate to folder")
 
  3. Click "Begin Segmentation".
 
@@ -400,10 +399,16 @@ threshold.
 
 ### Running Analysis
 
-The Noise Threshold and Syllable Similarity Threshold will be used
-in Song Analysis. If you have not used the two widgets to determine
-appropriate thresholds, we recommend doing so before running Song Analysis.
-
+The Noise Threshold and Syllable Similarity Threshold specified on the 
+landing page will be used in Song Analysis. If you have not used the two 
+widgets to determine appropriate thresholds, we recommend doing so before 
+running Song Analysis. Users should be cautious of any note and syntax 
+measurements made in analysis without first finding appropriate thresholds 
+for their data. Similarly, if the user is not concerned with note and syntax
+ information and they are confident they have removed all noise that would 
+ artificially raise or lower the frequency measurements, these thresholds 
+ can be lowered for analysis.
+ 
 Starting Song Analysis will first take you to a file explorer to choose
 a folder of gzip outputs from Syllable Segmentation.
 
