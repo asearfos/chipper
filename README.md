@@ -11,12 +11,31 @@ GitHub. For associated publication see *Searfoss, Pino, Creanza 2019 (Under
 ### Download Chipper
 
 1. [Download](https://github.com/CreanzaLab/chipper/releases) the correct version of Chipper for your operating system.
-2. Unzip the folder.
-3. Navigate to and double click the executable named chipper.exe, which may 
-have
-a bird as an icon. 
-4. You will now see a terminal window open, and soon after, the
-Chipper landing page will load. You are ready to go!
+2. Unzip the folder, extracting all files.
+3. *Windows:* Navigate into the start_chipper folder and double click the 
+Application file (.exe) named start_chipper, which may have a bird as an 
+icon. The first time you try to open the file, you may receive the message 
+"Windows Defender SmartScreen prevented an 
+unrecognized app from starting. Running this app might put your PC at risk."
+ Click "More info" and then select "Run anyway". You will now see a terminal
+  window open.<br/>  
+
+    *Mac:* Navigate into the start_chipper folder and double click the Unix 
+    executable file named start_chipper. The first time you 
+    try to open the file, you may receive the message "start_chipper can't 
+    be opened because it is from an unidentified developer". If so, right 
+    click on the file and select "Open". Click "Open" again on the popup to 
+    confirm. You will now see a terminal window open.
+    
+    *Linux:* Open the terminal and type 
+    "/path/to/start_chipper/start_chipper" without quotes and replacing 
+    "/path/to" with the full file location. Hit enter.
+4. The Chipper landing page will soon open. Note, this can take some time to
+  load the first time. If it does not open, close the terminal and try opening 
+  the start_chipper file again. For best performance, we recommend 
+  using Chipper in full-screen mode, especially if you are working on a low 
+  resolution display. You are ready to go!
+
 
 ### Install from source
 
