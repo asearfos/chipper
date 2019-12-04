@@ -17,17 +17,38 @@
  7.  [Running Analysis](#running-analysis)
 
  8.  [Analysis Output](#analysis-output)
+ 
+ 9.  [Contributing or Customizing Chipper](#contributing-or-customizing-chipper)
 
 ### How to Install
 
 Option 1: Download Chipper
 
 1. [Download](https://github.com/CreanzaLab/chipper/releases) the correct version of Chipper for your operating system.
-2. Unzip the folder.
-3. Navigate to and double click the executable/application named 
-run_chipper, which may have a bird as an icon.  
-4. You will now see a terminal window open, and soon after, the
-Chipper landing page will load. You are ready to go!
+2. Unzip the folder, extracting all files.
+3. *Windows:* Navigate into the start_chipper folder and double click the 
+Application file (.exe) named start_chipper, which may have a bird as an 
+icon. The first time you try to open the file, you may receive the message 
+"Windows Defender SmartScreen prevented an 
+unrecognized app from starting. Running this app might put your PC at risk."
+ Click "More info" and then select "Run anyway". You will now see a terminal
+  window open.<br/>  
+
+    *Mac:* Navigate into the start_chipper folder and double click the Unix 
+    executable file named start_chipper. The first time you 
+    try to open the file, you may receive the message "start_chipper can't 
+    be opened because it is from an unidentified developer". If so, right 
+    click on the file and select "Open". Click "Open" again on the popup to 
+    confirm. You will now see a terminal window open.
+    
+    *Linux:* Open the terminal and type 
+    "/path/to/start_chipper/start_chipper" without quotes and replacing 
+    "/path/to" with the full file location. Hit enter.
+4. The Chipper landing page will soon open. Note, this can take some time to
+  load the first time. If it does not open, close the terminal and try opening 
+  the start_chipper file again. For best performance, we recommend 
+  using Chipper in full-screen mode, especially if you are working on a low 
+  resolution display. You are ready to go!
 
 Option 2: Install from source (primarily for developers)
 
@@ -101,11 +122,12 @@ the songs and the size of the files Chipper can handle depends greatly on
 your computing resources and screen size. We recommend songs between \~0.5s 
 and 10s long or files no larger than 3MB. Depending on the computing 
 resources, you may experience lag with files between 2-3MB. Thus, we 
-recommend choosing bouts of song to segment using another program such as 
-Audacity (audacity.sourceforge.net). Similarly, if a bout is very short, it 
-may appear stretched; you can always reduce this effect when selecting a 
-bout in Audacity by not cutting the bout too close or by adding time to the 
-beginning or end of the bout.
+recommend selecting bouts of song to segment using another program such as 
+[Audacity](https://www.audacityteam.org/) 
+or [monitoR](https://CRAN.R-project.org/package=monitoR). 
+Similarly, if a bout is very short, it may appear stretched; you can always 
+reduce this effect when selecting a bout in Audacity by not cutting the bout
+ too close or by adding time to the beginning or end of the bout.
 
 *Note: We have set a warning message for files over 3MB in which the user
 can select to either toss or process the file; this is a safety to
@@ -237,7 +259,6 @@ information.*
 "navigate to folder")
 
  3. Click "Begin Segmentation".
-
     ![begin segmentation](static/begin_segmentation_circled.png "begin 
     segmentation")
 
@@ -473,7 +494,7 @@ more detailed information see [analysis.py](https://github.com/CreanzaLab/chippe
   
   | Term | Calculation |
   |---|---|
-  | avg\_note\_duration(ms) | mean(time of note beginning − time of note ending) |
+  | avg\_note\_duration(ms) | mean(time of note ending − time of note beginning) |
   | avg\_notes\_freq\_modulation(Hz) | mean(maximum frequency − minimum frequency for each note) |
   | avg\_notes\_lower\_freq(Hz) | mean(minimum frequency of each note) |
   | avg\_notes\_upper\_freq(Hz) | mean(maximum frequency of each note) |
@@ -483,7 +504,7 @@ more detailed information see [analysis.py](https://github.com/CreanzaLab/chippe
   | avg\_sylls\_lower\_freq(Hz) | mean(minimum frequency of each syllable) |
   | avg\_sylls\_upper\_freq(Hz) | mean(maximum frequency of each syllable) |
   | bout\_duration(ms) | (time of last syllable offset − time of first syllable onset) |
-  | largest\_note\_duration(ms) | max(time of note beginning − time of note ending) |
+  | largest\_note\_duration(ms) | max(time of note ending − time of note beginning) |
   | largest\_notes\_freq\_modulation(Hz) | max(maximum frequency − minimum frequency for each note) |
   | largest\_silence\_duration(ms) | max(time of syllable onset − time of previous syllable offset) |
   | largest\_syllable\_duration(ms) | max(time of syllable offset − time of syllable onset) |
@@ -498,22 +519,40 @@ more detailed information see [analysis.py](https://github.com/CreanzaLab/chippe
   | num\_notes\_per\_syll | (total number of notes)/(total number of syllables) |
   | num\_syllable\_per\_bout\_duration(1/ms) | (number of syllables)/(song duration) |
   | num\_syllables | number of syllable onsets in a song |
-  | num\_syllables\_per\_num\_unique | (number of syllable onsets in a song)/(unique values in syllable pattern) |
+  | num\_syllables\_per\_num\_unique | (number of syllable onsets in a song)/(number of unique values in syllable pattern) |
   | num\_unique\_syllables | number of unique values in syllable pattern |
   | overall\_notes\_freq\_range(Hz) | max(maximum frequency of each note) − min(minimum frequency of each note) |
   | overall\_sylls\_freq\_range(Hz) | max(maximum frequency of each syllable) − min(minimum frequency of each syllable) |
-  | sequential\_repetition | number of syllables that are followed by the same syllable/(number of syllables - 1) |
-  | smallest\_note\_duration(ms) | min(time of note beginning − time of note ending) |
+  | sequential\_repetition | (number of syllables that are followed by the same syllable)/(number of syllables - 1) |
+  | smallest\_note\_duration(ms) | min(time of note ending − time of note beginning) |
   | smallest\_notes\_freq\_modulation(Hz) | min(maximum frequency − minimum frequency for each note) |
   | smallest\_silence\_duration(ms) | min(time of syllable onset − time of previous syllable offset) |
   | smallest\_syllable\_duration(ms) | min(time of syllable offset − time of syllable onset) |
   | smallest\_sylls\_freq\_modulation(Hz) | min(maximum frequency − minimum frequency for each syllable) |
-  | stdev\_note\_duration(ms) | standard deviation(time of note beginning − time of note ending) |
+  | stdev\_note\_duration(ms) | standard deviation(time of note ending − time of note beginning) |
   | stdev\_notes\_freq\_modulation(Hz) | standard deviation(maximum frequency − minimum frequency for each note) |
   | stdev\_silence\_duration(ms) | standard deviation(time of syllable onset − time of previous syllable offset) |
   | stdev\_syllable\_duration(ms) | standard deviation(time of syllable offset − time of syllable onset) |
   | stdev\_syllable\_stereotypy | standard deviation(stereotypy values for each repeated syllable) <BR>\[see syllable_stereotypy definition below] |
   | stdev\_sylls\_freq\_modulation(Hz) | standard deviation(maximum frequency − minimum frequency for each syllable) |
   | syll\_correlation\_threshold | provided by user (Syllable Similarity Threshold) \[see Syllable Similarity widget] <BR><BR>Note: The percent similarity between any pair of syllables is defined as maximum(cross-correlation between each pair of syllables)/maximum(autocorrelation of each of the compared syllables) × 100. If this percent similarity is greater than or equal to the syll\_correlation\_threshold, the two syllables are considered the same. |
-  | syllable\_pattern | syllable_pattern list of the syllables in the order that they are sung, where each unique syllable is assigned a number (i.e. the song syntax) |
+  | syllable\_pattern | list of the syllables in the order that they are sung, where each unique syllable (found sequentially) is assigned a number (i.e. the song syntax) \[see Syllable Similarity widget] |
   | syllable\_stereotypy | list of the mean(pairwise percent similarities) for each repeated syllable, where percent similarity is the maximum(cross-correlation between each pair of syllables)/maximum(autocorrelation of each of the compared syllables) × 100 |
+
+### Contributing or Customizing Chipper
+
+We created Chipper using open-source software so that the community can 
+contribute to improving and adding new functionality to Chipper.
+
+An easy place to start would be to adjust or add measurements 
+output from Chipper's analysis. You can do this by editing the 
+[analysis.py](https://github.com/CreanzaLab/chipper/blob/master/chipper/analysis.py) 
+script. All information from segmentation and threshold determination have 
+been added as attributes of the Song class and can be used for additional 
+calculations. 
+  
+If you would like to contribute your changes to Chipper so others can also 
+benefit, please submit a pull request to [github/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper). 
+
+If you find any bugs or would like to suggest changes or improvements to 
+Chipper, please create a new issue at [github/CreanzaLab/chipper/issues](https://github.com/CreanzaLab/chipper/issues).
