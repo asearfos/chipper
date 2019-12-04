@@ -22,12 +22,10 @@ basename = 'SynSongs_amp100_30p'
 noise = ['',
          '_S4A06622_20180409_161600_clip',
          '_S4A06622_20180722_170100_clip',
-         '_WhiteNoise_0001',
          '_WhiteNoise_001',
-         '_WhiteNoise_01',
-         '_WhiteNoise_1']
+         '_WhiteNoise_01']
 
-sample = 'SynSongs_amp100_30p_1'
+sample = 'SynSongs_amp100_30p_3'
 
 for n in noise:
     song_file = basename + n + '/' + sample + n + '.wav'
@@ -51,7 +49,9 @@ for n in noise:
     ax.get_yaxis().set_major_formatter(plt.FuncFormatter(
             lambda x, p: "%.0f" % (x*freqAxis_conversion/1000)))
     plt.tick_params(labelsize=14)
-    plt.savefig("C:/Users/abiga\Box Sync\Abigail_Nicole\ChipperPaper\SyntheticSongs\SynSongs\SpectrogramsOfSynSongs\Ex2_SynSongs_amp100_30p_1/" +
+    plt.savefig("C:/Users/abiga\Box "
+                "Sync\Abigail_Nicole\ChipperPaper\SyntheticSongs\SynSongs"
+                "\SpectrogramsOfSynSongs\Ex1_SynSongs_amp100_30p_3/" +
                 sample + n + '_sonogram' + '.pdf', type='pdf',
                 dpi=fig.dpi, bbox_inches='tight',
                 transparent=True)

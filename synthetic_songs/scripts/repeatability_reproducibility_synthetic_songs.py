@@ -22,7 +22,7 @@ nicole_data_try1['User'] = 'Nicole'
 nicole_data_try1['Try'] = 1
 
 nicole_data_try2 = pd.read_csv(
-    "ChipperedByNicole_Try3ForPaper\AnalysisOutput_20190903_T215612_songsylls.txt", sep="\t")
+    "ChipperedByNicole_Try2ForPaper\AnalysisOutput_20190903_T215612_songsylls.txt", sep="\t")
 nicole_data_try2['User'] = 'Nicole'
 nicole_data_try2['Try'] = 2
 

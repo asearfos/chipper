@@ -64,7 +64,7 @@ def add_noise(signal, signal_info, noise_file):
 """
 create random songs
 """
-folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/synthetic_songs/SynSongs_amp100_30p"
+folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/scripts/SynSongs_amp100_30p"
 baseFileName = 'SynSongs_amp100_30p_'
 
 sampling_rate = 44100
@@ -157,9 +157,9 @@ for i in range(0, 50):
 """
 add noise
 """
-song_folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/synthetic_songs/SynSongs_amp100_30p"
+song_folder = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/scripts/SynSongs_amp100_30p"
 synthetic_songs = glob.glob(song_folder + '/*.wav')
-noiseFileName = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/synthetic_songs/WhiteNoiseTracks/WhiteNoise_0001" \
+noiseFileName = "C:/Users/abiga/Box Sync/Abigail_Nicole/ChipperPaper/scripts/WhiteNoiseTracks/WhiteNoise_001" \
                 ".wav"
 
 save_folder = os.path.dirname(song_folder) + '/' + os.path.basename(song_folder) + '_' + os.path.splitext(os.path.basename(
