@@ -303,11 +303,11 @@ class Song(object):
             'overall_' + data_type + '_freq_range(Hz)': overall_freq_range_scaled
         }
 
-        freq_modulation_per_segment = abs(
+        freq_range_per_segment = abs(
             np.asarray(freq_range_upper) - np.asarray(
                 freq_range_lower)) * self.hertzPerPixel
-        basic_freq_stats = get_basic_stats(freq_modulation_per_segment,
-                                           data_type + '_freq_modulation',
+        basic_freq_stats = get_basic_stats(freq_range_per_segment,
+                                           data_type + '_freq_range',
                                            '(Hz)')
 
         freq_stats = update_dict([freq_stats, basic_freq_stats])
