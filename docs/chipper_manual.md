@@ -69,32 +69,34 @@ Option 1: Download Chipper
 
 Option 2: Install from source (primarily for developers)
 
- 1.  Install Anaconda
+1.  Install Anaconda
  
->Our recommended approach is to use Anaconda, which is a distribution of 
->Python containing most of the numeric and scientific software needed to get 
->started. If you are a Mac or Linux user, have used Python before and are 
->comfortable using pip to install software, you may want to skip this step 
->and use your existing Python installation.
+      >Our recommended approach is to use Anaconda, which is a distribution of 
+      >Python containing most of the numeric and scientific software needed to get 
+      >started. If you are a Mac or Linux user, have used Python before and are 
+      >comfortable using pip to install software, you may want to skip this step 
+      >and use your existing Python installation.
 
- 2.  From within a terminal or command prompt window we will install most 
- packages with conda
+ 2.  Next, download our code, including the requirements.txt file. From within a terminal or command prompt window, create a conda environment. 
+ 
+         $ conda create -n chipper_env python=3.7
+ 
+      - For Mac and Linux, install packages with conda:
 
-    $ conda create -n chipper_env python=3.7
-    $ condapip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew
-    $ kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev
-    $ kivy.deps.gstreamer_dev
+            $ conda install -r requirements.txt
+            $ conda install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
 
- 3.  Additional steps for Windows users:
+      - For Windows users, you may need to use pip:
+ 
+            $ pip install -r requirements.txt
+            $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
 
-    $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
+ 3.  Install kivy packages
 
- 4.  Install kivy packages
-
-    $ garden install --kivy graph
-    $ garden install --kivy filebrowser
-    $ garden install --kivy matplotlib
-    $ garden install --kivy progressspinner
+         $ garden install --kivy graph
+         $ garden install --kivy filebrowser
+         $ garden install --kivy matplotlib
+         $ garden install --kivy progressspinner
 
 For full code visit
 [https://github.com/CreanzaLab/chipper](https://github.com/CreanzaLab/chipper).
