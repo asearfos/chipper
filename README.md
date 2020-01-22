@@ -67,12 +67,12 @@ This is recommended for developers.
  
       - For Mac and Linux, install packages with conda:
 
-            $ conda install -r requirments.txt
+            $ conda install -r requirements.txt
             $ conda install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
 
       - For Windows users, you may need to use pip:
  
-            $ pip install -r requirments.txt
+            $ pip install -r requirements.txt
             $ pip install pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.glew_dev kivy.deps.sdl2_dev kivy.deps.gstreamer_dev
 
  3.  Install kivy packages
